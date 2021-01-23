@@ -1,0 +1,7 @@
+{
+	"name": "This is a lets do retro micro service",
+	"version": "0.1",
+	"secret": "PemmasaniDasari",
+	"database": "mongodb://localhost:27017/lets-do-retro",
+  	"port": 3000
+}
