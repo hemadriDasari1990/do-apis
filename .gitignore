@@ -1,0 +1,17 @@
+# Dependency directories
+node_modules/
+
+# ignore lockfiles
+package-lock.json
+
+# VSCode workspaces
+*.code-workspace
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
