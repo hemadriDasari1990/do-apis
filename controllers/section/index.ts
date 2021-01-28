@@ -5,6 +5,7 @@ import {
 } from '../../util/sectionFilters';
 
 import Section from '../../models/section';
+import { findNotesBySectionAndDelete } from "../note";
 import mongoose from 'mongoose';
 
 export async function createSection(req: Request, res: Response, next: NextFunction): Promise<any> {
@@ -31,22 +32,22 @@ export async function saveSection(input: any) {
 
 export async function updateSection(req: Request, res: Response, next: NextFunction): Promise<any> {
     try {
-        const update = {
-              title: req.body.title,
-            };
-        await Section.findByIdAndUpdate(req.params.id, update, async (err: any) => {
-            if(err) { 
-            return next(err); 
-            }
-            return res.status(200).send("Title updated successfully");
-        });
+      const update = {
+        title: req.body.title,
+      };
+      const updated = await Section.findByIdAndUpdate(req.params.id, update);
+      if(!updated) { 
+        return next(updated); 
+      }
+      return res.status(200).send("Title updated successfully");
     } catch(err){
-        return res.status(500).send(err || err.message);
+      return res.status(500).send(err || err.message);
     }
 };
 
 export async function getAllSections(req: Request, res: Response): Promise<any> {
   try {
+    console.log(req);
     const sections = await Section.find().sort({_id: -1}).limit(25).populate([
       {
         path: 'notes',
@@ -75,13 +76,13 @@ export async function getSectionsByBoardId(req: Request, res: Response): Promise
 
 export async function deleteSection(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
-    await Section.findByIdAndRemove(req.params.id, (err: any) => {
-      if (err) {
-        res.status(500).json({ message: `Cannot delete resource ${err || err.message}`});
-        return next(err);
-      }
-      return res.status(200).json({message: "Resource has been deleted successfully"});
-    });
+    await findNotesBySectionAndDelete(req.params.id);
+    const deleted = await Section.findByIdAndRemove(req.params.id);
+    if (!deleted) {
+      res.status(500).json({ message: `Cannot delete resource`});
+      return next(deleted);
+    }
+    return res.status(200).send(deleted);
   } catch(err) {
     return res.status(500).send(err || err.message);
   }

@@ -1,21 +1,67 @@
-import Like from '../models/like';
+import Reaction from '../models/reaction';
 
-const notesLookup = { "$lookup": {
-  "from": Like.collection.name,
-  "let": { "likes": "$likes" },
+const reactionLookup = { "$lookup": {
+  "from": Reaction.collection.name,
+  "let": { "reactions": "$reactions" },
   "pipeline": [
     { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$likes',[]]}] },
+      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
     }},
     {
       "$sort": {"_id": -1}
-    },
+    }
   ],
-  "as": "likes"
+  "as": "reactions"
 }}
 
+const reactionAgreeLookup = { "$lookup": {
+  "from": Reaction.collection.name,
+  "let": { "reactions": "$reactions" },
+  "pipeline": [
+    { "$match": {
+      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
+      "type": "agree"
+    }}
+  ],
+  "as": "agreeReactions"
+}}
+
+const reactionDisAgreeLookup = { "$lookup": {
+  "from": Reaction.collection.name,
+  "let": { "reactions": "$reactions" },
+  "pipeline": [
+    { "$match": {
+      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
+      "type": "disagree"
+    }}
+  ],
+  "as": "disAgreeReactions"
+}}
+
+const reactionLoveLookup = { "$lookup": {
+  "from": Reaction.collection.name,
+  "let": { "reactions": "$reactions" },
+  "pipeline": [
+    { "$match": {
+      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
+      "type": "love"
+    }}
+  ],
+  "as": "loveReactions"
+}}
+
+
 const noteAddFields = { "$addFields": {
-  "totalLikes": { "$size": { "$ifNull": [ "$likes", 0 ] }},
+  "totalReactions": { "$size": { "$ifNull": [ "$reactions", [] ] }},
+  "totalAgreed": { "$size": { "$ifNull": [ "$agreeReactions", [] ] }},
+  "totalDisAgreed": { "$size": { "$ifNull": [ "$disAgreeReactions", [] ] }},
+  "totalLove": { "$size": { "$ifNull": [ "$loveReactions", [] ] }},
 }};
 
-export { notesLookup, noteAddFields };
+export { 
+  noteAddFields,
+  reactionLookup,
+  reactionAgreeLookup,
+  reactionDisAgreeLookup,
+  reactionLoveLookup
+};

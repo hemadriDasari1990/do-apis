@@ -12,8 +12,8 @@ export default class Server {
   private app: Application = express();
 
   public bootstrap(): Application {
-    this.configureDatabase();
-    this.configureMiddleware();
+    this.configureDatabase(); /* Connect to the Database */
+    this.configureMiddleware(); /* Configuration set up*/
     this.configureRoutes();
     return this.app;
   }
@@ -40,6 +40,6 @@ export default class Server {
     /* Adds some security defaults */
     this.app.use(helmet());
 
-    this.app.use(morgan('dev'));
+    this.app.use(morgan(config.get("env")));
   }
 }

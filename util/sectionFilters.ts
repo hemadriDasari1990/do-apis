@@ -1,3 +1,11 @@
+import {
+  noteAddFields,
+  reactionAgreeLookup,
+  reactionDisAgreeLookup,
+  reactionLookup,
+  reactionLoveLookup
+} from "./noteFilters";
+
 import Note from '../models/note';
 
 const sectionsLookup = { "$lookup": {
@@ -10,6 +18,11 @@ const sectionsLookup = { "$lookup": {
     {
       "$sort": {"_id": -1}
     },
+    reactionDisAgreeLookup,
+    reactionAgreeLookup,
+    reactionLoveLookup,
+    reactionLookup,
+    noteAddFields,
   ],
   "as": "notes"
 }}

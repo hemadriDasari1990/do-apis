@@ -12,6 +12,13 @@ const BoardSchema = new Schema({
     trim: true,
     minlength: 5
   },
+  sprint: {
+    type: Number,
+    default: 0
+  },
+  duration: {
+    type: String
+  },
   sections: [{
     type: Schema.Types.ObjectId, ref: 'Section'
   }],

@@ -1,9 +1,10 @@
 import { createBoard, deleteBoard, getAllBoards, getBoardDetails, updateBoard } from "../controllers/board";
+import { createFeedback, getFeedbacks } from "../controllers/feedback";
 import { createNote, deleteNote, getAllNotes, getNotesBySectionId, updateNote } from "../controllers/note";
 import { createSection, deleteSection, getAllSections, getSectionsByBoardId, updateSection } from "../controllers/section";
 import express, { Application } from 'express';
 
-import { createLike } from "../controllers/like";
+import { createOrUpdateReaction } from "../controllers/reaction";
 
 export default function (app: Application) {
   // Initializing route groups
@@ -11,7 +12,8 @@ export default function (app: Application) {
     boardRoutes = express.Router(),
     sectionRoutes = express.Router(),
     noteRoutes = express.Router(),
-    likeRoutes = express.Router();
+    reactionRoutes = express.Router(),
+    feedbackRoutes = express.Router();
 
   //= ========================
   // Board Routes
@@ -84,11 +86,25 @@ export default function (app: Application) {
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/like', likeRoutes);
+  apiRoutes.use('/react', reactionRoutes);
 
   // Like creation route
-  likeRoutes.post('/', createLike);
+  reactionRoutes.put('/', createOrUpdateReaction);
+
+  //= ========================
+  // Feedback Routes
+  //= ========================
+
+  // Set user routes as subgroup/middleware to apiRoutes
+  apiRoutes.use('/feedback', feedbackRoutes);
+
+  // Feedback creation route
+  feedbackRoutes.post('/', createFeedback);
+
+  // Get Feedbacks
+  feedbackRoutes.get('/', getFeedbacks);
 
   // Set url for API group routes
   app.use('/', apiRoutes);
+
 };

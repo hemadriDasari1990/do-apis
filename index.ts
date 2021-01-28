@@ -1,4 +1,4 @@
-import { Request, Response, } from 'express';
+import { Request, Response } from 'express';
 
 import ApplicationServer from './server';
 import config from 'config';
@@ -15,9 +15,10 @@ function onListening() {
 }
 
 function onError(error: any) {
-    console.log('There was an error:', error);
+  console.log('There was an error:', error);
 }
 
 app.get("/", (req: Request, res: Response) => {
+  console.log(req);
     res.send(`This is a landing page for letsdoretro service`);
 });

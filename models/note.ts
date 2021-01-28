@@ -13,8 +13,8 @@ const NoteSchema = new Schema({
     trim: true,
     minlength: 5
   },
-  likes : [
-    { type: Schema.Types.ObjectId, ref: 'Like' }
+  reactions : [
+    { type: Schema.Types.ObjectId, ref: 'Reaction' }
   ]
 },
   {

@@ -12,7 +12,9 @@ export async function createBoard(req: Request, res: Response, next: NextFunctio
   try {
     const board = new Board({
       title: req.body.title,
-      description: req.body.description
+      description: req.body.description,
+      sprint: req.body.sprint,
+      duration: req.body.duration
     });
     const created = await board.save();
     if(!created) { 
@@ -22,11 +24,11 @@ export async function createBoard(req: Request, res: Response, next: NextFunctio
       await promise;
       const section = await saveSection({
         boardId: created._id,
-        title: "Enter title"
+        title: "Section Title"
       });
-      await addSectionToBoard(section._id, created._id);
+      await addSectionToBoard(section?._id, created._id);
     }, Promise.resolve());
-    return res.status(200).send("Board created Successfully");
+    return res.status(200).send(created);
   } catch(err) {
     throw new Error(err || err.message);
   }
@@ -54,12 +56,11 @@ export async function updateBoard(req: Request, res: Response, next: NextFunctio
           title: req.body.title,
           description: req.body.description
         };
-        await Board.findByIdAndUpdate(req.params.id, update, async (err: any) => {
-            if(err) { 
-              return next(err); 
-            }
-            return res.status(200).send("Updated board successfully");
-        });
+        const updated = await Board.findByIdAndUpdate(req.params.id, update)
+        if(!updated) { 
+          return next(updated); 
+        }
+        return res.status(200).send("Updated board successfully");
     } catch(err){
         return res.status(500).send(err || err.message);
     }
@@ -67,6 +68,7 @@ export async function updateBoard(req: Request, res: Response, next: NextFunctio
 
 export async function getAllBoards(req: Request, res: Response): Promise<any> {
   try {
+    console.log(req);
     const boards = await Board.find().sort({_id: -1}).limit(25).populate([
       {
         path: 'sections',
@@ -95,13 +97,12 @@ export async function getBoardDetails(req: Request, res: Response): Promise<any>
 
 export async function deleteBoard(req: Request, res: Response, next: NextFunction): Promise<any> {
   try{
-    await Board.findByIdAndRemove(req.params.id, (err: any) => {
-      if (err) {
-        res.status(500).json({ message: `Cannot delete resource ${err || err.message}`});
-        return next(err);
-      }
-      return res.status(200).json({message: "Resource has been deleted successfully"});
-    });
+    const deleted = await Board.findByIdAndRemove(req.params.id);
+    if (!deleted) {
+      res.status(500).json({ message: `Cannot delete resource`});
+      return next(deleted);
+    }
+    return res.status(200).json({message: "Resource has been deleted successfully"});
   } catch(err) {
     return res.status(500).send(err || err.message);
   }
