@@ -54,7 +54,7 @@ export default function (app: Application) {
   sectionRoutes.post('/', createSection);
 
   // Update or Create Section
-  sectionRoutes.put('/', updateSection);
+  sectionRoutes.put('/:id', updateSection);
 
   // Section delete route
   sectionRoutes.delete('/:id', deleteSection);

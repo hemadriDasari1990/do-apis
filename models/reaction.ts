@@ -11,7 +11,7 @@ const ReactionSchema = new Schema({
   type: {
     type: String,
     required: true,
-    enum : ['agree','disagree', 'love'],
+    enum : ['plusOne', 'plusTwo', 'disagree', 'love', "deserve"],
     default: 'agree',
     index: true
   },

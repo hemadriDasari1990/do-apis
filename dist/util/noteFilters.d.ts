@@ -22,7 +22,45 @@ declare const reactionLookup: {
         as: string;
     };
 };
-declare const reactionAgreeLookup: {
+declare const reactionPlusOneLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            reactions: string;
+        };
+        pipeline: {
+            $match: {
+                $expr: {
+                    $in: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+                type: string;
+            };
+        }[];
+        as: string;
+    };
+};
+declare const reactionPlusTwoLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            reactions: string;
+        };
+        pipeline: {
+            $match: {
+                $expr: {
+                    $in: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+                type: string;
+            };
+        }[];
+        as: string;
+    };
+};
+declare const reactionDeserveLookup: {
     $lookup: {
         from: string;
         let: {
@@ -86,7 +124,17 @@ declare const noteAddFields: {
                 $ifNull: (string | never[])[];
             };
         };
-        totalAgreed: {
+        totalPlusOne: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalPlusTwo: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalDeserve: {
             $size: {
                 $ifNull: (string | never[])[];
             };
@@ -103,4 +151,4 @@ declare const noteAddFields: {
         };
     };
 };
-export { noteAddFields, reactionLookup, reactionAgreeLookup, reactionDisAgreeLookup, reactionLoveLookup };
+export { noteAddFields, reactionLookup, reactionPlusOneLookup, reactionPlusTwoLookup, reactionDeserveLookup, reactionDisAgreeLookup, reactionLoveLookup };

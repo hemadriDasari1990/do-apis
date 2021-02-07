@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 
 import Reaction from '../../models/reaction';
 import { addReactionToNote } from "../note";
+import { socket } from "../../index";
 
 export async function createOrUpdateReaction(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
@@ -17,6 +18,7 @@ export async function createOrUpdateReaction(req: Request, res: Response, next: 
     if(!added){
       return next(added);
     }
+    socket.emit("new-reaction", reactionCreated);
     return res.status(200).send(reactionCreated);
   } catch(err) {
     throw new Error(err || err.message);

@@ -7,11 +7,13 @@ import {
 import Section from '../../models/section';
 import { findNotesBySectionAndDelete } from "../note";
 import mongoose from 'mongoose';
+import { socket } from "../../index";
 
 export async function createSection(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
     const created = await saveSection(req.body);
     if (!created) { return next(created); }
+    socket.emit("new-section", created);
     return res.status(200).send("Title created Successfully");
   } catch(err) {
     throw new Error(err || err.message);
@@ -35,11 +37,12 @@ export async function updateSection(req: Request, res: Response, next: NextFunct
       const update = {
         title: req.body.title,
       };
-      const updated = await Section.findByIdAndUpdate(req.params.id, update);
+      const updated = await Section.findByIdAndUpdate(req.params.id, update, {new: true});
       if(!updated) { 
         return next(updated); 
       }
-      return res.status(200).send("Title updated successfully");
+      socket.emit("update-section", updated);
+      return res.status(200).send(updated);
     } catch(err){
       return res.status(500).send(err || err.message);
     }
@@ -62,15 +65,25 @@ export async function getAllSections(req: Request, res: Response): Promise<any> 
 
 export async function getSectionsByBoardId(req: Request, res: Response): Promise<any> {
   try {
-    const query = { boardId: mongoose.Types.ObjectId(req.params.boardId) };
+    const sections = await getSections(req.params.boardId);
+    return res.status(200).json(sections);
+  } catch(err){
+    return res.status(500).send(err || err.message);
+  }
+}
+
+async function getSections(boardId: string): Promise<any> {
+  try {
+    const query = { boardId: mongoose.Types.ObjectId(boardId) };
     const sections = await Section.aggregate([
       { "$match": query },
       sectionsLookup,
       sectionAddFields
     ]);
-    return res.status(200).json(sections);
+    // socket.emit("sections-list", sections);
+    return sections;
   } catch(err){
-    return res.status(500).send(err || err.message);
+    throw err | err.message;
   }
 }
 
@@ -82,6 +95,7 @@ export async function deleteSection(req: Request, res: Response, next: NextFunct
       res.status(500).json({ message: `Cannot delete resource`});
       return next(deleted);
     }
+    socket.emit("delete-section", deleted);
     return res.status(200).send(deleted);
   } catch(err) {
     return res.status(500).send(err || err.message);

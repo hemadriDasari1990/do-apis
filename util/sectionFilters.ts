@@ -1,9 +1,11 @@
 import {
   noteAddFields,
-  reactionAgreeLookup,
+  reactionDeserveLookup,
   reactionDisAgreeLookup,
   reactionLookup,
-  reactionLoveLookup
+  reactionLoveLookup,
+  reactionPlusOneLookup,
+  reactionPlusTwoLookup
 } from "./noteFilters";
 
 import Note from '../models/note';
@@ -19,7 +21,9 @@ const sectionsLookup = { "$lookup": {
       "$sort": {"_id": -1}
     },
     reactionDisAgreeLookup,
-    reactionAgreeLookup,
+    reactionPlusTwoLookup,
+    reactionPlusOneLookup,
+    reactionDeserveLookup,
     reactionLoveLookup,
     reactionLookup,
     noteAddFields,

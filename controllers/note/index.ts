@@ -1,16 +1,19 @@
 import { NextFunction, Request, Response } from "express";
 import {
   noteAddFields,
-  reactionAgreeLookup,
+  reactionDeserveLookup,
   reactionDisAgreeLookup,
   reactionLookup,
-  reactionLoveLookup
+  reactionLoveLookup,
+  reactionPlusOneLookup,
+  reactionPlusTwoLookup
 } from '../../util/noteFilters';
 
 import Note from '../../models/note';
 import { addNoteToSection } from "../section";
 import { findReactionsByNoteAndDelete } from "../reaction";
 import mongoose from 'mongoose';
+import { socket } from "../../index";
 
 export async function createNote(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
@@ -23,6 +26,7 @@ export async function createNote(req: Request, res: Response, next: NextFunction
     if(!added){
       return next(added);
     }
+    socket.emit("new-note", noteCreated);
     return res.status(200).send("Resource created Successfully");
   } catch(err) {
     throw new Error(err || err.message);
@@ -42,6 +46,7 @@ export async function updateNote(req: Request, res: Response, next: NextFunction
     if(!added){
       return next(added);
     }
+    socket.emit("update-note", updated);
     return res.status(200).send(updated)
   } catch(err){
     return res.status(500).send(err || err.message);
@@ -69,7 +74,9 @@ export async function getNotesBySectionId(req: Request, res: Response): Promise<
     const notes = await Note.aggregate([
       { "$match": query },
       reactionLookup,
-      reactionAgreeLookup,
+      reactionDeserveLookup,
+      reactionPlusOneLookup,
+      reactionPlusTwoLookup,
       reactionDisAgreeLookup,
       reactionLoveLookup,
       noteAddFields
@@ -87,6 +94,7 @@ export async function deleteNote(req: Request, res: Response, next: NextFunction
       res.status(500).json({ message: `Cannot delete resource`});
       return next(noteDeleted);
     }
+    socket.emit("delete-note", noteDeleted);
     return res.status(200).send(noteDeleted);
   } catch(err) {
     return res.status(500).send(err || err.message);

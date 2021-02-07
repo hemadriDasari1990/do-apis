@@ -52,7 +52,17 @@ declare const sectionsLookup: {
                         $ifNull: (string | never[])[];
                     };
                 };
-                totalAgreed: {
+                totalPlusOne: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalPlusTwo: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalDeserve: {
                     $size: {
                         $ifNull: (string | never[])[];
                     };

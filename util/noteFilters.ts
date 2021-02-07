@@ -14,16 +14,40 @@ const reactionLookup = { "$lookup": {
   "as": "reactions"
 }}
 
-const reactionAgreeLookup = { "$lookup": {
+const reactionPlusOneLookup = { "$lookup": {
   "from": Reaction.collection.name,
   "let": { "reactions": "$reactions" },
   "pipeline": [
     { "$match": {
       "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
-      "type": "agree"
+      "type": "plusOne"
     }}
   ],
-  "as": "agreeReactions"
+  "as": "plusOneReactions"
+}}
+
+const reactionPlusTwoLookup = { "$lookup": {
+  "from": Reaction.collection.name,
+  "let": { "reactions": "$reactions" },
+  "pipeline": [
+    { "$match": {
+      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
+      "type": "plusTwo"
+    }}
+  ],
+  "as": "plusTwoReactions"
+}}
+
+const reactionDeserveLookup = { "$lookup": {
+  "from": Reaction.collection.name,
+  "let": { "reactions": "$reactions" },
+  "pipeline": [
+    { "$match": {
+      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
+      "type": "deserve"
+    }}
+  ],
+  "as": "deserveReactions"
 }}
 
 const reactionDisAgreeLookup = { "$lookup": {
@@ -53,7 +77,9 @@ const reactionLoveLookup = { "$lookup": {
 
 const noteAddFields = { "$addFields": {
   "totalReactions": { "$size": { "$ifNull": [ "$reactions", [] ] }},
-  "totalAgreed": { "$size": { "$ifNull": [ "$agreeReactions", [] ] }},
+  "totalPlusOne": { "$size": { "$ifNull": [ "$plusOneReactions", [] ] }},
+  "totalPlusTwo": { "$size": { "$ifNull": [ "$plusTwoReactions", [] ] }},
+  "totalDeserve": { "$size": { "$ifNull": [ "$deserveReactions", [] ] }},
   "totalDisAgreed": { "$size": { "$ifNull": [ "$disAgreeReactions", [] ] }},
   "totalLove": { "$size": { "$ifNull": [ "$loveReactions", [] ] }},
 }};
@@ -61,7 +87,9 @@ const noteAddFields = { "$addFields": {
 export { 
   noteAddFields,
   reactionLookup,
-  reactionAgreeLookup,
+  reactionPlusOneLookup,
+  reactionPlusTwoLookup,
+  reactionDeserveLookup,
   reactionDisAgreeLookup,
   reactionLoveLookup
 };

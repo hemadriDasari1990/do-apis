@@ -462,13 +462,13 @@
         "affectsGlobalScope": false
       },
       "../models/reaction.ts": {
-        "version": "11a0d5d86be7beff7e62f0fb2d87d6231b0127a47eabe2b473d97786d6efd830",
+        "version": "402f6396e682791561f580ad8ce635c5e0e191b5b16b10abb5927481dbe3e8a4",
         "signature": "69e5ef605439cbbded09301b3f5e3615ad802f3683d3b37eb246f5a85e299604",
         "affectsGlobalScope": false
       },
       "../util/notefilters.ts": {
-        "version": "2eb210d8161fab855a4379c12c23174cc9429a7e12a32a6b059a3a0ff1044d9d",
-        "signature": "cd90a1cb7755e3db8336ad8d1a4cf388c63e9886ae69655402842b4cb2d3d902",
+        "version": "75749758df988cced512132f8a2bab6f985838973cac78620f78a62304c79bd5",
+        "signature": "d851ae1972011bc6fd66d38800a1697b31d09a4602dbac0608c55ed7ec98b5f4",
         "affectsGlobalScope": false
       },
       "../models/note.ts": {
@@ -477,22 +477,22 @@
         "affectsGlobalScope": false
       },
       "../util/sectionfilters.ts": {
-        "version": "e0b3aae75b90701750461ffa77cd1c9f33094d542b14c6f0d24be690458a66f3",
-        "signature": "f628c2e1dc670dedfec4967c6f977bdde5f4dc2a70598667f92a6cbaf4e40683",
+        "version": "a9b34fc05ab4d671f17baa8813fb01c06f6754a20e53b8eb8d22ee28e7147504",
+        "signature": "6c4220a9941b18d76ec3e70095f460a119fcc01e94e1354fbf0aa007ba05ec3e",
         "affectsGlobalScope": false
       },
       "../controllers/reaction/index.ts": {
-        "version": "331a55f57b53c6216419fda2784b62cb6879bec02473b0c3769ccf7443b31ff0",
+        "version": "8cddcc87756bc066f887f21731d279cedca5e03de87e2b83481bdf134730f1f7",
         "signature": "a4ef3abcc2a68bd1b378344a211de089a7c780e9dad375b9e204b855257e488b",
         "affectsGlobalScope": false
       },
       "../controllers/note/index.ts": {
-        "version": "4344bf74a558cac489f734d70e867a65ab62b28d69132eadd0ca113bd83ac902",
+        "version": "a5f515e5f61b5582b31a630b0b3d55bd75a2a188420fffdf0f1156e1e8342420",
         "signature": "6e3882ac1b84ba2b2699359615b88f173c226d93035e11fc7ec4480e14fa86f5",
         "affectsGlobalScope": false
       },
       "../controllers/section/index.ts": {
-        "version": "773c05dfe7179b742249263a2fdcc2f8bac2df3ea226de77e79466d76c0427f1",
+        "version": "bcf09c40801cf8a1c6797d9d40c9636cc660c25cc690ef3e41590851d89860a5",
         "signature": "1216823b8843f9d95442f5a0d9e094b74c3d60cb56d8a3af7bb26c7c15c4a4bc",
         "affectsGlobalScope": false
       },
@@ -512,7 +512,7 @@
         "affectsGlobalScope": false
       },
       "../router/index.ts": {
-        "version": "b281ff35ae869076ee974ff5fbb7d41b1c49383eb45383638f09e023d2151356",
+        "version": "2153253d58fd7fa139a367214dce11f44c357c6333633fc6b5c3e6d77fce9bff",
         "signature": "e36e302c6e51d614a020b52cdffdd29695c5ec3a945e592a47411176b351d20d",
         "affectsGlobalScope": false
       },
@@ -521,9 +521,54 @@
         "signature": "70e4a3cda7558001f7c956e9b03ae7a5f5973fa57518e9546812543fc058f6c3",
         "affectsGlobalScope": false
       },
+      "../node_modules/socket.io/dist/client.d.ts": {
+        "version": "4a993441b8be327aab6d28a2310e3ec7c3aa3d4eaf83a8b57101acc8676e8387",
+        "signature": "4a993441b8be327aab6d28a2310e3ec7c3aa3d4eaf83a8b57101acc8676e8387",
+        "affectsGlobalScope": false
+      },
+      "../node_modules/socket.io-adapter/dist/index.d.ts": {
+        "version": "8ef692b43546bba3f743f404e14f99d211c587190aad12e736d59701ae5edba4",
+        "signature": "8ef692b43546bba3f743f404e14f99d211c587190aad12e736d59701ae5edba4",
+        "affectsGlobalScope": false
+      },
+      "../node_modules/socket.io/dist/socket.d.ts": {
+        "version": "ad5031d9d14feb0ee969ccbc683fa3f3fd03852fd21a97ef8bd12a52a5322168",
+        "signature": "ad5031d9d14feb0ee969ccbc683fa3f3fd03852fd21a97ef8bd12a52a5322168",
+        "affectsGlobalScope": false
+      },
+      "../node_modules/socket.io/dist/namespace.d.ts": {
+        "version": "db7308621966017d3a50ea84012e1d60b07f354dcdd35ccf5cbe638059996f1c",
+        "signature": "db7308621966017d3a50ea84012e1d60b07f354dcdd35ccf5cbe638059996f1c",
+        "affectsGlobalScope": false
+      },
+      "../node_modules/@types/component-emitter/index.d.ts": {
+        "version": "a3a88c1869ba1022dfaefac47ff7a984ec62510e9b4d60988f91d5e523266c34",
+        "signature": "a3a88c1869ba1022dfaefac47ff7a984ec62510e9b4d60988f91d5e523266c34",
+        "affectsGlobalScope": false
+      },
+      "../node_modules/socket.io-parser/dist/index.d.ts": {
+        "version": "6ce9c4c7d976960a7f14dfe40e26c357bcab9405eb2eea38f79760ed4f323512",
+        "signature": "6ce9c4c7d976960a7f14dfe40e26c357bcab9405eb2eea38f79760ed4f323512",
+        "affectsGlobalScope": false
+      },
+      "../node_modules/@types/cookie/index.d.ts": {
+        "version": "405ad6db8aa3d5618c3be21cde8125de28a3e40690eb05136c123f420c05c082",
+        "signature": "405ad6db8aa3d5618c3be21cde8125de28a3e40690eb05136c123f420c05c082",
+        "affectsGlobalScope": false
+      },
+      "../node_modules/socket.io/dist/index.d.ts": {
+        "version": "dc39b848104d2c663e0e14dc09ca0acea82b2cb9c3af2ddf929ad1a2aa7fbe63",
+        "signature": "dc39b848104d2c663e0e14dc09ca0acea82b2cb9c3af2ddf929ad1a2aa7fbe63",
+        "affectsGlobalScope": false
+      },
+      "../socket/index.ts": {
+        "version": "9d5cea55000c930ed3ae97e784f62dfb3dd8d0e1e4bd1f93d7e1f920bbab4a9d",
+        "signature": "c99509bbbfab39c47df120c40610ebc2d505a48a552d97cde7b065f7d02a193f",
+        "affectsGlobalScope": false
+      },
       "../index.ts": {
-        "version": "9551c06bbb4de7e9eb007de4fef597990c1d839e29291dd024f30155faae0180",
-        "signature": "8e609bb71c20b858c77f0e9f90bb1319db8477b13f9f965f1a1e18524bf50881",
+        "version": "cd20b36b7bd171330119758f52833146166ecc3da277dd834bd55a17c5a80bd1",
+        "signature": "b5e2ca815bc7b789e85a22baaeb1b072c5e806f970f14b3f17e74de40329a9a0",
         "affectsGlobalScope": false
       },
       "../types/like.ts": {
@@ -608,6 +653,7 @@
       "../controllers/note/index.ts": [
         "../controllers/reaction/index.ts",
         "../controllers/section/index.ts",
+        "../index.ts",
         "../models/note.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
@@ -615,11 +661,13 @@
       ],
       "../controllers/reaction/index.ts": [
         "../controllers/note/index.ts",
+        "../index.ts",
         "../models/reaction.ts",
         "../node_modules/@types/express/index.d.ts"
       ],
       "../controllers/section/index.ts": [
         "../controllers/note/index.ts",
+        "../index.ts",
         "../models/section.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
@@ -629,7 +677,8 @@
         "../node_modules/@types/config/index.d.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/@types/node/http.d.ts",
-        "../server.ts"
+        "../server.ts",
+        "../socket/index.ts"
       ],
       "../models/board.ts": [
         "../node_modules/mongoose/index.d.ts"
@@ -849,6 +898,46 @@
         "../node_modules/@types/node/stream.d.ts",
         "../node_modules/mongoose/index.d.ts"
       ],
+      "../node_modules/socket.io-adapter/dist/index.d.ts": [
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/index.d.ts"
+      ],
+      "../node_modules/socket.io-parser/dist/index.d.ts": [
+        "../node_modules/@types/component-emitter/index.d.ts"
+      ],
+      "../node_modules/socket.io/dist/client.d.ts": [
+        "../node_modules/@types/node/http.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io/dist/index.d.ts",
+        "../node_modules/socket.io/dist/socket.d.ts"
+      ],
+      "../node_modules/socket.io/dist/index.d.ts": [
+        "../node_modules/@types/cookie/index.d.ts",
+        "../node_modules/@types/cors/index.d.ts",
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/http.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io-adapter/dist/index.d.ts",
+        "../node_modules/socket.io-parser/dist/index.d.ts",
+        "../node_modules/socket.io/dist/namespace.d.ts",
+        "../node_modules/socket.io/dist/socket.d.ts"
+      ],
+      "../node_modules/socket.io/dist/namespace.d.ts": [
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io-adapter/dist/index.d.ts",
+        "../node_modules/socket.io/dist/client.d.ts",
+        "../node_modules/socket.io/dist/index.d.ts",
+        "../node_modules/socket.io/dist/socket.d.ts"
+      ],
+      "../node_modules/socket.io/dist/socket.d.ts": [
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/http.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io-adapter/dist/index.d.ts",
+        "../node_modules/socket.io/dist/client.d.ts",
+        "../node_modules/socket.io/dist/namespace.d.ts"
+      ],
       "../router/index.ts": [
         "../controllers/board/index.ts",
         "../controllers/feedback/index.ts",
@@ -866,6 +955,9 @@
         "../node_modules/@types/morgan/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
         "../router/index.ts"
+      ],
+      "../socket/index.ts": [
+        "../node_modules/socket.io/dist/index.d.ts"
       ],
       "../types/board.ts": [
         "../node_modules/mongoose/index.d.ts",
@@ -1134,11 +1226,54 @@
         "../node_modules/@types/node/stream.d.ts",
         "../node_modules/mongoose/index.d.ts"
       ],
+      "../node_modules/socket.io-adapter/dist/index.d.ts": [
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/index.d.ts"
+      ],
+      "../node_modules/socket.io-parser/dist/index.d.ts": [
+        "../node_modules/@types/component-emitter/index.d.ts"
+      ],
+      "../node_modules/socket.io/dist/client.d.ts": [
+        "../node_modules/@types/node/http.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io/dist/index.d.ts",
+        "../node_modules/socket.io/dist/socket.d.ts"
+      ],
+      "../node_modules/socket.io/dist/index.d.ts": [
+        "../node_modules/@types/cookie/index.d.ts",
+        "../node_modules/@types/cors/index.d.ts",
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/http.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io-adapter/dist/index.d.ts",
+        "../node_modules/socket.io-parser/dist/index.d.ts",
+        "../node_modules/socket.io/dist/namespace.d.ts",
+        "../node_modules/socket.io/dist/socket.d.ts"
+      ],
+      "../node_modules/socket.io/dist/namespace.d.ts": [
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io-adapter/dist/index.d.ts",
+        "../node_modules/socket.io/dist/client.d.ts",
+        "../node_modules/socket.io/dist/index.d.ts",
+        "../node_modules/socket.io/dist/socket.d.ts"
+      ],
+      "../node_modules/socket.io/dist/socket.d.ts": [
+        "../node_modules/@types/node/events.d.ts",
+        "../node_modules/@types/node/http.d.ts",
+        "../node_modules/@types/node/index.d.ts",
+        "../node_modules/socket.io-adapter/dist/index.d.ts",
+        "../node_modules/socket.io/dist/client.d.ts",
+        "../node_modules/socket.io/dist/namespace.d.ts"
+      ],
       "../router/index.ts": [
         "../node_modules/@types/express/index.d.ts"
       ],
       "../server.ts": [
         "../node_modules/@types/express/index.d.ts"
+      ],
+      "../socket/index.ts": [
+        "../node_modules/socket.io/dist/index.d.ts"
       ],
       "../types/board.ts": [
         "../node_modules/mongoose/index.d.ts",
@@ -1176,8 +1311,10 @@
       "../models/section.ts",
       "../node_modules/@types/body-parser/index.d.ts",
       "../node_modules/@types/bson/index.d.ts",
+      "../node_modules/@types/component-emitter/index.d.ts",
       "../node_modules/@types/config/index.d.ts",
       "../node_modules/@types/connect/index.d.ts",
+      "../node_modules/@types/cookie/index.d.ts",
       "../node_modules/@types/cors/index.d.ts",
       "../node_modules/@types/express-serve-static-core/index.d.ts",
       "../node_modules/@types/express/index.d.ts",
@@ -1235,6 +1372,12 @@
       "../node_modules/@types/range-parser/index.d.ts",
       "../node_modules/@types/serve-static/index.d.ts",
       "../node_modules/mongoose/index.d.ts",
+      "../node_modules/socket.io-adapter/dist/index.d.ts",
+      "../node_modules/socket.io-parser/dist/index.d.ts",
+      "../node_modules/socket.io/dist/client.d.ts",
+      "../node_modules/socket.io/dist/index.d.ts",
+      "../node_modules/socket.io/dist/namespace.d.ts",
+      "../node_modules/socket.io/dist/socket.d.ts",
       "../node_modules/typescript/lib/lib.dom.d.ts",
       "../node_modules/typescript/lib/lib.es2015.collection.d.ts",
       "../node_modules/typescript/lib/lib.es2015.core.d.ts",
@@ -1265,6 +1408,7 @@
       "../node_modules/typescript/lib/lib.esnext.intl.d.ts",
       "../router/index.ts",
       "../server.ts",
+      "../socket/index.ts",
       "../types/board.ts",
       "../types/index.ts",
       "../types/like.ts",
