@@ -18,7 +18,7 @@ export async function createOrUpdateReaction(req: Request, res: Response, next: 
     if(!added){
       return next(added);
     }
-    socket.emit("new-reaction", reactionCreated);
+    socket.emit(`new-reaction-${added?.sectionId}`, reactionCreated);
     return res.status(200).send(reactionCreated);
   } catch(err) {
     throw new Error(err || err.message);

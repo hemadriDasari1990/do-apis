@@ -8,7 +8,7 @@ const sectionsLookup = { "$lookup": {
       "$expr": { "$in": ["$_id", {$ifNull :['$$sections',[]]}] },
     }},
     {
-      "$sort": {"_id": -1}
+      "$sort": {"_id": 1}
     },
   ],
   "as": "sections"

@@ -33,35 +33,25 @@ export async function saveSection(input: any) {
 }
 
 export async function updateSection(req: Request, res: Response, next: NextFunction): Promise<any> {
-    try {
-      const update = {
-        title: req.body.title,
-      };
-      const updated = await Section.findByIdAndUpdate(req.params.id, update, {new: true});
-      if(!updated) { 
-        return next(updated); 
-      }
-      socket.emit("update-section", updated);
-      return res.status(200).send(updated);
-    } catch(err){
-      return res.status(500).send(err || err.message);
-    }
-};
-
-export async function getAllSections(req: Request, res: Response): Promise<any> {
   try {
-    console.log(req);
-    const sections = await Section.find().sort({_id: -1}).limit(25).populate([
-      {
-        path: 'notes',
-        model: 'Note'
-      }
-    ]);
-    return res.status(200).json(sections);
+    const query = { _id: mongoose.Types.ObjectId(req.body.sectionId) },
+     update = { $set: {
+      title: req.body.title,
+      description: req.body.description,
+      projectId: req.body.projectId
+    }},
+    options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const updated = await Section.findOneAndUpdate(query, update, options);
+    if(!updated) { 
+      return next(updated); 
+    }
+    socket.emit("update-section", updated);
+    // await addDepartmentToOrganization(updated?._id, req.body.organizationId);
+    return res.status(200).send(updated);
   } catch(err){
     return res.status(500).send(err || err.message);
   }
-}
+};
 
 export async function getSectionsByBoardId(req: Request, res: Response): Promise<any> {
   try {

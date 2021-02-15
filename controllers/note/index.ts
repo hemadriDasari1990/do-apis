@@ -15,24 +15,6 @@ import { findReactionsByNoteAndDelete } from "../reaction";
 import mongoose from 'mongoose';
 import { socket } from "../../index";
 
-export async function createNote(req: Request, res: Response, next: NextFunction): Promise<any> {
-  try {
-    const note = new Note(req.body);
-    const noteCreated = await note.save();
-    if(!noteCreated){
-      return res.status(500).send("Resource creation is failed");
-    }
-    const added = await addNoteToSection(noteCreated._id, req.body.sectionId);
-    if(!added){
-      return next(added);
-    }
-    socket.emit("new-note", noteCreated);
-    return res.status(200).send("Resource created Successfully");
-  } catch(err) {
-    throw new Error(err || err.message);
-  }
-};
-
 export async function updateNote(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
     const update = {
@@ -40,33 +22,19 @@ export async function updateNote(req: Request, res: Response, next: NextFunction
       sectionId: req.body.sectionId
     };
     const options = { upsert: true, new: true };
-    const updated = await Note.findByIdAndUpdate(req.body.noteId ? req.body.noteId: new mongoose.Types.ObjectId(), update, options);
+    const updated: any = await Note.findByIdAndUpdate(req.body.noteId ? req.body.noteId: new mongoose.Types.ObjectId(), update, options);
     if(!updated){ return next(updated);}
     const added = await addNoteToSection(updated._id, req.body.sectionId);
     if(!added){
       return next(added);
     }
-    socket.emit("update-note", updated);
-    return res.status(200).send(updated)
+    const note = await getNoteDetails(updated?._id);
+    socket.emit(`update-note-${note?.sectionId}`, note);
+    return res.status(200).send(note)
   } catch(err){
     return res.status(500).send(err || err.message);
   }
 };
-
-export async function getAllNotes(req: Request, res: Response): Promise<any> {
-  try {
-    console.log(req);
-    const notes = await Note.find().sort({_id: 1}).limit(10).populate([
-      {
-        path: 'likes',
-        model: 'Like'
-      }
-    ]);
-    return res.status(200).json(notes);
-  } catch(err){
-    return res.status(500).send(err || err.message);
-  }
-}
 
 export async function getNotesBySectionId(req: Request, res: Response): Promise<any> {
   try {
@@ -87,6 +55,25 @@ export async function getNotesBySectionId(req: Request, res: Response): Promise<
   }
 }
 
+async function getNoteDetails(noteId: string): Promise<any> {
+  try {
+    const query = { _id: mongoose.Types.ObjectId(noteId)};
+    const notes = await Note.aggregate([
+      { "$match": query },
+      reactionLookup,
+      reactionDeserveLookup,
+      reactionPlusOneLookup,
+      reactionPlusTwoLookup,
+      reactionDisAgreeLookup,
+      reactionLoveLookup,
+      noteAddFields
+    ]);
+    return notes ? notes[0]: null;;
+  } catch(err){
+    throw err || err.message;
+  }
+}
+
 export async function deleteNote(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
     const noteDeleted = await deleteNoteById(req.params.id);
@@ -94,7 +81,7 @@ export async function deleteNote(req: Request, res: Response, next: NextFunction
       res.status(500).json({ message: `Cannot delete resource`});
       return next(noteDeleted);
     }
-    socket.emit("delete-note", noteDeleted);
+    socket.emit(`delete-note-${noteDeleted?.sectionId}`, noteDeleted);
     return res.status(200).send(noteDeleted);
   } catch(err) {
     return res.status(500).send(err || err.message);

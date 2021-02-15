@@ -10,24 +10,6 @@ declare const sectionsLookup: {
                 let: {
                     reactions: string;
                 };
-                pipeline: {
-                    $match: {
-                        $expr: {
-                            $in: (string | {
-                                $ifNull: (string | never[])[];
-                            })[];
-                        };
-                        type: string;
-                    };
-                }[];
-                as: string;
-            };
-        } | {
-            $lookup: {
-                from: string;
-                let: {
-                    reactions: string;
-                };
                 pipeline: ({
                     $match: {
                         $expr: {
@@ -43,6 +25,24 @@ declare const sectionsLookup: {
                     };
                     $match?: undefined;
                 })[];
+                as: string;
+            };
+        } | {
+            $lookup: {
+                from: string;
+                let: {
+                    reactions: string;
+                };
+                pipeline: {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                        type: string;
+                    };
+                }[];
                 as: string;
             };
         } | {

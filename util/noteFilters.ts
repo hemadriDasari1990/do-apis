@@ -8,7 +8,7 @@ const reactionLookup = { "$lookup": {
       "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
     }},
     {
-      "$sort": {"_id": -1}
+      "$sort": {"_id": 1}
     }
   ],
   "as": "reactions"
