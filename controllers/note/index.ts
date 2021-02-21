@@ -74,6 +74,25 @@ async function getNoteDetails(noteId: string): Promise<any> {
   }
 }
 
+export async function markReadNote(req: Request, res: Response, next: NextFunction): Promise<any> {
+  try {
+    const query = { _id: mongoose.Types.ObjectId(req.params.id)},
+    update = { $set: {
+      read: req.body.read,
+    }};
+    const noteUpdated: any = await Note.findOneAndUpdate(query, update);
+    if (!noteUpdated) {
+      res.status(500).json({ message: `Cannot Update note`});
+      return next(noteUpdated);
+    }
+    noteUpdated.read = req.body.read;
+    await socket.emit(`mark-read-${noteUpdated?.sectionId}`, noteUpdated);
+    return res.status(200).send(noteUpdated);
+  } catch(err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
 export async function deleteNote(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
     const noteDeleted = await deleteNoteById(req.params.id);

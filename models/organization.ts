@@ -26,6 +26,9 @@ const OrganizationSchema = new Schema({
     type: String,
     required: true
   },
+  token: {
+    type: String,
+  },
   departments: [{
     type: Schema.Types.ObjectId, ref: 'Department'
   }],

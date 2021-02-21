@@ -13,6 +13,10 @@ const NoteSchema = new Schema({
     trim: true,
     minlength: 5
   },
+  read: {
+    type: Boolean,
+    default: false
+  },
   reactions : [
     { type: Schema.Types.ObjectId, ref: 'Reaction' }
   ]

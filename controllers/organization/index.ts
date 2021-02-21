@@ -5,9 +5,7 @@ import {
 } from '../../util/organizationFilters';
 
 import Organization from '../../models/organization';
-import bcrypt from "bcryptjs";
-import config from "config";
-import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import mongoose from 'mongoose';
 
 export async function createOrganization(req: Request, res: Response): Promise<any> {
@@ -16,54 +14,16 @@ export async function createOrganization(req: Request, res: Response): Promise<a
     if(organization){
       return res.status(400).json({ message: "Requested organization unique key already exist" });
     }
+    const hashedPassword = await bcrypt.hash(req.body.password, 10);
     const newOrganization: {[Key: string]: any} = new Organization({
       title: req.body.title,
       description: req.body.description,
       uniqueKey: req.body.uniqueKey,
-      password: req.body.password
+      password: hashedPassword
     });
-    const salt = await bcrypt.genSalt(10);
-    if (!salt) throw salt;
-    const hash = await bcrypt.hash(newOrganization.password, salt);
-    if (!hash) throw hash;
-    newOrganization.password = hash;
     const newOrg = await newOrganization.save();
+    newOrg.password = undefined;
     return res.status(200).json(newOrg)
-  } catch(err){
-    return res.status(500).send(err || err.message);
-  }
-};
-
-export async function login(req: Request, res: Response): Promise<any> {
-  try {
-    const uniqueKey: string = req.body.uniqueKey;
-    const password: string = req.body.password;
-    const organization: {[Key: string]: any} = await getOrganizationByUniqueKey(uniqueKey);
-    if(!organization?._id){
-      return res.status(404).json({ message: "Invalid unique key" });
-    }
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, organization.password);
-    if (!isPasswordValid) return res.status(404).json({ message: "Invalid Password" });
-    const payload = {
-      _id: organization._id,
-      title: organization.title
-    };
-
-    // Sign token
-    const token = await jwt.sign(
-      payload,
-      config.get("secret"),
-      {
-        expiresIn: 31556926 // 1 year in seconds
-      });
-    if(!token){
-      return res.status(500).json({ message: "Error while logging in" });
-    } 
-    return res.status(200).json({
-      success: true,
-      token: "Bearer " + token
-    });
   } catch(err){
     return res.status(500).send(err || err.message);
   }
@@ -77,7 +37,13 @@ export async function getOrganizationDetails(req: Request, res: Response): Promi
       departmentsLookup,
       organizationAddFields,
     ]);
-    return res.status(200).json(organizations ? organizations[0]: null);
+    const org: any = organizations ? organizations[0]: null;
+    if(org){
+      org.uniqueKey = undefined;
+      org.password = undefined;
+      org.token = undefined;
+    }
+    return res.status(200).json(org);
   } catch(err){
     return res.status(500).send(err || err.message);
   }
@@ -96,7 +62,7 @@ export async function deleteOrganization(req: Request, res: Response, next: Next
   }
 }
 
-async function getOrganizationByUniqueKey(uniqueKey: string): Promise<any> {
+export async function getOrganizationByUniqueKey(uniqueKey: string): Promise<any> {
   try {
     const organization = await Organization.findOne({ uniqueKey });
     return organization;

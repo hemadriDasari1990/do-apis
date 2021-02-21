@@ -65,7 +65,7 @@ export async function deleteProject(req: Request, res: Response, next: NextFunct
       res.status(500).json({ message: `Cannot delete resource`});
       return next(deleted);
     }
-    return res.status(200).send(deleted);
+    return res.status(200).json({ deleted: true });
   } catch(err) {
     return res.status(500).send(err || err.message);
   }

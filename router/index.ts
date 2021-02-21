@@ -1,19 +1,21 @@
+import { authenticateJWT, login } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
-import { createOrganization, deleteOrganization, getOrganizationDetails, login } from "../controllers/organization";
+import { createOrganization, deleteOrganization, getOrganizationDetails } from "../controllers/organization";
 import { createSection, deleteSection, getSectionsByBoardId, updateSection } from "../controllers/section";
 import { deleteBoard, getBoardDetails, updateBoard } from "../controllers/board";
 import { deleteDepartment, getDepartmentDetails, updateDepartment } from "../controllers/department";
-import { deleteNote, getNotesBySectionId, updateNote } from "../controllers/note";
+import { deleteNote, getNotesBySectionId, markReadNote, updateNote } from "../controllers/note";
 import { deleteProject, getProjectDetails, updateProject } from "../controllers/project";
 import express, { Application } from 'express';
 
 import { createOrUpdateReaction } from "../controllers/reaction";
+import { refreshToken } from "../controllers/auth"
 
 export default function (app: Application) {
   // Initializing route groups
   const apiRoutes = express.Router(),
+    authRoutes = express.Router(),
     organizationRoutes = express.Router(),
-    loginRoutes = express.Router(),
     departmentRoutes = express.Router(),
     projectRoutes = express.Router(),
     boardRoutes = express.Router(),
@@ -22,15 +24,19 @@ export default function (app: Application) {
     reactionRoutes = express.Router(),
     feedbackRoutes = express.Router();
 
+    
   //= ========================
-  // Login Routes
+  // Authentication Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/login', loginRoutes);
+  apiRoutes.use('/auth', authRoutes);
 
   // Login
-  loginRoutes.post('/', login);
+  authRoutes.post('/login', login);
+
+  // Login
+  authRoutes.post('/refresh-token', refreshToken);
 
   //= ========================
   // Organization Routes
@@ -40,13 +46,13 @@ export default function (app: Application) {
   apiRoutes.use('/organization', organizationRoutes);
 
   // Organization details route
-  organizationRoutes.get('/:id', getOrganizationDetails);
+  organizationRoutes.get('/:id', authenticateJWT, getOrganizationDetails);
 
   // Update or Create Organization
   organizationRoutes.post('/', createOrganization);
 
   // Organization delete route
-  organizationRoutes.delete('/:id', deleteOrganization);
+  organizationRoutes.delete('/:id', authenticateJWT, deleteOrganization);
 
   //= ========================
   // Department Routes
@@ -56,13 +62,13 @@ export default function (app: Application) {
   apiRoutes.use('/project', projectRoutes);
 
   // Project details route
-  projectRoutes.get('/:id', getProjectDetails);
+  projectRoutes.get('/:id', authenticateJWT, getProjectDetails);
 
   // Create or Update Project
-  projectRoutes.put('/', updateProject);
+  projectRoutes.put('/', authenticateJWT, updateProject);
 
   // Project delete route
-  projectRoutes.delete('/:id', deleteProject);
+  projectRoutes.delete('/:id', authenticateJWT, deleteProject);
 
   //= ========================
   // Project Routes
@@ -72,13 +78,13 @@ export default function (app: Application) {
   apiRoutes.use('/department', departmentRoutes);
 
   // Department details route
-  departmentRoutes.get('/:id', getDepartmentDetails);
+  departmentRoutes.get('/:id', authenticateJWT, getDepartmentDetails);
 
   // Create or Update Department
-  departmentRoutes.put('/', updateDepartment);
+  departmentRoutes.put('/', authenticateJWT, updateDepartment);
 
   // Department delete route
-  departmentRoutes.delete('/:id', deleteDepartment);
+  departmentRoutes.delete('/:id', authenticateJWT, deleteDepartment);
 
   //= ========================
   // Board Routes
@@ -91,10 +97,10 @@ export default function (app: Application) {
   boardRoutes.get('/:id', getBoardDetails);
 
   // Update or Create board
-  boardRoutes.put('/', updateBoard);
+  boardRoutes.put('/', authenticateJWT, updateBoard);
 
   // Board delete route
-  boardRoutes.delete('/:id', deleteBoard);
+  boardRoutes.delete('/:id', authenticateJWT, deleteBoard);
 
   //= ========================
   // Section Routes
@@ -107,13 +113,13 @@ export default function (app: Application) {
   sectionRoutes.get('/:boardId', getSectionsByBoardId);
 
   // Section creation route
-  sectionRoutes.post('/', createSection);
+  sectionRoutes.post('/', authenticateJWT, createSection);
 
   // Update or Create Section
-  sectionRoutes.put('/', updateSection);
+  sectionRoutes.put('/', authenticateJWT, updateSection);
 
   // Section delete route
-  sectionRoutes.delete('/:id', deleteSection);
+  sectionRoutes.delete('/:id', authenticateJWT, deleteSection);
 
   //= ========================
   // Note Routes
@@ -126,10 +132,13 @@ export default function (app: Application) {
   noteRoutes.get('/:sectionId', getNotesBySectionId);
 
   // Note or Create board
-  noteRoutes.put('/', updateNote);
+  noteRoutes.put('/', authenticateJWT, updateNote);
+
+  // Mark read
+  noteRoutes.put('/:id/mark-read', authenticateJWT, markReadNote);
 
   // Note delete route
-  noteRoutes.delete('/:id', deleteNote);
+  noteRoutes.delete('/:id', authenticateJWT, deleteNote);
 
   //= ========================
   // Like Routes

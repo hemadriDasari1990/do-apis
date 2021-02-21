@@ -11,17 +11,14 @@ import mongoose from 'mongoose';
 
 export async function updateDepartment(req: Request, res: Response, next: NextFunction): Promise<any> {
   try {
-    const query = { _id: mongoose.Types.ObjectId(req.body.projectId) },
-     update = { $set: {
+    const update = {
       title: req.body.title,
       description: req.body.description,
       organizationId: req.body.organizationId
-    }},
-    options = { upsert: true, new: true, setDefaultsOnInsert: true };
-    const updated = await Department.findOneAndUpdate(query, update, options);
-    if(!updated) { 
-      return next(updated); 
-    }
+    };
+    const options = { upsert: true, new: true };
+    const updated: any = await Department.findByIdAndUpdate(req.body.departmentId ? req.body.departmentId: new mongoose.Types.ObjectId(), update, options);
+    if(!updated){ return next(updated);}
     await addDepartmentToOrganization(updated?._id, req.body.organizationId);
     return res.status(200).send(updated);
   } catch(err){
@@ -51,7 +48,7 @@ export async function deleteDepartment(req: Request, res: Response, next: NextFu
       res.status(500).json({ message: `Cannot delete resource`});
       return next(deleted);
     }
-    return res.status(200).send(deleted);
+    return res.status(200).json({ deleted: true });
   } catch(err) {
     return res.status(500).send(err || err.message);
   }
