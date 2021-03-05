@@ -4,5 +4,14 @@
 	"accessTokenSecret": "letsdoretro",
 	"refreshTokenSecret": "letsdoretro12345",
 	"database": "mongodb://localhost:27017/lets-do-retro",
-  	"port": 3001
+	"port": 3001,
+	"bcryptSalt": 10,
+	"email": {
+		"from": "letsdoretro@gmail.com",
+		"host": "smtp.gmail.com",
+		"port": 587,
+		"user": "letsdoretro@gmail.com",
+		"password": "quwxwozcwytvoiap"
+	},
+	"url": "http://www.letsdoretro.com"
 }

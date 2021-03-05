@@ -1,17 +1,49 @@
-import { authenticateJWT, login } from "../controllers/auth";
+import {
+  authenticateJWT,
+  login,
+  resendToken,
+  verifyAccount,
+} from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
-import { createOrganization, deleteOrganization, getOrganizationDetails } from "../controllers/organization";
-import { createSection, deleteSection, getSectionsByBoardId, updateSection } from "../controllers/section";
-import { deleteBoard, getBoardDetails, updateBoard } from "../controllers/board";
-import { deleteDepartment, getDepartmentDetails, updateDepartment } from "../controllers/department";
-import { deleteNote, getNotesBySectionId, markReadNote, updateNote } from "../controllers/note";
-import { deleteProject, getProjectDetails, updateProject } from "../controllers/project";
-import express, { Application } from 'express';
+import {
+  createOrganization,
+  deleteOrganization,
+  getOrganizationDetails,
+} from "../controllers/organization";
+import {
+  createSection,
+  deleteSection,
+  getSectionsByBoardId,
+  updateSection,
+} from "../controllers/section";
+import {
+  deleteBoard,
+  getBoardDetails,
+  startOrCompleteBoard,
+  updateBoard,
+} from "../controllers/board";
+import {
+  deleteDepartment,
+  getDepartmentDetails,
+  updateDepartment,
+} from "../controllers/department";
+import {
+  deleteNote,
+  getNotesBySectionId,
+  markReadNote,
+  updateNote,
+} from "../controllers/note";
+import {
+  deleteProject,
+  getProjectDetails,
+  updateProject,
+} from "../controllers/project";
+import express, { Application } from "express";
 
 import { createOrUpdateReaction } from "../controllers/reaction";
-import { refreshToken } from "../controllers/auth"
+import { refreshToken } from "../controllers/auth";
 
-export default function (app: Application) {
+export default function(app: Application) {
   // Initializing route groups
   const apiRoutes = express.Router(),
     authRoutes = express.Router(),
@@ -24,146 +56,153 @@ export default function (app: Application) {
     reactionRoutes = express.Router(),
     feedbackRoutes = express.Router();
 
-    
   //= ========================
   // Authentication Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/auth', authRoutes);
+  apiRoutes.use("/auth", authRoutes);
 
   // Login
-  authRoutes.post('/login', login);
+  authRoutes.post("/login", login);
 
-  // Login
-  authRoutes.post('/refresh-token', refreshToken);
+  // refresh token
+  authRoutes.post("/refresh-token", refreshToken);
+
+  // verify account
+  authRoutes.post("/verify-token", verifyAccount);
+
+  // resend verification token
+  authRoutes.post("/resend-token", resendToken);
 
   //= ========================
   // Organization Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/organization', organizationRoutes);
+  apiRoutes.use("/organization", organizationRoutes);
 
   // Organization details route
-  organizationRoutes.get('/:id', authenticateJWT, getOrganizationDetails);
+  organizationRoutes.get("/:id", authenticateJWT, getOrganizationDetails);
 
   // Update or Create Organization
-  organizationRoutes.post('/', createOrganization);
+  organizationRoutes.post("/", createOrganization);
 
   // Organization delete route
-  organizationRoutes.delete('/:id', authenticateJWT, deleteOrganization);
+  organizationRoutes.delete("/:id", authenticateJWT, deleteOrganization);
 
   //= ========================
   // Department Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/project', projectRoutes);
+  apiRoutes.use("/project", projectRoutes);
 
   // Project details route
-  projectRoutes.get('/:id', authenticateJWT, getProjectDetails);
+  projectRoutes.get("/:id", authenticateJWT, getProjectDetails);
 
   // Create or Update Project
-  projectRoutes.put('/', authenticateJWT, updateProject);
+  projectRoutes.put("/", authenticateJWT, updateProject);
 
   // Project delete route
-  projectRoutes.delete('/:id', authenticateJWT, deleteProject);
+  projectRoutes.delete("/:id", authenticateJWT, deleteProject);
 
   //= ========================
   // Project Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/department', departmentRoutes);
+  apiRoutes.use("/department", departmentRoutes);
 
   // Department details route
-  departmentRoutes.get('/:id', authenticateJWT, getDepartmentDetails);
+  departmentRoutes.get("/:id", authenticateJWT, getDepartmentDetails);
 
   // Create or Update Department
-  departmentRoutes.put('/', authenticateJWT, updateDepartment);
+  departmentRoutes.put("/", authenticateJWT, updateDepartment);
 
   // Department delete route
-  departmentRoutes.delete('/:id', authenticateJWT, deleteDepartment);
+  departmentRoutes.delete("/:id", authenticateJWT, deleteDepartment);
 
   //= ========================
   // Board Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/board', boardRoutes);
+  apiRoutes.use("/board", boardRoutes);
 
   // Board details route
-  boardRoutes.get('/:id', getBoardDetails);
+  boardRoutes.get("/:id", getBoardDetails);
 
   // Update or Create board
-  boardRoutes.put('/', authenticateJWT, updateBoard);
+  boardRoutes.put("/", authenticateJWT, updateBoard);
 
   // Board delete route
-  boardRoutes.delete('/:id', authenticateJWT, deleteBoard);
+  boardRoutes.delete("/:id", authenticateJWT, deleteBoard);
+
+  // Start or complete the board
+  boardRoutes.put("/:id/:action", authenticateJWT, startOrCompleteBoard);
 
   //= ========================
   // Section Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/section', sectionRoutes);
+  apiRoutes.use("/section", sectionRoutes);
 
   // Section details route
-  sectionRoutes.get('/:boardId', getSectionsByBoardId);
+  sectionRoutes.get("/:boardId", getSectionsByBoardId);
 
   // Section creation route
-  sectionRoutes.post('/', authenticateJWT, createSection);
+  sectionRoutes.post("/", authenticateJWT, createSection);
 
   // Update or Create Section
-  sectionRoutes.put('/', authenticateJWT, updateSection);
+  sectionRoutes.put("/", authenticateJWT, updateSection);
 
   // Section delete route
-  sectionRoutes.delete('/:id', authenticateJWT, deleteSection);
+  sectionRoutes.delete("/:id", authenticateJWT, deleteSection);
 
   //= ========================
   // Note Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/note', noteRoutes);
+  apiRoutes.use("/note", noteRoutes);
 
   // Note details route
-  noteRoutes.get('/:sectionId', getNotesBySectionId);
+  noteRoutes.get("/:sectionId", getNotesBySectionId);
 
   // Note or Create board
-  noteRoutes.put('/', authenticateJWT, updateNote);
+  noteRoutes.put("/", authenticateJWT, updateNote);
 
   // Mark read
-  noteRoutes.put('/:id/mark-read', authenticateJWT, markReadNote);
+  noteRoutes.put("/:id/mark-read", authenticateJWT, markReadNote);
 
   // Note delete route
-  noteRoutes.delete('/:id', authenticateJWT, deleteNote);
+  noteRoutes.delete("/:id", authenticateJWT, deleteNote);
 
   //= ========================
   // Like Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/react', reactionRoutes);
+  apiRoutes.use("/react", reactionRoutes);
 
   // Like creation route
-  reactionRoutes.put('/', createOrUpdateReaction);
+  reactionRoutes.put("/", createOrUpdateReaction);
 
   //= ========================
   // Feedback Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use('/feedback', feedbackRoutes);
+  apiRoutes.use("/feedback", feedbackRoutes);
 
   // Feedback creation route
-  feedbackRoutes.post('/', createFeedback);
+  feedbackRoutes.post("/", createFeedback);
 
   // Get Feedbacks
-  feedbackRoutes.get('/', getFeedbacks);
+  feedbackRoutes.get("/", getFeedbacks);
 
   // Set url for API group routes
-  app.use('/', apiRoutes);
-
-};
+  app.use("/", apiRoutes);
+}

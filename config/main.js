@@ -10,5 +10,14 @@ module.exports = {
   // necessary in order to run tests in parallel of the main app
   test_port: 3001,
   test_db: 'lets-do-retro',
-  test_env: 'test'
+  test_env: 'test',
+  bcryptSalt: 10,
+  "email": {
+    "from": "letsdoretro@gmail.com",
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "user": "letsdoretro@gmail.com",
+    "password": "quwxwozcwytvoiap" //nodemailer
+  },
+  "url": "http://localhost:3000",
 };

@@ -1,44 +1,52 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  projectAddFields,
-  projectsLookup
-} from '../../util/projectFilters';
+import { projectAddFields, projectsLookup } from "../../util/projectFilters";
 
-import Project from '../../models/project';
+import Project from "../../models/project";
 import { addProjectToDepartment } from "../department";
 import { findBoardsByProjectAndDelete } from "../board";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-export async function updateProject(req: Request, res: Response, next: NextFunction): Promise<any> {
+export async function updateProject(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(req.body.projectId) },
-     update = { $set: {
-      title: req.body.title,
-      description: req.body.description,
-      departmentId: req.body.departmentId
-    }},
-    options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      update = {
+        $set: {
+          title: req.body.title,
+          description: req.body.description,
+          departmentId: req.body.departmentId,
+          status: req.body.status || "active",
+          private: req.body.private || false,
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated = await Project.findOneAndUpdate(query, update, options);
-    if(!updated) { 
-      return next(updated); 
+    if (!updated) {
+      return next(updated);
     }
     await addProjectToDepartment(updated?._id, req.body.departmentId);
     return res.status(200).send(updated);
-  } catch(err){
+  } catch (err) {
     return res.status(500).send(err || err.message);
   }
-};
+}
 
-export async function getProjectDetails(req: Request, res: Response): Promise<any> {
+export async function getProjectDetails(
+  req: Request,
+  res: Response
+): Promise<any> {
   try {
-    const query = {_id: mongoose.Types.ObjectId(req.params.id)};
+    const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const projects = await Project.aggregate([
-      { "$match": query },
+      { $match: query },
       projectsLookup,
-      projectAddFields
+      projectAddFields,
     ]);
-    return res.status(200).json(projects ? projects[0]: null);
-  } catch(err){
+    return res.status(200).json(projects ? projects[0] : null);
+  } catch (err) {
     return res.status(500).send(err || err.message);
   }
 }
@@ -57,62 +65,73 @@ export async function getProjectDetails(req: Request, res: Response): Promise<an
 //   }
 // }
 
-export async function deleteProject(req: Request, res: Response, next: NextFunction): Promise<any> {
+export async function deleteProject(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<any> {
   try {
     await findBoardsByProjectAndDelete(req.params.id);
     const deleted = await Project.findByIdAndRemove(req.params.id);
     if (!deleted) {
-      res.status(500).json({ message: `Cannot delete resource`});
+      res.status(500).json({ message: `Cannot delete resource` });
       return next(deleted);
     }
     return res.status(200).json({ deleted: true });
-  } catch(err) {
+  } catch (err) {
     return res.status(500).send(err || err.message);
   }
 }
 
-export async function addBoardToProject(boardId: string, projectId: string) : Promise<any> {
+export async function addBoardToProject(
+  boardId: string,
+  projectId: string
+): Promise<any> {
   try {
-    if(!boardId || !projectId){
+    if (!boardId || !projectId) {
       return;
     }
     const updated = await Project.findByIdAndUpdate(
       projectId,
-      { $push: { boards: boardId }},
+      { $push: { boards: boardId } },
       { new: true, useFindAndModify: false }
     );
     return updated;
-  } catch(err){
+  } catch (err) {
     throw `Error while adding note to section ${err || err.message}`;
   }
 }
 
-export async function findProjectsByDepartmentAndDelete(departmentId: string): Promise<any> {
+export async function findProjectsByDepartmentAndDelete(
+  departmentId: string
+): Promise<any> {
   try {
     const projectsList = await getProjectsByDepartment(departmentId);
-    if(!projectsList?.length){
+    if (!projectsList?.length) {
       return;
     }
-    const deleted = projectsList.reduce(async (promise: Promise<any>, project: {[Key: string]: any}) => {
-      await promise;
-      // await findSectionsByBoardAndDelete(board._id)
-      // await deleteNoteById(board._id);
-      console.log(project)
-    }, [Promise.resolve()]);
+    const deleted = projectsList.reduce(
+      async (promise: Promise<any>, project: { [Key: string]: any }) => {
+        await promise;
+        // await findSectionsByBoardAndDelete(board._id)
+        // await deleteNoteById(board._id);
+        console.log(project);
+      },
+      [Promise.resolve()]
+    );
     return deleted;
-  } catch(err) {
+  } catch (err) {
     throw err || err.message;
   }
 }
 
-
-async function getProjectsByDepartment(departmentId: string):Promise<any> {
+async function getProjectsByDepartment(departmentId: string): Promise<any> {
   try {
-    if(!departmentId){
+    if (!departmentId) {
       return;
     }
     return await Project.find({ departmentId });
-  } catch(err) {
+  } catch (err) {
     throw `Error while fetching projects ${err || err.message}`;
   }
 }

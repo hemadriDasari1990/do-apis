@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('./head'); %>
+    <script>
+
+    </script>
+</head>
+
+<body class="container">
+    <header>
+        <%- include('./header'); %>
+    </header>
+    <div class="container">
+        <div>
+            <img src="/assets/images/welcome.svg" class="card-img-top" width="fit-content" height="fit-content" />
+        </div>
+        <div>
+            <h2>Let's organize all your departments, projects and product development team's Retro's</h2>
+        </div>
+        <div>
+            <p>Nice to meet you, <%= name %> :)</p>
+            <p>
+                With letsdoretro.com, you can organize all team's retro boards in one place and can access any time with
+                one account and run retros differently with customer friendly User Interface with reactions.
+            </p>
+            <button type="button" class="btn btn-primary" onclick="">Go to your account</button>
+        </div>
+    </div>
+    <footer>
+        <%- include('./footer'); %>
+    </footer>
+
+</body>
+
+</html>
