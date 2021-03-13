@@ -1,37 +1,86 @@
-import Board from '../models/board';
-import Project from '../models/project';
+import {
+  activeProjectsLookup,
+  inActiveProjectsLookup,
+  privateProjectsLookup,
+  projectAddFields,
+  projectsLookup,
+  publicProjectsLookup,
+} from "./projectFilters";
 
-const departmentsLookup = { "$lookup": {
-    "from": Project.collection.name,
-    "let": { "projects": "$projects" },
-    "pipeline": [
-      { "$match": {
-        "$expr": { "$in": ["$_id", {$ifNull :['$$projects',[]]}] },
-      }},
+import Department from "../models/department";
+
+const departmentsLookup = {
+  $lookup: {
+    from: Department.collection.name,
+    let: { departments: "$departments" },
+    pipeline: [
       {
-        "$sort": {"_id": 1}
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$departments", []] }] },
+        },
       },
-      { "$lookup": {
-        "from": Board.collection.name,
-        "let": { "boards": "$boards" },
-        "pipeline": [
-          { "$match": {
-            "$expr": { "$in": ["$_id", {$ifNull :['$$boards',[]]}] },
-          }},
-        ],
-        "as": "boards"
-      }},
-      { "$addFields": {
-        "totalBoards": { "$sum": { "$size": { "$ifNull": [ "$boards", [] ] }}},
-      }},
+      {
+        $sort: { _id: 1 },
+      },
+      projectsLookup,
+      activeProjectsLookup,
+      inActiveProjectsLookup,
+      privateProjectsLookup,
+      publicProjectsLookup,
+      projectAddFields,
     ],
-    "as": "projects"
-  }}
-  
-  const departmentAddFields = { "$addFields": {
-    "projects": "$projects",
-    "totalProjects": { "$size": { "$ifNull": [ "$projects", 0 ] }},
-  }};
-  
-  export { departmentsLookup, departmentAddFields };
-  
+    as: "departments",
+  },
+};
+
+const inActiveDepartmentsLookup = {
+  $lookup: {
+    from: Department.collection.name,
+    let: { departments: "$departments" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$departments", []] }] },
+          status: "inactive",
+        },
+      },
+    ],
+    as: "inActiveDepartments",
+  },
+};
+
+const activeDepartmentsLookup = {
+  $lookup: {
+    from: Department.collection.name,
+    let: { departments: "$departments" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$departments", []] }] },
+          status: "active",
+        },
+      },
+    ],
+    as: "activeDepartments",
+  },
+};
+
+const departmentAddFields = {
+  $addFields: {
+    departments: "$departments",
+    activeDepartments: "$activeDepartments",
+    inActiveDepartments: "$inActiveDepartments",
+    totalDepartments: { $size: { $ifNull: ["$departments", []] } },
+    totalActiveDepartments: { $size: { $ifNull: ["$activeDepartments", []] } },
+    totalInActiveDepartments: {
+      $size: { $ifNull: ["$inActiveDepartments", []] },
+    },
+  },
+};
+
+export {
+  departmentsLookup,
+  departmentAddFields,
+  inActiveDepartmentsLookup,
+  activeDepartmentsLookup,
+};

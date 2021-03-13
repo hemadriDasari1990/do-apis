@@ -25,9 +25,6 @@ const BoardSchema = new Schema(
       type: Number,
       default: 0,
     },
-    duration: {
-      type: String,
-    },
     status: {
       type: String,
       required: true,
@@ -37,11 +34,15 @@ const BoardSchema = new Schema(
     },
     startedAt: {
       type: Date,
-      default: Date.now,
+      default: null,
     },
     completedAt: {
       type: Date,
-      default: Date.now,
+      default: null,
+    },
+    isLocked: {
+      type: Boolean,
+      default: false,
     },
     sections: [
       {

@@ -2,31 +2,136 @@ declare const departmentsLookup: {
     $lookup: {
         from: string;
         let: {
-            projects: string;
+            departments: string;
         };
         pipeline: ({
-            $match: {
-                $expr: {
-                    $in: (string | {
-                        $ifNull: (string | never[])[];
-                    })[];
+            $lookup: {
+                from: string;
+                let: {
+                    projects: string;
                 };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            boards: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    sections: string;
+                                };
+                                pipeline: ({
+                                    $match: {
+                                        $expr: {
+                                            $in: (string | {
+                                                $ifNull: (string | never[])[];
+                                            })[];
+                                        };
+                                    };
+                                    $sort?: undefined;
+                                } | {
+                                    $sort: {
+                                        _id: number;
+                                    };
+                                    $match?: undefined;
+                                })[];
+                                as: string;
+                            };
+                        } | {
+                            $addFields: {
+                                sections: string;
+                                totalSections: {
+                                    $size: {
+                                        $ifNull: (string | never[])[];
+                                    };
+                                };
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $sort?: undefined;
+                        } | {
+                            $sort: {
+                                _id: number;
+                            };
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $lookup: {
+                        from: string;
+                        let: {
+                            boards: string;
+                        };
+                        pipeline: {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                                status: string;
+                            };
+                        }[];
+                        as: string;
+                    };
+                } | {
+                    $addFields: {
+                        boards: string;
+                        inProgressBoards: string;
+                        newBoards: string;
+                        completedBoards: string;
+                        totalBoards: {
+                            $size: {
+                                $ifNull: (string | never[])[];
+                            };
+                        };
+                        totalInProgressBoards: {
+                            $size: {
+                                $ifNull: (string | never[])[];
+                            };
+                        };
+                        totalNewBoards: {
+                            $size: {
+                                $ifNull: (string | never[])[];
+                            };
+                        };
+                        totalCompletedBoards: {
+                            $size: {
+                                $ifNull: (string | never[])[];
+                            };
+                        };
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                    };
+                    $sort?: undefined;
+                } | {
+                    $sort: {
+                        _id: number;
+                    };
+                    $match?: undefined;
+                })[];
+                as: string;
             };
-            $sort?: undefined;
-            $lookup?: undefined;
-            $addFields?: undefined;
-        } | {
-            $sort: {
-                _id: number;
-            };
-            $match?: undefined;
-            $lookup?: undefined;
-            $addFields?: undefined;
         } | {
             $lookup: {
                 from: string;
                 let: {
-                    boards: string;
+                    projects: string;
                 };
                 pipeline: {
                     $match: {
@@ -35,38 +140,121 @@ declare const departmentsLookup: {
                                 $ifNull: (string | never[])[];
                             })[];
                         };
+                        status: string;
                     };
                 }[];
                 as: string;
             };
-            $match?: undefined;
-            $sort?: undefined;
-            $addFields?: undefined;
+        } | {
+            $lookup: {
+                from: string;
+                let: {
+                    projects: string;
+                };
+                pipeline: {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                        private: boolean;
+                    };
+                }[];
+                as: string;
+            };
         } | {
             $addFields: {
-                totalBoards: {
-                    $sum: {
-                        $size: {
-                            $ifNull: (string | never[])[];
-                        };
+                projects: string;
+                activeProjects: string;
+                inActiveProjects: string;
+                privateProjects: string;
+                publicProjects: string;
+                totalProjects: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalActiveProjects: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalInActiveProjects: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalPrivateProjects: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalPublicProjects: {
+                    $size: {
+                        $ifNull: (string | never[])[];
                     };
                 };
             };
-            $match?: undefined;
+        } | {
+            $match: {
+                $expr: {
+                    $in: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+            };
             $sort?: undefined;
-            $lookup?: undefined;
+        } | {
+            $sort: {
+                _id: number;
+            };
+            $match?: undefined;
         })[];
+        as: string;
+    };
+};
+declare const inActiveDepartmentsLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            departments: string;
+        };
+        pipeline: {
+            $match: {
+                $expr: {
+                    $in: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+                status: string;
+            };
+        }[];
+        as: string;
+    };
+};
+declare const activeDepartmentsLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            departments: string;
+        };
+        pipeline: {
+            $match: {
+                $expr: {
+                    $in: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+                status: string;
+            };
+        }[];
         as: string;
     };
 };
 declare const departmentAddFields: {
     $addFields: {
-        projects: string;
-        totalProjects: {
-            $size: {
-                $ifNull: (string | number)[];
-            };
-        };
+        departments: string;
     };
 };
-export { departmentsLookup, departmentAddFields };
+export { departmentsLookup, departmentAddFields, inActiveDepartmentsLookup, activeDepartmentsLookup, };

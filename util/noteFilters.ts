@@ -1,95 +1,46 @@
-import Reaction from '../models/reaction';
-
-const reactionLookup = { "$lookup": {
-  "from": Reaction.collection.name,
-  "let": { "reactions": "$reactions" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
-    }},
-    {
-      "$sort": {"_id": 1}
-    }
-  ],
-  "as": "reactions"
-}}
-
-const reactionPlusOneLookup = { "$lookup": {
-  "from": Reaction.collection.name,
-  "let": { "reactions": "$reactions" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
-      "type": "plusOne"
-    }}
-  ],
-  "as": "plusOneReactions"
-}}
-
-const reactionPlusTwoLookup = { "$lookup": {
-  "from": Reaction.collection.name,
-  "let": { "reactions": "$reactions" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
-      "type": "plusTwo"
-    }}
-  ],
-  "as": "plusTwoReactions"
-}}
-
-const reactionDeserveLookup = { "$lookup": {
-  "from": Reaction.collection.name,
-  "let": { "reactions": "$reactions" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
-      "type": "deserve"
-    }}
-  ],
-  "as": "deserveReactions"
-}}
-
-const reactionDisAgreeLookup = { "$lookup": {
-  "from": Reaction.collection.name,
-  "let": { "reactions": "$reactions" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
-      "type": "disagree"
-    }}
-  ],
-  "as": "disAgreeReactions"
-}}
-
-const reactionLoveLookup = { "$lookup": {
-  "from": Reaction.collection.name,
-  "let": { "reactions": "$reactions" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$reactions',[]]}] },
-      "type": "love"
-    }}
-  ],
-  "as": "loveReactions"
-}}
-
-
-const noteAddFields = { "$addFields": {
-  "totalReactions": { "$size": { "$ifNull": [ "$reactions", [] ] }},
-  "totalPlusOne": { "$size": { "$ifNull": [ "$plusOneReactions", [] ] }},
-  "totalPlusTwo": { "$size": { "$ifNull": [ "$plusTwoReactions", [] ] }},
-  "totalDeserve": { "$size": { "$ifNull": [ "$deserveReactions", [] ] }},
-  "totalDisAgreed": { "$size": { "$ifNull": [ "$disAgreeReactions", [] ] }},
-  "totalLove": { "$size": { "$ifNull": [ "$loveReactions", [] ] }},
-}};
-
-export { 
-  noteAddFields,
-  reactionLookup,
-  reactionPlusOneLookup,
-  reactionPlusTwoLookup,
+import {
+  reactionAddFields,
   reactionDeserveLookup,
   reactionDisAgreeLookup,
-  reactionLoveLookup
+  reactionLookup,
+  reactionLoveLookup,
+  reactionPlusOneLookup,
+  reactionPlusTwoLookup,
+} from "./reactionFilters";
+
+import Note from "../models/note";
+
+const noteAddFields = {
+  $addFields: {
+    notes: "$notes",
+    totalNotes: { $size: { $ifNull: ["$notes", []] } },
+  },
 };
+
+const notesLookup = {
+  $lookup: {
+    from: Note.collection.name,
+    let: { notes: "$notes" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$notes", []] }] },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+      reactionDisAgreeLookup,
+      reactionPlusTwoLookup,
+      reactionPlusOneLookup,
+      reactionDeserveLookup,
+      reactionLoveLookup,
+      reactionLookup,
+      noteAddFields,
+      reactionAddFields,
+    ],
+    as: "notes",
+  },
+};
+
+export { noteAddFields, notesLookup };

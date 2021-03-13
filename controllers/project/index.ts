@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { projectAddFields, projectsLookup } from "../../util/projectFilters";
+import { boardAddFields, boardsLookup } from "../../util/boardFilters";
 
 import Project from "../../models/project";
 import { addProjectToDepartment } from "../department";
@@ -42,8 +42,8 @@ export async function getProjectDetails(
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const projects = await Project.aggregate([
       { $match: query },
-      projectsLookup,
-      projectAddFields,
+      boardsLookup,
+      boardAddFields,
     ]);
     return res.status(200).json(projects ? projects[0] : null);
   } catch (err) {

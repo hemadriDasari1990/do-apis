@@ -1,39 +1,28 @@
-import {
-  noteAddFields,
-  reactionDeserveLookup,
-  reactionDisAgreeLookup,
-  reactionLookup,
-  reactionLoveLookup,
-  reactionPlusOneLookup,
-  reactionPlusTwoLookup
-} from "./noteFilters";
+import Section from "../models/section";
 
-import Note from '../models/note';
+const sectionsLookup = {
+  $lookup: {
+    from: Section.collection.name,
+    let: { sections: "$sections" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$sections", []] }] },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ],
+    as: "sections",
+  },
+};
 
-const sectionsLookup = { "$lookup": {
-  "from": Note.collection.name,
-  "let": { "notes": "$notes" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$notes',[]]}] },
-    }},
-    {
-      "$sort": {"_id": 1}
-    },
-    reactionDisAgreeLookup,
-    reactionPlusTwoLookup,
-    reactionPlusOneLookup,
-    reactionDeserveLookup,
-    reactionLoveLookup,
-    reactionLookup,
-    noteAddFields,
-  ],
-  "as": "notes"
-}}
-
-const sectionAddFields = { "$addFields": {
-  "notes": "$notes",
-  "totalNotes": { "$size": { "$ifNull": [ "$notes", 0 ] }},
-}};
+const sectionAddFields = {
+  $addFields: {
+    sections: "$sections",
+    totalSections: { $size: { $ifNull: ["$sections", []] } },
+  },
+};
 
 export { sectionsLookup, sectionAddFields };

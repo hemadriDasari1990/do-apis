@@ -1,42 +1,10 @@
-declare const boardsLookup: {
+declare const reactionLookup: {
     $lookup: {
         from: string;
         let: {
-            boards: string;
+            reactions: string;
         };
         pipeline: ({
-            $lookup: {
-                from: string;
-                let: {
-                    sections: string;
-                };
-                pipeline: ({
-                    $match: {
-                        $expr: {
-                            $in: (string | {
-                                $ifNull: (string | never[])[];
-                            })[];
-                        };
-                    };
-                    $sort?: undefined;
-                } | {
-                    $sort: {
-                        _id: number;
-                    };
-                    $match?: undefined;
-                })[];
-                as: string;
-            };
-        } | {
-            $addFields: {
-                sections: string;
-                totalSections: {
-                    $size: {
-                        $ifNull: (string | never[])[];
-                    };
-                };
-            };
-        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -54,11 +22,11 @@ declare const boardsLookup: {
         as: string;
     };
 };
-declare const inProgressBoardsLookup: {
+declare const reactionPlusOneLookup: {
     $lookup: {
         from: string;
         let: {
-            boards: string;
+            reactions: string;
         };
         pipeline: {
             $match: {
@@ -67,17 +35,17 @@ declare const inProgressBoardsLookup: {
                         $ifNull: (string | never[])[];
                     })[];
                 };
-                status: string;
+                type: string;
             };
         }[];
         as: string;
     };
 };
-declare const completedBoardsLookup: {
+declare const reactionPlusTwoLookup: {
     $lookup: {
         from: string;
         let: {
-            boards: string;
+            reactions: string;
         };
         pipeline: {
             $match: {
@@ -86,17 +54,17 @@ declare const completedBoardsLookup: {
                         $ifNull: (string | never[])[];
                     })[];
                 };
-                status: string;
+                type: string;
             };
         }[];
         as: string;
     };
 };
-declare const newBoardsLookup: {
+declare const reactionDeserveLookup: {
     $lookup: {
         from: string;
         let: {
-            boards: string;
+            reactions: string;
         };
         pipeline: {
             $match: {
@@ -105,38 +73,82 @@ declare const newBoardsLookup: {
                         $ifNull: (string | never[])[];
                     })[];
                 };
-                status: string;
+                type: string;
             };
         }[];
         as: string;
     };
 };
-declare const boardAddFields: {
+declare const reactionDisAgreeLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            reactions: string;
+        };
+        pipeline: {
+            $match: {
+                $expr: {
+                    $in: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+                type: string;
+            };
+        }[];
+        as: string;
+    };
+};
+declare const reactionLoveLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            reactions: string;
+        };
+        pipeline: {
+            $match: {
+                $expr: {
+                    $in: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+                type: string;
+            };
+        }[];
+        as: string;
+    };
+};
+declare const reactionAddFields: {
     $addFields: {
-        boards: string;
-        inProgressBoards: string;
-        newBoards: string;
-        completedBoards: string;
-        totalBoards: {
+        totalReactions: {
             $size: {
                 $ifNull: (string | never[])[];
             };
         };
-        totalInProgressBoards: {
+        totalPlusOne: {
             $size: {
                 $ifNull: (string | never[])[];
             };
         };
-        totalNewBoards: {
+        totalPlusTwo: {
             $size: {
                 $ifNull: (string | never[])[];
             };
         };
-        totalCompletedBoards: {
+        totalDeserve: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalDisAgreed: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalLove: {
             $size: {
                 $ifNull: (string | never[])[];
             };
         };
     };
 };
-export { boardsLookup, boardAddFields, newBoardsLookup, inProgressBoardsLookup, completedBoardsLookup, };
+export { reactionLookup, reactionPlusOneLookup, reactionPlusTwoLookup, reactionDeserveLookup, reactionDisAgreeLookup, reactionLoveLookup, reactionAddFields, };

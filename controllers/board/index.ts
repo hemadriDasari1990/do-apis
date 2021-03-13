@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { boardAddFields, sectionsLookup } from "../../util/boardFilters";
+import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 import Board from "../../models/board";
 import { addBoardToProject } from "../project";
@@ -37,7 +37,6 @@ export async function updateBoard(
           title: req.body.title,
           description: req.body.description,
           sprint: req.body.sprint,
-          duration: req.body.duration,
           projectId: req.body.projectId,
           status: req.body.status || "pending",
         },
@@ -71,17 +70,20 @@ export async function startOrCompleteBoard(
   next: NextFunction
 ): Promise<any> {
   try {
-    const query = { _id: mongoose.Types.ObjectId(req.body.boardId) },
+    const query = { _id: mongoose.Types.ObjectId(req.body.id) },
       update =
         req.params.action === "start"
           ? {
               $set: {
                 startedAt: req.body.startedAt,
+                status: "inprogress",
               },
             }
           : {
               $set: {
                 completedAt: req.body.completedAt,
+                status: "completed",
+                isLocked: true,
               },
             };
     const updated = await Board.findOneAndUpdate(query, update);
@@ -113,7 +115,7 @@ async function getBoardDetailsLocal(boardId: string): Promise<any> {
     const boards = await Board.aggregate([
       { $match: query },
       sectionsLookup,
-      boardAddFields,
+      sectionAddFields,
     ]);
     return boards ? boards[0] : null;
   } catch (err) {
@@ -153,6 +155,7 @@ export async function findBoardsByProjectAndDelete(
         await promise;
         // await findSectionsByBoardAndDelete(board._id)
         // await deleteNoteById(board._id);
+        console.log(board);
       },
       [Promise.resolve()]
     );

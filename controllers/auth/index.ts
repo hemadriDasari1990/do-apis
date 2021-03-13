@@ -260,6 +260,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
         .status(500)
         .json({ errorId: "NOT_FOUND", message: "Token is required" });
     }
+    const emailService = await new EmailService();
     const token: any = await Token.findOne({
       token: req.body.token,
     });
@@ -296,6 +297,16 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
         message: "Error while verifying the account ",
       });
     }
+    await emailService.sendEmail(
+      "/templates/welcome.ejs",
+      {
+        url: config.get("url"),
+        login_link: `${config.get("url")}/login`,
+        name: organization.title,
+      },
+      organization.email,
+      "Welcome to letsdoretro.com"
+    );
     return res
       .status(200)
       .json({ message: "The account has been verified. Please login!" });

@@ -1,8 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  departmentAddFields,
-  departmentsLookup,
-} from "../../util/departmentFilters";
+import { projectAddFields, projectsLookup } from "../../util/projectFilters";
 
 import Department from "../../models/department";
 import { addDepartmentToOrganization } from "../organization";
@@ -45,12 +42,12 @@ export async function getDepartmentDetails(
 ): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
-    const organizations = await Department.aggregate([
+    const departments = await Department.aggregate([
       { $match: query },
-      departmentsLookup,
-      departmentAddFields,
+      projectsLookup,
+      projectAddFields,
     ]);
-    return res.status(200).json(organizations ? organizations[0] : null);
+    return res.status(200).json(departments ? departments[0] : null);
   } catch (err) {
     return res.status(500).send(err || err.message);
   }

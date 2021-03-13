@@ -9,6 +9,7 @@ import {
   createOrganization,
   deleteOrganization,
   getOrganizationDetails,
+  getOrganizationSummary,
 } from "../controllers/organization";
 import {
   createSection,
@@ -91,6 +92,13 @@ export default function(app: Application) {
   // Organization delete route
   organizationRoutes.delete("/:id", authenticateJWT, deleteOrganization);
 
+  // Organization summary
+  organizationRoutes.get(
+    "/:id/summary",
+    authenticateJWT,
+    getOrganizationSummary
+  );
+
   //= ========================
   // Department Routes
   //= ========================
@@ -140,7 +148,7 @@ export default function(app: Application) {
   boardRoutes.delete("/:id", authenticateJWT, deleteBoard);
 
   // Start or complete the board
-  boardRoutes.put("/:id/:action", authenticateJWT, startOrCompleteBoard);
+  boardRoutes.put("/session/:action", authenticateJWT, startOrCompleteBoard);
 
   //= ========================
   // Section Routes

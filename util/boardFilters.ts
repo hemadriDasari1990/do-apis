@@ -1,22 +1,92 @@
-import Section from '../models/section';
+import { sectionAddFields, sectionsLookup } from "./sectionFilters";
 
-const sectionsLookup = { "$lookup": {
-  "from": Section.collection.name,
-  "let": { "sections": "$sections" },
-  "pipeline": [
-    { "$match": {
-      "$expr": { "$in": ["$_id", {$ifNull :['$$sections',[]]}] },
-    }},
-    {
-      "$sort": {"_id": 1}
-    },
-  ],
-  "as": "sections"
-}}
+import Board from "../models/board";
 
-const boardAddFields = { "$addFields": {
-  "sections": "$sections",
-  "totalSections": { "$size": { "$ifNull": [ "$sections", 0 ] }},
-}};
+const boardsLookup = {
+  $lookup: {
+    from: Board.collection.name,
+    let: { boards: "$boards" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$boards", []] }] },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+      sectionsLookup,
+      sectionAddFields,
+    ],
+    as: "boards",
+  },
+};
 
-export { sectionsLookup, boardAddFields };
+const inProgressBoardsLookup = {
+  $lookup: {
+    from: Board.collection.name,
+    let: { boards: "$boards" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$boards", []] }] },
+          status: "boards",
+        },
+      },
+    ],
+    as: "inProgressBoards",
+  },
+};
+
+const completedBoardsLookup = {
+  $lookup: {
+    from: Board.collection.name,
+    let: { boards: "$boards" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$boards", []] }] },
+          status: "completed",
+        },
+      },
+    ],
+    as: "completedBoards",
+  },
+};
+
+const newBoardsLookup = {
+  $lookup: {
+    from: Board.collection.name,
+    let: { boards: "$boards" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$boards", []] }] },
+          status: "pending",
+        },
+      },
+    ],
+    as: "newBoards",
+  },
+};
+
+const boardAddFields = {
+  $addFields: {
+    boards: "$boards",
+    inProgressBoards: "$inProgressBoards",
+    newBoards: "$newBoards",
+    completedBoards: "$completedBoards",
+    totalBoards: { $size: { $ifNull: ["$boards", []] } },
+    totalInProgressBoards: { $size: { $ifNull: ["$inProgressBoards", []] } },
+    totalNewBoards: { $size: { $ifNull: ["$newBoards", []] } },
+    totalCompletedBoards: { $size: { $ifNull: ["$completedBoards", []] } },
+  },
+};
+
+export {
+  boardsLookup,
+  boardAddFields,
+  newBoardsLookup,
+  inProgressBoardsLookup,
+  completedBoardsLookup,
+};

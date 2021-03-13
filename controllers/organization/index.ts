@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import {
+  departmentAddFields,
   departmentsLookup,
-  organizationAddFields,
-} from "../../util/organizationFilters";
+} from "../../util/departmentFilters";
 
 import EmailService from "../../services/email";
 import Organization from "../../models/organization";
@@ -11,6 +11,7 @@ import config from "config";
 import crypto from "crypto";
 // import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import { organizationLookup } from "../../util/organizationFilters";
 
 export async function createOrganization(
   req: Request,
@@ -146,16 +147,38 @@ export async function getOrganizationDetails(
     const organizations = await Organization.aggregate([
       { $match: query },
       departmentsLookup,
-      organizationAddFields,
+      departmentAddFields,
     ]);
     const org: any = organizations ? organizations[0] : null;
     if (org) {
-      org.uniqueKey = undefined;
       org.password = undefined;
       org.token = undefined;
     }
     return res.status(200).json(org);
   } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getOrganizationSummary(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    console.log("id...", req.params.id);
+    const query = { _id: mongoose.Types.ObjectId(req.params.id) };
+    const organizationSummary = await Organization.aggregate([
+      { $match: query },
+      organizationLookup,
+    ]).allowDiskUse(true);
+    const org: any = organizationSummary ? organizationSummary[0] : null;
+    if (org) {
+      org.password = undefined;
+      org.token = undefined;
+    }
+    return res.status(200).json(org);
+  } catch (err) {
+    console.log("check", err, req.params.id);
     return res.status(500).send(err || err.message);
   }
 }
