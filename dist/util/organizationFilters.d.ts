@@ -256,6 +256,11 @@ declare const organizationLookup: {
     departmentAddFields: {
         $addFields: {
             departments: string;
+            totalDepartments: {
+                $size: {
+                    $ifNull: (string | never[])[];
+                };
+            };
         };
     };
 };

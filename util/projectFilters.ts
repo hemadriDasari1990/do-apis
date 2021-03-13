@@ -71,7 +71,7 @@ const publicProjectsLookup = {
       {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$projects", []] }] },
-          private: false,
+          isPrivate: false,
         },
       },
     ],
@@ -87,7 +87,7 @@ const privateProjectsLookup = {
       {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$projects", []] }] },
-          private: true,
+          isPrivate: true,
         },
       },
     ],

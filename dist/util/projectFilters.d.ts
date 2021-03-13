@@ -173,7 +173,7 @@ declare const publicProjectsLookup: {
                         $ifNull: (string | never[])[];
                     })[];
                 };
-                private: boolean;
+                isPrivate: boolean;
             };
         }[];
         as: string;
@@ -192,7 +192,7 @@ declare const privateProjectsLookup: {
                         $ifNull: (string | never[])[];
                     })[];
                 };
-                private: boolean;
+                isPrivate: boolean;
             };
         }[];
         as: string;

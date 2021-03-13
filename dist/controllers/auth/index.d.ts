@@ -52,7 +52,7 @@ export declare function forgotPassword(req: Request, res: Response): Promise<any
  * @param {NextFunction} next
  * @returns {Response}
  */
-export declare function validateForgotPasswordToken(req: Request, res: Response): Promise<any>;
+export declare function validateForgotPassword(req: Request, res: Response): Promise<any>;
 /**
  * Validate the forgot password token request
  *

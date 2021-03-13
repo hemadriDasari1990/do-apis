@@ -446,6 +446,11 @@
         "signature": "6e7017e8cae95bd987696671fdafdf130ac0166b57bcdf70f502758ea26e24b7",
         "affectsGlobalScope": false
       },
+      "../util/constants.ts": {
+        "version": "8ac3d9ff15f98e13849c384feeded2e313672139939bc4e40232e8eeb00cc6af",
+        "signature": "bf8c7734aeda6b8997c68d6ef27f87dd2ef5e6b9932b5c080ccc63ab63291d8b",
+        "affectsGlobalScope": false
+      },
       "../node_modules/@types/ejs/index.d.ts": {
         "version": "cf0b62aa311100fcff8104f9677664878ae745cb45224b878c6cb9a2fa0bc48b",
         "signature": "cf0b62aa311100fcff8104f9677664878ae745cb45224b878c6cb9a2fa0bc48b",
@@ -537,12 +542,12 @@
         "affectsGlobalScope": false
       },
       "../models/organization.ts": {
-        "version": "145d4137d2e5a8cff67554fe454509fefaaff4135ad4cbdd212b38a0d65fca4d",
+        "version": "677ef37a687ac5c903b706c2d5c09ef0cabcf51efb47356b31edc836e24eefa7",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
       "../models/token.ts": {
-        "version": "0cd944a446a72e1f2f10baf15dd5b9bae00ed44663a878b0627ef19c13b1b661",
+        "version": "b91019685d0dc8abfd417c954abd4122dd9b8647797d42d9f7cbcdb52c087a0f",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
@@ -557,7 +562,7 @@
         "affectsGlobalScope": false
       },
       "../models/board.ts": {
-        "version": "b4d7f518f1653795223a7ae58994d109cd7dbea86339736e100e17e3f99e9db7",
+        "version": "bd7a55b36ad1d4a4dbab75a52e60dc35c41cd2014611a9d7c1050c48b72f33d0",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
@@ -567,33 +572,28 @@
         "affectsGlobalScope": false
       },
       "../models/project.ts": {
-        "version": "2006563a75cddf9d635952692da04cb0ffc157db4cc06f909edfe3533d247de2",
+        "version": "8f31c354c6276dc06d897ea4ba96f26ea96a8d92bbf2197f1d293fd81a31d4d2",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
       "../util/projectfilters.ts": {
-        "version": "6c430b9ff9c9f78521e531bb47c5495e36b14d47a99d44c500110fee89c2abb2",
-        "signature": "77964ccac45c609346f24b8cc010ef438c608c30ad1470771b98821ca2f4b2bb",
+        "version": "c8b7daa7158894ae9f5468bfd298859e6082869f32d379db65f46b17feea640a",
+        "signature": "72a02e3607d4a09e7df56060d08cdf001aed5c2705b155c1edd01447241ddbde",
         "affectsGlobalScope": false
       },
       "../models/department.ts": {
-        "version": "4640c023b20b02574628e85414737efc6a35ae485eab92cb339193646661e398",
+        "version": "9d9ae9ea053e884b00f6083fe0003483e1b631d53157c4b22504a4a3af8bb44c",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
       "../util/departmentfilters.ts": {
-        "version": "d95141fd9cf7051ea5b09fda746c2d0094581c2efcd7cbafa97a2d2c623ae6dd",
-        "signature": "bcc1dd81eead7aa260ad412bd906609a79c7e0f83a6530e241c02b33cb7c36eb",
-        "affectsGlobalScope": false
-      },
-      "../util/organizationfilters.ts": {
-        "version": "811f2565a7a450225048152c31a8df280611ead3333dbddc26db12a68f5dcd18",
-        "signature": "87072e47bc2ced8a384fac8d9e6aca4a18915ce42df6e0861b1901126d51525d",
+        "version": "88035c08b76bd8285fca3ebdf39201fc932492f309f43a461ac8daf5fefaf80c",
+        "signature": "c7e19f4a4d5025a0f73bbcf61c279266c6160f06e1ca26d4cb34fee2c0e58712",
         "affectsGlobalScope": false
       },
       "../controllers/organization/index.ts": {
-        "version": "bec08a2bf3b8448f2e2be30cd113d4d152c8e1176f83226170fbcb9196ac1519",
-        "signature": "23ce88c2eecccc6fda9a5431b893df8448e8391d663076c880442faeb847a74b",
+        "version": "7e8717e64960fa0876f6d6c8c76cdbecdbb7a758d5a4f494763f41129620e75c",
+        "signature": "3b8f5bf1ef3fb1e60a9aea953e98cc76ad03491417ec0d6c276c8faef50333dd",
         "affectsGlobalScope": false
       },
       "../node_modules/@types/jsonwebtoken/index.d.ts": {
@@ -602,8 +602,8 @@
         "affectsGlobalScope": false
       },
       "../controllers/auth/index.ts": {
-        "version": "5afb137c805c549904c8f72726788f128d8065020473f45d7d5119a74821319d",
-        "signature": "49a55d987d9cd3a3f55f94de86c55d3bdecf262b3248e8a414d12d919bb6f46d",
+        "version": "3ed4dbd8a46214549942b27df916c6743d2d515c9d765d2f8363647b86dbe222",
+        "signature": "65d5e72f3a483437b722eebe9b7184b1dd5da4681ae2d17079db5f5817890999",
         "affectsGlobalScope": false
       },
       "../models/feedback.ts": {
@@ -612,12 +612,12 @@
         "affectsGlobalScope": false
       },
       "../controllers/feedback/index.ts": {
-        "version": "987add630f05ed11c964cb4a11d03dbfee90fd4e56bfd266a073b6e4b1df25ee",
+        "version": "66b2ec6c37802691521355ed4efa0714c8bfc8745a04ee017daf8d0c842b7610",
         "signature": "051d42aa6561a634677f2ed7a9accfee2300f09e9ec7aaa9c4ae625c4ecc38e2",
         "affectsGlobalScope": false
       },
       "../models/reaction.ts": {
-        "version": "25a4356b5a02ccf3fde34fbded6956215dfccd8c92e6ea9473a965d6135754bd",
+        "version": "94a9f51510d619896991900647966622c7b432664465040ab04dc08f9832345c",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
@@ -657,7 +657,7 @@
         "affectsGlobalScope": false
       },
       "../controllers/project/index.ts": {
-        "version": "4678e4b0943043ba5e4aa166009e9cdb3e1fd21c9814ebce840ec110e4ba8a94",
+        "version": "4f9f332febaa1e1b66aec85e0507698688067a3fa8660eef00dfe7f8ccac7295",
         "signature": "1a9e184613ab60c756a3f80d6ad81ee4bfd553aa1f83527b1b12ffb1e83e6684",
         "affectsGlobalScope": false
       },
@@ -667,7 +667,7 @@
         "affectsGlobalScope": false
       },
       "../router/index.ts": {
-        "version": "95f539fe82e5f9f333e90967ea258877611525865856717ee6d62a306b22f4da",
+        "version": "98b6059e281793da11058cddb5f7d9f37a2a2cd56b19cf6165297cfd9e415544",
         "signature": "bb9f40b07ab2b881b3de2f5b1a7bb5886a9d031e447e0b70552f7d4da625c55f",
         "affectsGlobalScope": false
       },
@@ -820,7 +820,8 @@
         "../node_modules/@types/jsonwebtoken/index.d.ts",
         "../node_modules/@types/node/crypto.d.ts",
         "../node_modules/mongoose/index.d.ts",
-        "../services/email/index.ts"
+        "../services/email/index.ts",
+        "../util/constants.ts"
       ],
       "../controllers/board/index.ts": [
         "../controllers/project/index.ts",
@@ -852,15 +853,17 @@
         "../util/reactionfilters.ts"
       ],
       "../controllers/organization/index.ts": [
+        "../models/board.ts",
         "../models/organization.ts",
+        "../models/project.ts",
         "../models/token.ts",
         "../node_modules/@types/config/index.d.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/@types/node/crypto.d.ts",
         "../node_modules/mongoose/index.d.ts",
         "../services/email/index.ts",
-        "../util/departmentfilters.ts",
-        "../util/organizationfilters.ts"
+        "../util/constants.ts",
+        "../util/departmentfilters.ts"
       ],
       "../controllers/project/index.ts": [
         "../controllers/board/index.ts",
@@ -1356,9 +1359,6 @@
       "../util/notefilters.ts": [
         "../models/note.ts",
         "../util/reactionfilters.ts"
-      ],
-      "../util/organizationfilters.ts": [
-        "../util/departmentfilters.ts"
       ],
       "../util/projectfilters.ts": [
         "../models/project.ts",
@@ -1978,9 +1978,9 @@
       "../types/organization.ts",
       "../types/section.ts",
       "../util/boardfilters.ts",
+      "../util/constants.ts",
       "../util/departmentfilters.ts",
       "../util/notefilters.ts",
-      "../util/organizationfilters.ts",
       "../util/projectfilters.ts",
       "../util/reactionfilters.ts",
       "../util/sectionfilters.ts"

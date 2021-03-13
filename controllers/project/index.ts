@@ -19,7 +19,7 @@ export async function updateProject(
           description: req.body.description,
           departmentId: req.body.departmentId,
           status: req.body.status || "active",
-          private: req.body.private || false,
+          isPrivate: req.body.isPrivate || false,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };

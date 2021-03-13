@@ -1,17 +1,21 @@
 import { NextFunction, Request, Response } from "express";
 import {
+  activeDepartmentsLookup,
   departmentAddFields,
   departmentsLookup,
+  inActiveDepartmentsLookup,
 } from "../../util/departmentFilters";
 
+import Board from "../../models/board";
 import EmailService from "../../services/email";
 import Organization from "../../models/organization";
+import Project from "../../models/project";
 import Token from "../../models/token";
+import { UNAUTHORIZED } from "../../util/constants";
 import config from "config";
 import crypto from "crypto";
 // import bcrypt from "bcrypt";
 import mongoose from "mongoose";
-import { organizationLookup } from "../../util/organizationFilters";
 
 export async function createOrganization(
   req: Request,
@@ -46,6 +50,7 @@ export async function createOrganization(
       description: req.body.description,
       email: req.body.email,
       password: req.body.password,
+      isAgreed: req.body.isAgreed,
     });
     const newOrg = await newOrganization.save();
     newOrg.password = undefined;
@@ -153,8 +158,9 @@ export async function getOrganizationDetails(
     if (org) {
       org.password = undefined;
       org.token = undefined;
+      return res.status(200).json(org);
     }
-    return res.status(200).json(org);
+    return res.status(401).json({ code: UNAUTHORIZED });
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
@@ -165,12 +171,14 @@ export async function getOrganizationSummary(
   res: Response
 ): Promise<any> {
   try {
-    console.log("id...", req.params.id);
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const organizationSummary = await Organization.aggregate([
       { $match: query },
-      organizationLookup,
-    ]).allowDiskUse(true);
+      activeDepartmentsLookup,
+      departmentsLookup,
+      inActiveDepartmentsLookup,
+      departmentAddFields,
+    ]);
     const org: any = organizationSummary ? organizationSummary[0] : null;
     if (org) {
       org.password = undefined;
@@ -178,7 +186,42 @@ export async function getOrganizationSummary(
     }
     return res.status(200).json(org);
   } catch (err) {
-    console.log("check", err, req.params.id);
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getOrganizations(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    console.log(req);
+    const organizations = await Organization.find({}).select({
+      title: 1,
+      isVerified: 1,
+      description: 1,
+      _id: 0,
+    });
+    return res.status(200).json({
+      organizations,
+    });
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getAllSummary(req: Request, res: Response): Promise<any> {
+  try {
+    console.log(req);
+    const organizationsCount = await Organization.find({}).count();
+    const projectsCount = await Project.find({}).count();
+    const boardsCount = await Board.find({}).count();
+    return res.status(200).json({
+      organizationsCount,
+      projectsCount,
+      boardsCount,
+    });
+  } catch (err) {
     return res.status(500).send(err || err.message);
   }
 }

@@ -158,7 +158,7 @@ declare const departmentsLookup: {
                                 $ifNull: (string | never[])[];
                             })[];
                         };
-                        private: boolean;
+                        isPrivate: boolean;
                     };
                 }[];
                 as: string;
@@ -255,6 +255,53 @@ declare const activeDepartmentsLookup: {
 declare const departmentAddFields: {
     $addFields: {
         departments: string;
+        activeDepartments: string;
+        inActiveDepartments: string;
+        totalDepartments: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalActiveDepartments: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalInActiveDepartments: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        projects: string;
+        activeProjects: string;
+        inActiveProjects: string;
+        privateProjects: string;
+        publicProjects: string;
+        totalProjects: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalActiveProjects: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalInActiveProjects: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalPrivateProjects: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        totalPublicProjects: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
     };
 };
-export { departmentsLookup, departmentAddFields, inActiveDepartmentsLookup, activeDepartmentsLookup, };
+export { departmentsLookup, inActiveDepartmentsLookup, activeDepartmentsLookup, departmentAddFields, };

@@ -8,7 +8,7 @@ const TokenSchema = new Schema({
     ref: "Organizaton",
   },
   token: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now, expires: 86400 },
+  createdAt: { type: Date, default: Date.now, expires: "1hr" },
 });
 
 export default mongoose.model("Token", TokenSchema);

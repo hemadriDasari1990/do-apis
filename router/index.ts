@@ -1,15 +1,20 @@
 import {
   authenticateJWT,
+  forgotPassword,
   login,
   resendToken,
+  resetPassword,
+  validateForgotPassword,
   verifyAccount,
 } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
 import {
   createOrganization,
   deleteOrganization,
+  getAllSummary,
   getOrganizationDetails,
   getOrganizationSummary,
+  getOrganizations,
 } from "../controllers/organization";
 import {
   createSection,
@@ -76,12 +81,27 @@ export default function(app: Application) {
   // resend verification token
   authRoutes.post("/resend-token", resendToken);
 
+  // forgot password
+  authRoutes.post("/forgot-password", forgotPassword);
+
+  // validate forgot password token
+  authRoutes.post("/validate-forgot-password", validateForgotPassword);
+
+  // reset password
+  authRoutes.post("/reset-password", resetPassword);
+
   //= ========================
   // Organization Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
   apiRoutes.use("/organization", organizationRoutes);
+
+  // Organization summary
+  organizationRoutes.get("/summary", getAllSummary);
+
+  // Organization names
+  organizationRoutes.get("/", getOrganizations);
 
   // Organization details route
   organizationRoutes.get("/:id", authenticateJWT, getOrganizationDetails);
@@ -180,7 +200,7 @@ export default function(app: Application) {
   noteRoutes.get("/:sectionId", getNotesBySectionId);
 
   // Note or Create board
-  noteRoutes.put("/", authenticateJWT, updateNote);
+  noteRoutes.put("/", updateNote);
 
   // Mark read
   noteRoutes.put("/:id/mark-read", authenticateJWT, markReadNote);

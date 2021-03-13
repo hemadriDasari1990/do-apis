@@ -30,7 +30,7 @@ const ProjectSchema = new Schema(
       default: "active",
       index: true,
     },
-    private: {
+    isPrivate: {
       type: Boolean,
       default: false,
     },

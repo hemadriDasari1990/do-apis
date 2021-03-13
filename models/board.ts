@@ -24,6 +24,7 @@ const BoardSchema = new Schema(
     sprint: {
       type: Number,
       default: 0,
+      unique: true,
     },
     status: {
       type: String,

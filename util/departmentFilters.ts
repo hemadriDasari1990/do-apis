@@ -75,12 +75,26 @@ const departmentAddFields = {
     totalInActiveDepartments: {
       $size: { $ifNull: ["$inActiveDepartments", []] },
     },
+    projects: "$projects",
+    activeProjects: "$activeProjects",
+    inActiveProjects: "$inActiveProjects",
+    privateProjects: "$privateProjects",
+    publicProjects: "$publicProjects",
+    totalProjects: { $size: { $ifNull: ["$projects", []] } },
+    totalActiveProjects: { $size: { $ifNull: ["$activeProjects", []] } },
+    totalInActiveProjects: { $size: { $ifNull: ["$inActiveProjects", []] } },
+    totalPrivateProjects: {
+      $size: { $ifNull: ["$privateProjects", []] },
+    },
+    totalPublicProjects: {
+      $size: { $ifNull: ["$publicProjects", []] },
+    },
   },
 };
 
 export {
   departmentsLookup,
-  departmentAddFields,
   inActiveDepartmentsLookup,
   activeDepartmentsLookup,
+  departmentAddFields,
 };

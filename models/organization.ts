@@ -43,6 +43,10 @@ const OrganizationSchema = new Schema(
     token: {
       type: String,
     },
+    isAgreed: {
+      type: Boolean,
+      default: false,
+    },
     departments: [
       {
         type: Schema.Types.ObjectId,

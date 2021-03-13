@@ -1,3 +1,12 @@
+import {
+  ALREADY_VERIFIED,
+  INTERNAL_SERVER_ERROR,
+  NOT_FOUND,
+  REQUIRED,
+  TOKEN_EXPIRED,
+  UNAUTHORIZED,
+  VERIFIED,
+} from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 
 import EmailService from "../../services/email";
@@ -36,16 +45,16 @@ export async function authenticateJWT(
     }
     jwt.verify(token, secret, (err: any, user: any) => {
       if (err) {
-        return res.status(401).json({ status: "error", code: "UNAUTHORIZED" });
+        return res.status(401).json({ status: "error", code: UNAUTHORIZED });
       }
       if (!user) {
-        return res.status(401).json({ status: "error", code: "UNAUTHORIZED" });
+        return res.status(401).json({ status: "error", code: UNAUTHORIZED });
       } else {
         return next();
       }
     });
   } else {
-    return res.status(401).json({ status: "error", code: "UNAUTHORIZED" });
+    return res.status(401).json({ status: "error", code: UNAUTHORIZED });
   }
 }
 
@@ -67,7 +76,7 @@ export async function login(req: Request, res: Response): Promise<any> {
     if (!organization) {
       return res
         .status(422)
-        .json({ message: "Please enter valid email address" });
+        .json({ message: "Email is not registered with us" });
     }
     if (!organization?.isVerified) {
       return res.status(422).json({
@@ -81,7 +90,7 @@ export async function login(req: Request, res: Response): Promise<any> {
       organization.password
     );
     if (!isPasswordValid)
-      return res.status(422).json({ message: "Invalid Password" });
+      return res.status(422).json({ message: "Incorrect Password" });
     const payload = {
       _id: organization._id,
       title: organization.title,
@@ -181,25 +190,44 @@ export async function forgotPassword(
 ): Promise<any> {
   try {
     if (!req.body.email) {
-      return res.status(500).json({ message: "Email is required" });
+      return res
+        .status(500)
+        .json({ errorId: REQUIRED, message: "Email is required" });
     }
-    const organization = await Organization.findOne({ email: req.body.email });
+    const emailService = await new EmailService();
+    const organization: any = await Organization.findOne({
+      email: req.body.email,
+    });
     if (!organization) {
-      return res.status(409).json({ message: "Email does not exist" });
+      return res.status(409).json({
+        errorId: NOT_FOUND,
+        message: "Email does not exist! Please create account",
+      });
     }
+
     const token: any = new Token({
       organizationId: organization._id,
       token: crypto.randomBytes(16).toString("hex"),
-      expires: Date.now() + 3600000, // 1hr
+      createdAt: Date.now(),
     });
     await token.save();
     await Token.find({
       organizationId: organization._id,
-      token: { $ne: token.token },
+      token: { $ne: token?.token },
     })
       .remove()
       .exec();
     //@TODO - Send forgot password email to reset the password
+    await emailService.sendEmail(
+      "/templates/forgot-password.ejs",
+      {
+        url: config.get("url"),
+        confirm_link: `${config.get("url")}/reset-password/${token?.token}`,
+        name: organization.title,
+      },
+      req.body.email,
+      "Resetting your letsdoretro password"
+    );
     res.status(200).json({
       message:
         "Email has been sent. Please check your inbox for further instructions to reset the password",
@@ -217,28 +245,33 @@ export async function forgotPassword(
  * @param {NextFunction} next
  * @returns {Response}
  */
-export async function validateForgotPasswordToken(
+export async function validateForgotPassword(
   req: Request,
   res: Response
 ): Promise<any> {
   try {
     if (!req.body.token) {
-      return res.status(500).json({ message: "Token is required" });
+      return res
+        .status(500)
+        .json({ errorId: REQUIRED, message: "Token is required" });
     }
     const token: any = await Token.findOne({
       token: req.body.token,
-      expires: { $gt: Date.now() },
     });
     if (!token) {
-      return res
-        .status(409)
-        .json({ message: "Password reset token is invalid or has expired" });
+      return res.status(409).json({
+        errorId: TOKEN_EXPIRED,
+        message: "Password reset token is invalid or has expired",
+      });
     }
-    const updated = Organization.findOne({
+    const organization: any = await Organization.findOne({
       _id: token.organizationId,
     });
-    if (updated) {
-      return res.status(200).json({ message: "Token verified successfully." });
+    if (organization) {
+      return res.status(200).json({
+        organization: { _id: organization._id },
+        message: "Token verified successfully. Please set new password",
+      });
     }
   } catch (err) {
     return res.status(500).json({ message: err || err.message });
@@ -258,7 +291,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
     if (!req.body.token) {
       return res
         .status(500)
-        .json({ errorId: "NOT_FOUND", message: "Token is required" });
+        .json({ errorId: NOT_FOUND, message: "Token is required" });
     }
     const emailService = await new EmailService();
     const token: any = await Token.findOne({
@@ -267,7 +300,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
 
     if (!token) {
       return res.status(500).json({
-        errorId: "TOKEN_EXPIRED",
+        errorId: TOKEN_EXPIRED,
         message:
           "We are unable to find a valid token. Your token my have expired.",
       });
@@ -277,13 +310,13 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
     });
     if (!organization) {
       return res.status(500).send({
-        errorId: "NOT_FOUND",
+        errorId: NOT_FOUND,
         message: "We are unable to find a user for this token.",
       });
     }
     if (organization?.isVerified) {
       return res.status(500).send({
-        errorId: "ALREADY_VERIFIED",
+        errorId: ALREADY_VERIFIED,
         message: "This account has already been verified. Please login",
       });
     }
@@ -293,7 +326,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
     const saved = await organization.save();
     if (!saved) {
       return res.status(500).send({
-        errorId: "INTERNAL_SERVER_ERROR",
+        errorId: INTERNAL_SERVER_ERROR,
         message: "Error while verifying the account ",
       });
     }
@@ -313,7 +346,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
   } catch (err) {
     return res
       .status(500)
-      .json({ errorId: "INTERNAL_SERVER_ERROR", message: err || err.message });
+      .json({ errorId: INTERNAL_SERVER_ERROR, message: err || err.message });
   }
 }
 
@@ -330,7 +363,7 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
     if (!req.body.email) {
       return res
         .status(500)
-        .json({ errorId: "NOT_FOUND", message: "Email address is required" });
+        .json({ errorId: NOT_FOUND, message: "Email address is required" });
     }
     const emailService = await new EmailService();
     const organization: any = await Organization.findOne({
@@ -338,13 +371,13 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
     });
     if (!organization) {
       return res.status(500).json({
-        errorId: "NOT_FOUND",
+        errorId: NOT_FOUND,
         message: "We are unable to find a user with that email.",
       });
     }
     if (organization.isVerified)
       return res.status(500).json({
-        errorId: "ALREADY_VERIFIED",
+        errorId: ALREADY_VERIFIED,
         message: "This account has already been verified. Please log in.",
       });
     const token = new Token({
@@ -369,7 +402,7 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
   } catch (err) {
     return res
       .status(500)
-      .json({ errorId: "INTERNAL_SERVER_ERROR", message: err || err.message });
+      .json({ errorId: INTERNAL_SERVER_ERROR, message: err || err.message });
   }
 }
 
@@ -383,33 +416,68 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
  */
 export async function resetPassword(req: Request, res: Response): Promise<any> {
   try {
-    if (!req.body.token) {
-      return res.status(500).json({ message: "Token is required" });
+    if (!req.body.password) {
+      return res.status(500).json({ message: "Password is required" });
     }
-    const token: any = await Token.findOne({
-      token: req.body.token,
-      expires: { $gt: Date.now() },
+    if (!req.body.confirmPassword) {
+      return res.status(500).json({ message: "Confirm Password is required" });
+    }
+    const emailService = await new EmailService();
+    const organization: any = await Organization.findOne({
+      _id: mongoose.Types.ObjectId(req.body.organizationId),
     });
-    if (!token) {
-      return res
-        .status(409)
-        .json({ message: "Password reset token is invalid or has expired" });
+    const isPasswordSame = await bcrypt.compare(
+      req.body.password.trim(),
+      organization.password.trim()
+    );
+    if (isPasswordSame) {
+      return res.status(500).json({
+        message:
+          "Your new password and old password can't be same. Please use different one",
+      });
     }
+    const hash = await bcrypt.hash(
+      req.body.password,
+      Number(config.get("bcryptSalt"))
+    );
     const query = {
-        _id: mongoose.Types.ObjectId(token.organizationId),
+        _id: mongoose.Types.ObjectId(req.body.organizationId),
       },
       update = {
         $set: {
-          password: req.body.password,
+          password: hash,
         },
-      };
-    const updated = Organization.findOneAndUpdate(query, update);
+      },
+      options = { useFindAndModify: true };
+    const updated: any = await Organization.findOneAndUpdate(
+      query,
+      update,
+      options
+    );
     if (!updated) {
-      return res.status(200).json({ message: "Password can not reset" });
+      return res
+        .status(500)
+        .json({ message: "Error while updating new password" });
     }
-    await token.remove();
-    //@TODO - Send sucessfull password reset email
-    return res.status(200).json({ message: "Password reset successfully" });
+    await emailService.sendEmail(
+      "/templates/password-changed.ejs",
+      {
+        url: config.get("url"),
+        login_link: `${config.get("url")}/login`,
+        name: updated.title,
+      },
+      updated.email,
+      "Your letsdoretro password has been changed"
+    );
+    await Token.find({
+      organizationId: updated._id,
+    })
+      .remove()
+      .exec();
+    return res.status(200).json({
+      code: VERIFIED,
+      message: "Password reset successfully! Login now",
+    });
   } catch (err) {
     return res.status(500).json({ message: err || err.message });
   }

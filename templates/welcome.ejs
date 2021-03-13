@@ -8,7 +8,7 @@
     </script>
     <style type="text/css">
         .mail-body-container {
-            background: #f9f9f9;
+            background: #fff;
             padding: 25px 0;
             margin: 10px 0;
             border-radius: 6px;
@@ -33,7 +33,6 @@
         .content {
             max-width: 700px;
             Margin: 0 auto;
-            background: "#fff";
         }
 
         .content-table {
@@ -66,9 +65,11 @@
     </style>
 </head>
 
-<body class="container">
+<body>
     <header>
-        <%- include('./header'); %>
+        <div style="padding-top: 10px;">
+            <%- include('./header'); %>
+        </div>
     </header>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" class="mail-body-container">
         <tbody>
