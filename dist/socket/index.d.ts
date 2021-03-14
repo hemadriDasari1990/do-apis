@@ -1,2 +1,2 @@
-import socketio from 'socket.io';
+import socketio from "socket.io";
 export default function socketEvents(io: socketio.Server): void;

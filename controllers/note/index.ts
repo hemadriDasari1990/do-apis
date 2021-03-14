@@ -105,7 +105,7 @@ export async function markReadNote(
       return next(noteUpdated);
     }
     noteUpdated.read = req.body.read;
-    await socket.emit(`mark-read-${noteUpdated?.sectionId}`, noteUpdated);
+    await socket.emit(`mark-read-${noteUpdated?._id}`, noteUpdated);
     return res.status(200).send(noteUpdated);
   } catch (err) {
     return res.status(500).send(err || err.message);

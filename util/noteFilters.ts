@@ -9,11 +9,13 @@ import {
 } from "./reactionFilters";
 
 import Note from "../models/note";
+import Section from "../models/section";
 
 const noteAddFields = {
   $addFields: {
     notes: "$notes",
     totalNotes: { $size: { $ifNull: ["$notes", []] } },
+    section: { $ifNull: ["$section", [null]] },
   },
 };
 
@@ -28,8 +30,23 @@ const notesLookup = {
         },
       },
       {
-        $sort: { _id: 1 },
+        $sort: { _id: -1 },
       },
+      {
+        $lookup: {
+          from: Section.collection.name,
+          let: { sectionId: "$sectionId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$sectionId"] },
+              },
+            },
+          ],
+          as: "section",
+        },
+      },
+      { $unwind: "$section" },
       reactionDisAgreeLookup,
       reactionPlusTwoLookup,
       reactionPlusOneLookup,

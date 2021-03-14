@@ -75,6 +75,21 @@ export async function getSectionsByBoardId(
   }
 }
 
+export async function addAndRemoveNoteFromSection(data: {
+  [Key: string]: any;
+}): Promise<any> {
+  try {
+    await addNoteToSection(data.noteId, data.destinationSectionId);
+    const updated = await removeNoteFromSection(
+      data.noteId,
+      data.sourceSectionId
+    );
+    return updated;
+  } catch (err) {
+    throw err || err.message;
+  }
+}
+
 async function getSections(boardId: string): Promise<any> {
   try {
     const query = { boardId: mongoose.Types.ObjectId(boardId) };
@@ -86,7 +101,6 @@ async function getSections(boardId: string): Promise<any> {
     // socket.emit("sections-list", sections);
     return sections;
   } catch (err) {
-    console.log("error", err);
     throw err | err.message;
   }
 }
@@ -107,6 +121,25 @@ export async function deleteSection(
     return res.status(200).send(deleted);
   } catch (err) {
     return res.status(500).send(err || err.message);
+  }
+}
+
+export async function removeNoteFromSection(
+  noteId: string,
+  sectionId: string
+): Promise<any> {
+  try {
+    if (!noteId || !sectionId) {
+      return;
+    }
+    const updated = await Section.findByIdAndUpdate(
+      sectionId,
+      { $pull: { notes: noteId } }
+      // { new: true, useFindAndModify: false }
+    );
+    return updated;
+  } catch (err) {
+    throw `Error while removing note from section ${err || err.message}`;
   }
 }
 

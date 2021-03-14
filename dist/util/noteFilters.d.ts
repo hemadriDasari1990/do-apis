@@ -6,6 +6,9 @@ declare const noteAddFields: {
                 $ifNull: (string | never[])[];
             };
         };
+        section: {
+            $ifNull: (string | null[])[];
+        };
     };
 };
 declare const notesLookup: {
@@ -15,33 +18,6 @@ declare const notesLookup: {
             notes: string;
         };
         pipeline: ({
-            $addFields: {
-                notes: string;
-                totalNotes: {
-                    $size: {
-                        $ifNull: (string | never[])[];
-                    };
-                };
-            };
-        } | {
-            $lookup: {
-                from: string;
-                let: {
-                    reactions: string;
-                };
-                pipeline: {
-                    $match: {
-                        $expr: {
-                            $in: (string | {
-                                $ifNull: (string | never[])[];
-                            })[];
-                        };
-                        type: string;
-                    };
-                }[];
-                as: string;
-            };
-        } | {
             $lookup: {
                 from: string;
                 let: {
@@ -62,6 +38,24 @@ declare const notesLookup: {
                     };
                     $match?: undefined;
                 })[];
+                as: string;
+            };
+        } | {
+            $lookup: {
+                from: string;
+                let: {
+                    reactions: string;
+                };
+                pipeline: {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                        type: string;
+                    };
+                }[];
                 as: string;
             };
         } | {
@@ -98,6 +92,18 @@ declare const notesLookup: {
                 };
             };
         } | {
+            $addFields: {
+                notes: string;
+                totalNotes: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                section: {
+                    $ifNull: (string | null[])[];
+                };
+            };
+        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -106,11 +112,38 @@ declare const notesLookup: {
                 };
             };
             $sort?: undefined;
+            $lookup?: undefined;
+            $unwind?: undefined;
         } | {
             $sort: {
                 _id: number;
             };
             $match?: undefined;
+            $lookup?: undefined;
+            $unwind?: undefined;
+        } | {
+            $lookup: {
+                from: string;
+                let: {
+                    sectionId: string;
+                };
+                pipeline: {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                }[];
+                as: string;
+            };
+            $match?: undefined;
+            $sort?: undefined;
+            $unwind?: undefined;
+        } | {
+            $unwind: string;
+            $match?: undefined;
+            $sort?: undefined;
+            $lookup?: undefined;
         })[];
         as: string;
     };
