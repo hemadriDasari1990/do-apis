@@ -89,7 +89,6 @@ export async function getSectionsByBoardId(
     const sections = await getSections(req.params.boardId);
     return res.status(200).json(sections);
   } catch (err) {
-    console.log("error", err);
     return res.status(500).send(err || err.message);
   }
 }

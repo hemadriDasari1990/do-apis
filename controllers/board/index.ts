@@ -178,7 +178,6 @@ export async function findBoardsByProjectAndDelete(
         await promise;
         await findSectionsByBoardAndDelete(board._id);
         // await deleteNoteById(board._id);
-        console.log(board);
       },
       [Promise.resolve()]
     );
