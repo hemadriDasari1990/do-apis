@@ -19,9 +19,16 @@ const departmentsLookup = {
           $expr: { $in: ["$_id", { $ifNull: ["$$departments", []] }] },
         },
       },
+      // {
+      //   $group: {
+      //     _id: null,
+      //     totalProjects: { $sum: { $size: "$projectId" } },
+      //   },
+      // },
       {
         $sort: { _id: 1 },
       },
+
       projectsLookup,
       activeProjectsLookup,
       inActiveProjectsLookup,

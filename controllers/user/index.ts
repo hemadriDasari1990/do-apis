@@ -5,33 +5,32 @@ import {
   departmentsLookup,
   inActiveDepartmentsLookup,
 } from "../../util/departmentFilters";
+import { memberAddFields, membersLookup } from "../../util/memberFilters";
+import { teamAddFields, teamsLookup } from "../../util/teamFilters";
 
 import Board from "../../models/board";
 import EmailService from "../../services/email";
-import Organization from "../../models/organization";
 import Project from "../../models/project";
 import Token from "../../models/token";
 import { UNAUTHORIZED } from "../../util/constants";
+import User from "../../models/user";
 import config from "config";
 import crypto from "crypto";
 // import bcrypt from "bcrypt";
 import mongoose from "mongoose";
 
-export async function createOrganization(
-  req: Request,
-  res: Response
-): Promise<any> {
+export async function createUser(req: Request, res: Response): Promise<any> {
   try {
     const emailService = await new EmailService();
-    const organization = await getOrganizationByEmail(req.body.email);
-    if (organization && !organization?.isVerified) {
+    const user = await getUserByEmail(req.body.email);
+    if (user && !user?.isVerified) {
       return res.status(400).json({
-        errorId: "ORGANIZATION_ALREADY_EXIST",
+        errorId: "USER_ALREADY_EXIST",
         message: `An account with following email ${req.body.email} already exist but not verified yet. Please check your inbox`,
       });
     }
 
-    if (organization && organization?.isVerified) {
+    if (user && user?.isVerified) {
       return res.status(400).json({
         errorId: "EMAIL_VERIFIED",
         message: `An account with following email ${req.body.email} already exist and verified. Please login!`,
@@ -45,18 +44,18 @@ export async function createOrganization(
     //       .json({ message: 'Error hashing password' });
     // }
 
-    const newOrganization: { [Key: string]: any } = new Organization({
-      title: req.body.title,
+    const newUser: { [Key: string]: any } = new User({
+      name: req.body.name,
       description: req.body.description,
       email: req.body.email,
       password: req.body.password,
       isAgreed: req.body.isAgreed,
     });
-    const newOrg = await newOrganization.save();
+    const newOrg = await newUser.save();
     newOrg.password = undefined;
 
     const token = new Token({
-      organizationId: newOrganization._id,
+      userId: newUser._id,
       token: crypto.randomBytes(16).toString("hex"),
     });
     const newToken: any = await token.save();
@@ -66,7 +65,7 @@ export async function createOrganization(
       {
         url: config.get("url"),
         confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
-        name: req.body.title,
+        name: req.body.name,
       },
       req.body.email,
       "Please confirm your email"
@@ -90,22 +89,22 @@ export async function confirmEmail(req: Request, res: Response): Promise<any> {
           "Your verification link may have expired. Please click on resend for verify your Email.",
       });
     }
-    const organization: any = await Organization.findOne({
-      _id: mongoose.Types.ObjectId(token.organizationId),
+    const user: any = await User.findOne({
+      _id: mongoose.Types.ObjectId(token.userId),
       email: req.params.email,
     });
-    if (!organization) {
+    if (!user) {
       return res.status(401).send({
-        message: `We are unable to find a organization account associated with ${req.params.email} for this verification. Please SignUp!`,
+        message: `We are unable to find a user account associated with ${req.params.email} for this verification. Please SignUp!`,
       });
     }
-    if (organization.isVerified) {
+    if (user.isVerified) {
       return res
         .status(200)
-        .send("Organization has been already verified. Please Login");
+        .send("User has been already verified. Please Login");
     }
-    organization.isVerified = true;
-    await organization.save();
+    user.isVerified = true;
+    await user.save();
     //@TODO - Send successfully verified Email
     return res
       .status(200)
@@ -119,21 +118,21 @@ export async function resendActivationLink(
   res: Response
 ): Promise<any> {
   try {
-    const organization: any = await Organization.findOne({
+    const user: any = await User.findOne({
       email: req.params.email,
     });
-    if (!organization) {
+    if (!user) {
       return res.status(401).send({
-        message: `We are unable to find an organization account associated with ${req.body.email}. Make sure your Email is correct!`,
+        message: `We are unable to find an user account associated with ${req.body.email}. Make sure your Email is correct!`,
       });
     }
-    if (organization.isVerified) {
+    if (user.isVerified) {
       return res
         .status(200)
-        .send("Organization has been already verified. Please Login");
+        .send("User has been already verified. Please Login");
     }
     const token = new Token({
-      organizationId: organization._id,
+      userId: user._id,
       token: crypto.randomBytes(16).toString("hex"),
     });
     await token.save();
@@ -143,18 +142,22 @@ export async function resendActivationLink(
   }
 }
 
-export async function getOrganizationDetails(
+export async function getUserDetails(
   req: Request,
   res: Response
 ): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
-    const organizations = await Organization.aggregate([
+    const users = await User.aggregate([
       { $match: query },
       departmentsLookup,
       departmentAddFields,
+      teamsLookup,
+      teamAddFields,
+      membersLookup,
+      memberAddFields,
     ]);
-    const org: any = organizations ? organizations[0] : null;
+    const org: any = users ? users[0] : null;
     if (org) {
       org.password = undefined;
       org.token = undefined;
@@ -166,20 +169,24 @@ export async function getOrganizationDetails(
   }
 }
 
-export async function getOrganizationSummary(
+export async function getUserSummary(
   req: Request,
   res: Response
 ): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
-    const organizationSummary = await Organization.aggregate([
+    const userSummary = await User.aggregate([
       { $match: query },
       activeDepartmentsLookup,
       departmentsLookup,
       inActiveDepartmentsLookup,
       departmentAddFields,
+      teamsLookup,
+      teamAddFields,
+      membersLookup,
+      memberAddFields,
     ]);
-    const org: any = organizationSummary ? organizationSummary[0] : null;
+    const org: any = userSummary ? userSummary[0] : null;
     if (org) {
       org.password = undefined;
       org.token = undefined;
@@ -190,20 +197,17 @@ export async function getOrganizationSummary(
   }
 }
 
-export async function getOrganizations(
-  req: Request,
-  res: Response
-): Promise<any> {
+export async function getUsers(req: Request, res: Response): Promise<any> {
   try {
     console.log(req);
-    const organizations = await Organization.find({}).select({
-      title: 1,
+    const users = await User.find({}).select({
+      name: 1,
       isVerified: 1,
       description: 1,
       _id: 0,
     });
     return res.status(200).json({
-      organizations,
+      users,
     });
   } catch (err) {
     return res.status(500).send(err || err.message);
@@ -213,11 +217,11 @@ export async function getOrganizations(
 export async function getAllSummary(req: Request, res: Response): Promise<any> {
   try {
     console.log(req);
-    const organizationsCount = await Organization.find({}).count();
+    const usersCount = await User.find({}).count();
     const projectsCount = await Project.find({}).count();
     const boardsCount = await Board.find({}).count();
     return res.status(200).json({
-      organizationsCount,
+      usersCount,
       projectsCount,
       boardsCount,
     });
@@ -226,13 +230,13 @@ export async function getAllSummary(req: Request, res: Response): Promise<any> {
   }
 }
 
-export async function deleteOrganization(
+export async function deleteUser(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<any> {
   try {
-    const deleted = await Organization.findByIdAndRemove(req.params.id);
+    const deleted = await User.findByIdAndRemove(req.params.id);
     if (!deleted) {
       res.status(500).json({ message: `Cannot delete resource` });
       return next(deleted);
@@ -245,30 +249,68 @@ export async function deleteOrganization(
   }
 }
 
-export async function getOrganizationByEmail(email: string): Promise<any> {
+export async function getUserByEmail(email: string): Promise<any> {
   try {
-    const organization = await Organization.findOne({ email: email });
-    return organization;
+    const user = await User.findOne({ email: email });
+    return user;
   } catch (err) {
     return err || err.message;
   }
 }
 
-export async function addDepartmentToOrganization(
+export async function addDepartmentToUser(
   departmentId: string,
-  organizationId: string
+  userId: string
 ): Promise<any> {
   try {
-    if (!organizationId || !departmentId) {
+    if (!userId || !departmentId) {
       return;
     }
-    const organization = await Organization.findByIdAndUpdate(
-      organizationId,
+    const user = await User.findByIdAndUpdate(
+      userId,
       { $push: { departments: departmentId } },
       { new: true, useFindAndModify: false }
     );
-    return organization;
+    return user;
   } catch (err) {
-    throw "Cannot add department to organization";
+    throw "Cannot add department to user";
+  }
+}
+
+export async function addTeamToUser(
+  teamId: string,
+  userId: string
+): Promise<any> {
+  try {
+    if (!userId || !teamId) {
+      return;
+    }
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $push: { teams: teamId } },
+      { new: true, useFindAndModify: false }
+    );
+    return user;
+  } catch (err) {
+    throw "Cannot add team" + err || err.message;
+  }
+}
+
+export async function addMemberToUser(
+  memberId: string,
+  userId: string
+): Promise<any> {
+  try {
+    if (!userId || !memberId) {
+      return;
+    }
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $push: { members: memberId } },
+      { new: true, useFindAndModify: false }
+    );
+    return user;
+  } catch (err) {
+    throw "Cannot add team" + err || err.message;
   }
 }

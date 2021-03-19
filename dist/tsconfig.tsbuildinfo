@@ -446,9 +446,74 @@
         "signature": "6e7017e8cae95bd987696671fdafdf130ac0166b57bcdf70f502758ea26e24b7",
         "affectsGlobalScope": false
       },
-      "../util/constants.ts": {
-        "version": "8ac3d9ff15f98e13849c384feeded2e313672139939bc4e40232e8eeb00cc6af",
-        "signature": "bf8c7734aeda6b8997c68d6ef27f87dd2ef5e6b9932b5c080ccc63ab63291d8b",
+      "../models/member.ts": {
+        "version": "290f866c3e0abc9ea9223654503452d80a7f788b0fe341026b2405f66cb4222a",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../models/team.ts": {
+        "version": "e00e91d1d1d07075a310fad145d2d15b0b3aa5afa94e673b31a7546e49546b3b",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../models/teammember.ts": {
+        "version": "2e39677a7a61daba83c27995e0e177c039938b211c7bdb42c89b0cd230372da0",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../util/teammemberfilters.ts": {
+        "version": "9d712fb0bbbb9f0dba0a51393c026947148b36d0fdab195f066d42251bf19bc3",
+        "signature": "d3c637fdd8a84136dbc3893f9f68bec0910a0238450182ced356d0d1b7c43b8f",
+        "affectsGlobalScope": false
+      },
+      "../models/section.ts": {
+        "version": "2b56f785e33270455292515690f4e88f9e61e34b55709e1f56db59f95c2f3d4f",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../util/sectionfilters.ts": {
+        "version": "a087ac713ce829365cb91fcbdd5ffe21dbad471c60c1adb8e2503187a0d5d869",
+        "signature": "b8d3da3a9dc311987ec710fa41ca8373344c1957f04eedba3ac17f1478cf603e",
+        "affectsGlobalScope": false
+      },
+      "../models/board.ts": {
+        "version": "febcc8a4641fe7debe3406fe66130b79eeaed59f6922c599f890c1838647f4bb",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../util/boardfilters.ts": {
+        "version": "fcc2eba88e4716fc52ee6973d6c56576fd07622d8c785af261392784bc99ad01",
+        "signature": "3b311fd4344a393f87187f34f6f6075794a7384f686749a4133097b3ee2a6db8",
+        "affectsGlobalScope": false
+      },
+      "../models/project.ts": {
+        "version": "761bc8327b59ca436dfcb3120f1a92a98013056416629682b51648c7fa0f020a",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../util/projectfilters.ts": {
+        "version": "c8b7daa7158894ae9f5468bfd298859e6082869f32d379db65f46b17feea640a",
+        "signature": "72a02e3607d4a09e7df56060d08cdf001aed5c2705b155c1edd01447241ddbde",
+        "affectsGlobalScope": false
+      },
+      "../models/department.ts": {
+        "version": "5037b443480a8fb99c4dc42bdadebfe9dbe359f963e112ab936b029f9501036e",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../util/departmentfilters.ts": {
+        "version": "2fb301fe51f36776576ed6b44cc39606a5ed4318865aae5d704262053a8fd7ba",
+        "signature": "c7e19f4a4d5025a0f73bbcf61c279266c6160f06e1ca26d4cb34fee2c0e58712",
+        "affectsGlobalScope": false
+      },
+      "../util/memberfilters.ts": {
+        "version": "04578b8e0096a9bbe5e121a8cb60da1be875b687ef283c8486da7252386d5757",
+        "signature": "c9f83356a6bcae67f1d90c198a61fa0ce72d5b5c54e4a9256d4a0805d4f66e85",
+        "affectsGlobalScope": false
+      },
+      "../util/teamfilters.ts": {
+        "version": "50e95b4ae42c7bb8f298c22b248c51c8f9fbe10056a660e58a10aa365bcbcf48",
+        "signature": "29bb456a6c08a1249f605fbce26e912b3f3f3a1b42124d0222f887bdf4ba709d",
         "affectsGlobalScope": false
       },
       "../node_modules/@types/ejs/index.d.ts": {
@@ -531,9 +596,19 @@
         "signature": "07c085dfd052637504d0e8307868cd8983e937d64ce157b70e00155986b74755",
         "affectsGlobalScope": false
       },
-      "../types/organization.ts": {
-        "version": "f9e39e15e8a7bd5c18fc68e8611b9c0abff880fbd69f7ac64625ff28eaad995b",
-        "signature": "6566cd7a398fc30c738eb66cc600d9af1d994e82211051f6953f6ff74d44e2db",
+      "../models/token.ts": {
+        "version": "9de4dde165bef2c029ab0ebc7f3b63e7551c8c788b66949665c84512a93f83ff",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../util/constants.ts": {
+        "version": "ac5ad0270b7eefd9c3da4be572c0282bb7d3e328dfe2589deddabb27b417cf6b",
+        "signature": "fa375e5734c35212911793b7b38cd7ae9aa5eb8528f548f78cd4d3c0455482ec",
+        "affectsGlobalScope": false
+      },
+      "../types/user.ts": {
+        "version": "b1a3877ff9c458da22dbe352a0127f8eb4c5907ea1ce27740b48e7d182578c66",
+        "signature": "60198ef18749ca1d5dd992186b3b826e786f2076f45f58eb7fe18cf5249f9320",
         "affectsGlobalScope": false
       },
       "../node_modules/@types/bcrypt/index.d.ts": {
@@ -541,59 +616,24 @@
         "signature": "18b9a9702d2fc7d3766b0c8124133c761ad25a9d767925005777eb2c2cd8aeba",
         "affectsGlobalScope": false
       },
-      "../models/organization.ts": {
-        "version": "677ef37a687ac5c903b706c2d5c09ef0cabcf51efb47356b31edc836e24eefa7",
+      "../models/user.ts": {
+        "version": "6b8457832905d511e442385737b157bcc665a412124da62cb0aec8b729af6fbe",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
-      "../models/token.ts": {
-        "version": "b91019685d0dc8abfd417c954abd4122dd9b8647797d42d9f7cbcdb52c087a0f",
-        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+      "../controllers/user/index.ts": {
+        "version": "0f01d9f30501d632a2c5bb65ae71610c08970c74fbeab31ccc4c6c9e45e4b123",
+        "signature": "60b24521b29b898348606eef48cb6ddd2b11f2565815362f36a0cd69ac23ad5a",
         "affectsGlobalScope": false
       },
-      "../models/section.ts": {
-        "version": "2b56f785e33270455292515690f4e88f9e61e34b55709e1f56db59f95c2f3d4f",
-        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+      "../controllers/member/index.ts": {
+        "version": "1473def70236169db94a1b6842cfd01223cd74856bd8ee2872bfd6d69ffe12c6",
+        "signature": "81a2fd9f53690588bb2b86bc71167d4c06092c7b75420581f7947b2dded3c117",
         "affectsGlobalScope": false
       },
-      "../util/sectionfilters.ts": {
-        "version": "a087ac713ce829365cb91fcbdd5ffe21dbad471c60c1adb8e2503187a0d5d869",
-        "signature": "b8d3da3a9dc311987ec710fa41ca8373344c1957f04eedba3ac17f1478cf603e",
-        "affectsGlobalScope": false
-      },
-      "../models/board.ts": {
-        "version": "bd7a55b36ad1d4a4dbab75a52e60dc35c41cd2014611a9d7c1050c48b72f33d0",
-        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
-        "affectsGlobalScope": false
-      },
-      "../util/boardfilters.ts": {
-        "version": "fcc2eba88e4716fc52ee6973d6c56576fd07622d8c785af261392784bc99ad01",
-        "signature": "3b311fd4344a393f87187f34f6f6075794a7384f686749a4133097b3ee2a6db8",
-        "affectsGlobalScope": false
-      },
-      "../models/project.ts": {
-        "version": "8f31c354c6276dc06d897ea4ba96f26ea96a8d92bbf2197f1d293fd81a31d4d2",
-        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
-        "affectsGlobalScope": false
-      },
-      "../util/projectfilters.ts": {
-        "version": "c8b7daa7158894ae9f5468bfd298859e6082869f32d379db65f46b17feea640a",
-        "signature": "72a02e3607d4a09e7df56060d08cdf001aed5c2705b155c1edd01447241ddbde",
-        "affectsGlobalScope": false
-      },
-      "../models/department.ts": {
-        "version": "9d9ae9ea053e884b00f6083fe0003483e1b631d53157c4b22504a4a3af8bb44c",
-        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
-        "affectsGlobalScope": false
-      },
-      "../util/departmentfilters.ts": {
-        "version": "88035c08b76bd8285fca3ebdf39201fc932492f309f43a461ac8daf5fefaf80c",
-        "signature": "c7e19f4a4d5025a0f73bbcf61c279266c6160f06e1ca26d4cb34fee2c0e58712",
-        "affectsGlobalScope": false
-      },
-      "../controllers/organization/index.ts": {
-        "version": "7e8717e64960fa0876f6d6c8c76cdbecdbb7a758d5a4f494763f41129620e75c",
-        "signature": "3b8f5bf1ef3fb1e60a9aea953e98cc76ad03491417ec0d6c276c8faef50333dd",
+      "../controllers/team/index.ts": {
+        "version": "f02255ebff58a65f966c9af4f2b2ecbe455a7d694d47add37f57adfffe30ce1c",
+        "signature": "cdbadc04cb1057c66d6202e5927fd0708acc142af35571531629ec043b2be0b9",
         "affectsGlobalScope": false
       },
       "../node_modules/@types/jsonwebtoken/index.d.ts": {
@@ -602,7 +642,7 @@
         "affectsGlobalScope": false
       },
       "../controllers/auth/index.ts": {
-        "version": "3ed4dbd8a46214549942b27df916c6743d2d515c9d765d2f8363647b86dbe222",
+        "version": "660e049256b96a3811515ed28c4c469cc09fa1dc394b2e399f749262d1f05aad",
         "signature": "65d5e72f3a483437b722eebe9b7184b1dd5da4681ae2d17079db5f5817890999",
         "affectsGlobalScope": false
       },
@@ -617,13 +657,13 @@
         "affectsGlobalScope": false
       },
       "../models/reaction.ts": {
-        "version": "94a9f51510d619896991900647966622c7b432664465040ab04dc08f9832345c",
+        "version": "191b35578b8008e178b2eecb58da5f01a9eb98807df6b234ff68360eea5c6e76",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
       "../util/reactionfilters.ts": {
-        "version": "3e53eff04656f2b266767d04d3e4dfcd4cbe6a254df8ae6c8c7bd4ce68b1e324",
-        "signature": "47f00aa79e7d8ab34b0209368146f6f438fd4d26090e376aa0f6d92de54ba377",
+        "version": "db7962e25bcd24346eae07efd028e1ba868dc8adbbbe9e654a487179af9069ea",
+        "signature": "26e0d832f9ea62adf8fda6c0034c1b8e59ebe4af01159bef1c07d7ad36fc0992",
         "affectsGlobalScope": false
       },
       "../models/note.ts": {
@@ -633,41 +673,41 @@
       },
       "../util/notefilters.ts": {
         "version": "04d8490ff7695accaaaa08e107abaf0730e9056c84d6ab9d3530410d12c1df4f",
-        "signature": "f3e566b5a0c3869a17996925a482de1ea25a509835140e2925b85d46909ca047",
+        "signature": "8266266e6abc5fef744b1c70489f196f7b0f2395668cc2bbe6bfaafc17c2b3d9",
         "affectsGlobalScope": false
       },
       "../controllers/reaction/index.ts": {
-        "version": "9b33bb439478f747adf1bcc6109ae5c3e8beba0c8a1caac23faac4b316aa2039",
-        "signature": "a4ef3abcc2a68bd1b378344a211de089a7c780e9dad375b9e204b855257e488b",
+        "version": "874ffdf6944becb814eaf088ba94b8ee0f92d1f6f2a24c136e909381e1ce5fbc",
+        "signature": "28c0130df8948ea92fabb45afa41dd552685c332c281c8196e14b1859fea841a",
         "affectsGlobalScope": false
       },
       "../controllers/note/index.ts": {
-        "version": "d0b13fe3afee7b8d33542079af7d6588120c0400c6c223c2132831af85dd8f07",
-        "signature": "eaa4bd312461636b2b1344f7333e3bdf10ae903a2f2de3f58878f345d9a609c6",
+        "version": "0d483cde0f24e8ff5199f2dd41569729550843a1876662ae3606a003465a5564",
+        "signature": "bdfc601924ebe40d51508c5c08a2bc11a93e32e80f862b5fb1f1a3251f9d569f",
         "affectsGlobalScope": false
       },
       "../controllers/section/index.ts": {
-        "version": "e0d608503e69069d855025c0edc105a20a34e5df42e13e4f36d3603d49734024",
-        "signature": "e121e66ace74bbea3f3ecd29d6cfcfe725b7f87fbe5b06923c89e20ba294b689",
+        "version": "b4210cd71fb8e4a23b33dbd6466aa8911055a6370b79cca48cb4cb404341a92a",
+        "signature": "84fc557cfd72aca09b4703cac3837a2a9db092c6519161b1d4306cc414127c3d",
         "affectsGlobalScope": false
       },
       "../controllers/department/index.ts": {
-        "version": "931f7c5d739b7f11630e60de98e9988d86c48b307012b209c5af183e32720ac2",
+        "version": "eec378e24b946c91cd75cac782e2d436be0b7728401e23b90ad2adedf281190d",
         "signature": "2bf3f5ef4d94cc4d3f3b0c4d8549df6627f0c8b898efdd4f90eb4c97e0c36c71",
         "affectsGlobalScope": false
       },
       "../controllers/project/index.ts": {
-        "version": "4f9f332febaa1e1b66aec85e0507698688067a3fa8660eef00dfe7f8ccac7295",
+        "version": "a335276cf7239d5f34f8efaf0b641b9a7f86a5947e37d4b976b6c482e64b029d",
         "signature": "1a9e184613ab60c756a3f80d6ad81ee4bfd553aa1f83527b1b12ffb1e83e6684",
         "affectsGlobalScope": false
       },
       "../controllers/board/index.ts": {
-        "version": "c93383ce186d0e10b4d45560a799e1617b557a688c2edcd84d197c603a37bb81",
-        "signature": "ac88e48b11e98d9bf591f67ed59f648410f26819cefdbffafd089d8d6ea3d34a",
+        "version": "a09e4a6b3cc263035d8f4c4af6eea1839a1d5e4ca159a51281b322ef504448df",
+        "signature": "7610eff84df3c9822a8ab5eefdf8b7bbc647cde02b7502b257a2aad8fe0241fd",
         "affectsGlobalScope": false
       },
       "../router/index.ts": {
-        "version": "98b6059e281793da11058cddb5f7d9f37a2a2cd56b19cf6165297cfd9e415544",
+        "version": "33a9ea48f0616648bebf7e326f62d30220d90b6c09e2710cce1850c8d9dac3ab",
         "signature": "bb9f40b07ab2b881b3de2f5b1a7bb5886a9d031e447e0b70552f7d4da625c55f",
         "affectsGlobalScope": false
       },
@@ -752,7 +792,7 @@
         "affectsGlobalScope": false
       },
       "../types/section.ts": {
-        "version": "e71b6eb3e18329fab3877aff4076b1f1ae4d31c5ad83ef2569ed47b75b7f0e45",
+        "version": "0ee1e3912dcc8edbb62fa1a067fa821f28fc65518148e1bc9523b8f17a58de5e",
         "signature": "382f2b5817229f6242c4c3f1bb18679e5f9cf0dc2d7bef661152bbbd14f7f674",
         "affectsGlobalScope": false
       },
@@ -762,7 +802,7 @@
         "affectsGlobalScope": false
       },
       "../types/index.ts": {
-        "version": "b3df5c6d278fcb1d7c86e6156aefdf11399e112d53f85d0d448f7d6bba56fab3",
+        "version": "e780e35bbfef4e100d93434aa0c1f6ed1b3c3759fc53db5a8957b4fb77272028",
         "signature": "e780e35bbfef4e100d93434aa0c1f6ed1b3c3759fc53db5a8957b4fb77272028",
         "affectsGlobalScope": false
       }
@@ -810,10 +850,11 @@
     },
     "referencedMap": {
       "../controllers/auth/index.ts": [
-        "../controllers/organization/index.ts",
+        "../controllers/member/index.ts",
+        "../controllers/user/index.ts",
         "../index.ts",
-        "../models/organization.ts",
         "../models/token.ts",
+        "../models/user.ts",
         "../node_modules/@types/bcrypt/index.d.ts",
         "../node_modules/@types/config/index.d.ts",
         "../node_modules/@types/express/index.d.ts",
@@ -829,19 +870,28 @@
         "../models/board.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
+        "../util/constants.ts",
         "../util/sectionfilters.ts"
       ],
       "../controllers/department/index.ts": [
-        "../controllers/organization/index.ts",
         "../controllers/project/index.ts",
+        "../controllers/user/index.ts",
         "../models/department.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
+        "../util/constants.ts",
         "../util/projectfilters.ts"
       ],
       "../controllers/feedback/index.ts": [
         "../models/feedback.ts",
         "../node_modules/@types/express/index.d.ts"
+      ],
+      "../controllers/member/index.ts": [
+        "../controllers/user/index.ts",
+        "../models/member.ts",
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../util/teammemberfilters.ts"
       ],
       "../controllers/note/index.ts": [
         "../controllers/reaction/index.ts",
@@ -852,32 +902,23 @@
         "../node_modules/mongoose/index.d.ts",
         "../util/reactionfilters.ts"
       ],
-      "../controllers/organization/index.ts": [
-        "../models/board.ts",
-        "../models/organization.ts",
-        "../models/project.ts",
-        "../models/token.ts",
-        "../node_modules/@types/config/index.d.ts",
-        "../node_modules/@types/express/index.d.ts",
-        "../node_modules/@types/node/crypto.d.ts",
-        "../node_modules/mongoose/index.d.ts",
-        "../services/email/index.ts",
-        "../util/constants.ts",
-        "../util/departmentfilters.ts"
-      ],
       "../controllers/project/index.ts": [
         "../controllers/board/index.ts",
         "../controllers/department/index.ts",
         "../models/project.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
-        "../util/boardfilters.ts"
+        "../util/boardfilters.ts",
+        "../util/constants.ts"
       ],
       "../controllers/reaction/index.ts": [
+        "../controllers/member/index.ts",
         "../controllers/note/index.ts",
         "../index.ts",
         "../models/reaction.ts",
-        "../node_modules/@types/express/index.d.ts"
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../util/memberfilters.ts"
       ],
       "../controllers/section/index.ts": [
         "../controllers/note/index.ts",
@@ -885,7 +926,32 @@
         "../models/section.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
+        "../util/constants.ts",
         "../util/notefilters.ts"
+      ],
+      "../controllers/team/index.ts": [
+        "../controllers/member/index.ts",
+        "../controllers/user/index.ts",
+        "../models/team.ts",
+        "../models/teammember.ts",
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../util/teammemberfilters.ts"
+      ],
+      "../controllers/user/index.ts": [
+        "../models/board.ts",
+        "../models/project.ts",
+        "../models/token.ts",
+        "../models/user.ts",
+        "../node_modules/@types/config/index.d.ts",
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/@types/node/crypto.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../services/email/index.ts",
+        "../util/constants.ts",
+        "../util/departmentfilters.ts",
+        "../util/memberfilters.ts",
+        "../util/teamfilters.ts"
       ],
       "../index.ts": [
         "../node_modules/@types/config/index.d.ts",
@@ -900,14 +966,11 @@
       "../models/department.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
-      "../models/note.ts": [
+      "../models/member.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
-      "../models/organization.ts": [
-        "../node_modules/@types/bcrypt/index.d.ts",
-        "../node_modules/@types/config/index.d.ts",
-        "../node_modules/mongoose/index.d.ts",
-        "../types/organization.ts"
+      "../models/note.ts": [
+        "../node_modules/mongoose/index.d.ts"
       ],
       "../models/project.ts": [
         "../node_modules/mongoose/index.d.ts"
@@ -918,8 +981,20 @@
       "../models/section.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
+      "../models/team.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/teammember.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
       "../models/token.ts": [
         "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/user.ts": [
+        "../node_modules/@types/bcrypt/index.d.ts",
+        "../node_modules/@types/config/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../types/user.ts"
       ],
       "../node_modules/@types/body-parser/index.d.ts": [
         "../node_modules/@types/connect/index.d.ts",
@@ -1295,11 +1370,13 @@
         "../controllers/board/index.ts",
         "../controllers/department/index.ts",
         "../controllers/feedback/index.ts",
+        "../controllers/member/index.ts",
         "../controllers/note/index.ts",
-        "../controllers/organization/index.ts",
         "../controllers/project/index.ts",
         "../controllers/reaction/index.ts",
         "../controllers/section/index.ts",
+        "../controllers/team/index.ts",
+        "../controllers/user/index.ts",
         "../node_modules/@types/express/index.d.ts"
       ],
       "../server.ts": [
@@ -1342,12 +1419,12 @@
         "../node_modules/mongoose/index.d.ts",
         "../types/like.ts"
       ],
-      "../types/organization.ts": [
-        "../node_modules/mongoose/index.d.ts"
-      ],
       "../types/section.ts": [
         "../node_modules/mongoose/index.d.ts",
         "../types/note.ts"
+      ],
+      "../types/user.ts": [
+        "../node_modules/mongoose/index.d.ts"
       ],
       "../util/boardfilters.ts": [
         "../models/board.ts",
@@ -1356,6 +1433,10 @@
       "../util/departmentfilters.ts": [
         "../models/department.ts",
         "../util/projectfilters.ts"
+      ],
+      "../util/memberfilters.ts": [
+        "../models/member.ts",
+        "../util/teammemberfilters.ts"
       ],
       "../util/notefilters.ts": [
         "../models/note.ts",
@@ -1367,10 +1448,20 @@
         "../util/boardfilters.ts"
       ],
       "../util/reactionfilters.ts": [
-        "../models/reaction.ts"
+        "../models/reaction.ts",
+        "../util/memberfilters.ts"
       ],
       "../util/sectionfilters.ts": [
         "../models/section.ts"
+      ],
+      "../util/teamfilters.ts": [
+        "../models/team.ts",
+        "../util/memberfilters.ts"
+      ],
+      "../util/teammemberfilters.ts": [
+        "../models/member.ts",
+        "../models/team.ts",
+        "../models/teammember.ts"
       ]
     },
     "exportedModulesMap": {
@@ -1386,10 +1477,11 @@
       "../controllers/feedback/index.ts": [
         "../node_modules/@types/express/index.d.ts"
       ],
-      "../controllers/note/index.ts": [
-        "../node_modules/@types/express/index.d.ts"
+      "../controllers/member/index.ts": [
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts"
       ],
-      "../controllers/organization/index.ts": [
+      "../controllers/note/index.ts": [
         "../node_modules/@types/express/index.d.ts"
       ],
       "../controllers/project/index.ts": [
@@ -1402,16 +1494,22 @@
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts"
       ],
+      "../controllers/team/index.ts": [
+        "../node_modules/@types/express/index.d.ts"
+      ],
+      "../controllers/user/index.ts": [
+        "../node_modules/@types/express/index.d.ts"
+      ],
       "../models/board.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/department.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
-      "../models/note.ts": [
+      "../models/member.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
-      "../models/organization.ts": [
+      "../models/note.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/project.ts": [
@@ -1423,7 +1521,16 @@
       "../models/section.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
+      "../models/team.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/teammember.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
       "../models/token.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/user.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../node_modules/@types/body-parser/index.d.ts": [
@@ -1824,12 +1931,12 @@
         "../node_modules/mongoose/index.d.ts",
         "../types/like.ts"
       ],
-      "../types/organization.ts": [
-        "../node_modules/mongoose/index.d.ts"
-      ],
       "../types/section.ts": [
         "../node_modules/mongoose/index.d.ts",
         "../types/note.ts"
+      ],
+      "../types/user.ts": [
+        "../node_modules/mongoose/index.d.ts"
       ]
     },
     "semanticDiagnosticsPerFile": [
@@ -1837,21 +1944,26 @@
       "../controllers/board/index.ts",
       "../controllers/department/index.ts",
       "../controllers/feedback/index.ts",
+      "../controllers/member/index.ts",
       "../controllers/note/index.ts",
-      "../controllers/organization/index.ts",
       "../controllers/project/index.ts",
       "../controllers/reaction/index.ts",
       "../controllers/section/index.ts",
+      "../controllers/team/index.ts",
+      "../controllers/user/index.ts",
       "../index.ts",
       "../models/board.ts",
       "../models/department.ts",
       "../models/feedback.ts",
+      "../models/member.ts",
       "../models/note.ts",
-      "../models/organization.ts",
       "../models/project.ts",
       "../models/reaction.ts",
       "../models/section.ts",
+      "../models/team.ts",
+      "../models/teammember.ts",
       "../models/token.ts",
+      "../models/user.ts",
       "../node_modules/@types/bcrypt/index.d.ts",
       "../node_modules/@types/body-parser/index.d.ts",
       "../node_modules/@types/bson/index.d.ts",
@@ -1977,15 +2089,18 @@
       "../types/index.ts",
       "../types/like.ts",
       "../types/note.ts",
-      "../types/organization.ts",
       "../types/section.ts",
+      "../types/user.ts",
       "../util/boardfilters.ts",
       "../util/constants.ts",
       "../util/departmentfilters.ts",
+      "../util/memberfilters.ts",
       "../util/notefilters.ts",
       "../util/projectfilters.ts",
       "../util/reactionfilters.ts",
-      "../util/sectionfilters.ts"
+      "../util/sectionfilters.ts",
+      "../util/teamfilters.ts",
+      "../util/teammemberfilters.ts"
     ]
   },
   "version": "3.9.7"

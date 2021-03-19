@@ -1,4 +1,5 @@
 import Reaction from "../models/reaction";
+import { memberLookup } from "./memberFilters";
 
 const reactionLookup = {
   $lookup: {
@@ -12,6 +13,13 @@ const reactionLookup = {
       },
       {
         $sort: { _id: -1 },
+      },
+      memberLookup,
+      {
+        $unwind: {
+          path: "$reactedBy",
+          preserveNullAndEmptyArrays: true,
+        },
       },
     ],
     as: "reactions",
@@ -27,6 +35,13 @@ const reactionPlusOneLookup = {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$reactions", []] }] },
           type: "plusOne",
+        },
+      },
+      memberLookup,
+      {
+        $unwind: {
+          path: "$reactedBy",
+          preserveNullAndEmptyArrays: true,
         },
       },
     ],
@@ -45,6 +60,13 @@ const reactionPlusTwoLookup = {
           type: "plusTwo",
         },
       },
+      memberLookup,
+      {
+        $unwind: {
+          path: "$reactedBy",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ],
     as: "plusTwoReactions",
   },
@@ -59,6 +81,13 @@ const reactionDeserveLookup = {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$reactions", []] }] },
           type: "deserve",
+        },
+      },
+      memberLookup,
+      {
+        $unwind: {
+          path: "$reactedBy",
+          preserveNullAndEmptyArrays: true,
         },
       },
     ],
@@ -77,6 +106,13 @@ const reactionDisAgreeLookup = {
           type: "disagree",
         },
       },
+      memberLookup,
+      {
+        $unwind: {
+          path: "$reactedBy",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ],
     as: "disAgreeReactions",
   },
@@ -91,6 +127,13 @@ const reactionLoveLookup = {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$reactions", []] }] },
           type: "love",
+        },
+      },
+      memberLookup,
+      {
+        $unwind: {
+          path: "$reactedBy",
+          preserveNullAndEmptyArrays: true,
         },
       },
     ],

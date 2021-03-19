@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { boardAddFields, boardsLookup } from "../../util/boardFilters";
 
 import Project from "../../models/project";
+import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import { addProjectToDepartment } from "../department";
 import { findBoardsByProjectAndDelete } from "../board";
 import mongoose from "mongoose";
@@ -22,7 +23,19 @@ export async function updateProject(
           isPrivate: req.body.isPrivate || false,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = { upsert: true, new: true, setDefaultsOnInsert: true }; // new true will return modified document instead of original one
+    const project = await getProject({
+      $and: [
+        { title: req.body.title },
+        { departmentId: req.body.departmentId },
+      ],
+    });
+    if (project) {
+      return res.status(409).json({
+        errorId: RESOURCE_ALREADY_EXISTS,
+        message: `Project with ${project?.title} already exist. Please choose different name`,
+      });
+    }
     const updated = await Project.findOneAndUpdate(query, update, options);
     if (!updated) {
       return next(updated);
@@ -51,19 +64,14 @@ export async function getProjectDetails(
   }
 }
 
-// async function getProjects(boardId: string): Promise<any> {
-//   try {
-//     const query = { organizationId: mongoose.Types.ObjectId(boardId) };
-//     const projects = await Project.aggregate([
-//       { "$match": query },
-//       projectsLookup,
-//       projectAddFields
-//     ]);
-//     return projects;
-//   } catch(err){
-//     throw err | err.message;
-//   }
-// }
+async function getProject(query: { [Key: string]: any }): Promise<any> {
+  try {
+    const project = await Project.findOne(query);
+    return project;
+  } catch (err) {
+    throw err | err.message;
+  }
+}
 
 export async function deleteProject(
   req: Request,
@@ -113,9 +121,9 @@ export async function findProjectsByDepartmentAndDelete(
     const deleted = projectsList.reduce(
       async (promise: Promise<any>, project: { [Key: string]: any }) => {
         await promise;
+        await findBoardsByProjectAndDelete(project?.id);
         // await findSectionsByBoardAndDelete(board._id)
         // await deleteNoteById(board._id);
-        console.log(project);
       },
       [Promise.resolve()]
     );

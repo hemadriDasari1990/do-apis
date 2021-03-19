@@ -145,7 +145,21 @@ export async function addReactionToNote(
     );
     return updated;
   } catch (err) {
-    throw `Error adding like ${err || err.message}`;
+    throw `Error while adding reaction ${err || err.message}`;
+  }
+}
+
+export async function removeReactionFromNote(
+  reactionId: string,
+  noteId: string
+) {
+  try {
+    if (!reactionId || !noteId) {
+      return;
+    }
+    await Note.findByIdAndUpdate(noteId, { $pull: { reactions: reactionId } });
+  } catch (err) {
+    throw new Error("Error while removing reaction from note");
   }
 }
 
@@ -168,6 +182,15 @@ export async function findNotesBySectionAndDelete(
     return deleted;
   } catch (err) {
     throw err || err.message;
+  }
+}
+
+export async function getNote(query: { [Key: string]: any }): Promise<any> {
+  try {
+    const note = await Note.findOne(query);
+    return note;
+  } catch (err) {
+    throw err | err.message;
   }
 }
 

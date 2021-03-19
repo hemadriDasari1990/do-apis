@@ -16,6 +16,7 @@ const ProjectSchema = new Schema(
       trim: true,
       minlength: 1,
       required: true,
+      unique: true,
     },
     description: {
       type: String,
@@ -43,6 +44,7 @@ const ProjectSchema = new Schema(
   },
   {
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.
+    strict: true,
   }
 );
 

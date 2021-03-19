@@ -1,4 +1,10 @@
 import {
+  addOrRemoveMemberFromTeam,
+  deleteTeam,
+  getTeams,
+  updateTeam,
+} from "../controllers/team";
+import {
   authenticateJWT,
   forgotPassword,
   login,
@@ -9,19 +15,19 @@ import {
 } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
 import {
-  createOrganization,
-  deleteOrganization,
-  getAllSummary,
-  getOrganizationDetails,
-  getOrganizationSummary,
-  getOrganizations,
-} from "../controllers/organization";
-import {
   createSection,
   deleteSection,
   getSectionsByBoardId,
   updateSection,
 } from "../controllers/section";
+import {
+  createUser,
+  deleteUser,
+  getAllSummary,
+  getUserDetails,
+  getUserSummary,
+  getUsers,
+} from "../controllers/user";
 import {
   deleteBoard,
   getBoardDetails,
@@ -33,6 +39,12 @@ import {
   getDepartmentDetails,
   updateDepartment,
 } from "../controllers/department";
+import {
+  deleteMember,
+  getMemberDetails,
+  getMembersByUser,
+  updateMember,
+} from "../controllers/member";
 import {
   deleteNote,
   getNotesBySectionId,
@@ -53,13 +65,15 @@ export default function(app: Application) {
   // Initializing route groups
   const apiRoutes = express.Router(),
     authRoutes = express.Router(),
-    organizationRoutes = express.Router(),
+    userRoutes = express.Router(),
     departmentRoutes = express.Router(),
     projectRoutes = express.Router(),
     boardRoutes = express.Router(),
     sectionRoutes = express.Router(),
     noteRoutes = express.Router(),
     reactionRoutes = express.Router(),
+    teamRoutes = express.Router(),
+    memberRoutes = express.Router(),
     feedbackRoutes = express.Router();
 
   //= ========================
@@ -91,52 +105,70 @@ export default function(app: Application) {
   authRoutes.post("/reset-password", resetPassword);
 
   //= ========================
-  // Organization Routes
+  // User Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use("/organization", organizationRoutes);
+  apiRoutes.use("/user", userRoutes);
 
-  // Organization summary
-  organizationRoutes.get("/summary", getAllSummary);
+  // User summary
+  userRoutes.get("/summary", getAllSummary);
 
-  // Organization names
-  organizationRoutes.get("/", getOrganizations);
+  // User names
+  userRoutes.get("/", getUsers);
 
-  // Organization details route
-  organizationRoutes.get("/:id", authenticateJWT, getOrganizationDetails);
+  // User details route
+  userRoutes.get("/:id", authenticateJWT, getUserDetails);
 
-  // Update or Create Organization
-  organizationRoutes.post("/", createOrganization);
+  // Update or Create User
+  userRoutes.post("/", createUser);
 
-  // Organization delete route
-  organizationRoutes.delete("/:id", authenticateJWT, deleteOrganization);
+  // User delete route
+  userRoutes.delete("/:id", authenticateJWT, deleteUser);
 
-  // Organization summary
-  organizationRoutes.get(
-    "/:id/summary",
-    authenticateJWT,
-    getOrganizationSummary
-  );
+  // User summary
+  userRoutes.get("/:id/summary", authenticateJWT, getUserSummary);
+
+  //= ========================
+  // Team Routes
+  //= ========================
+
+  // Set user routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/team", teamRoutes);
+
+  // Team details route
+  teamRoutes.get("/", authenticateJWT, getTeams);
+
+  // Create or Update Team
+  teamRoutes.put("/", authenticateJWT, updateTeam);
+
+  // Create or Update Team
+  teamRoutes.put("/:id/member", authenticateJWT, addOrRemoveMemberFromTeam);
+
+  // Team delete route
+  teamRoutes.delete("/:id", authenticateJWT, deleteTeam);
+
+  //= ========================
+  // Member Routes
+  //= ========================
+
+  // Set user routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/member", memberRoutes);
+
+  // Get all members
+  memberRoutes.get("/", authenticateJWT, getMembersByUser);
+
+  // Member details route
+  memberRoutes.get("/:id", authenticateJWT, getMemberDetails);
+
+  // Create or Update Member
+  memberRoutes.put("/", authenticateJWT, updateMember);
+
+  // Member delete route
+  memberRoutes.delete("/:id", authenticateJWT, deleteMember);
 
   //= ========================
   // Department Routes
-  //= ========================
-
-  // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use("/project", projectRoutes);
-
-  // Project details route
-  projectRoutes.get("/:id", authenticateJWT, getProjectDetails);
-
-  // Create or Update Project
-  projectRoutes.put("/", authenticateJWT, updateProject);
-
-  // Project delete route
-  projectRoutes.delete("/:id", authenticateJWT, deleteProject);
-
-  //= ========================
-  // Project Routes
   //= ========================
 
   // Set user routes as subgroup/middleware to apiRoutes
@@ -150,6 +182,22 @@ export default function(app: Application) {
 
   // Department delete route
   departmentRoutes.delete("/:id", authenticateJWT, deleteDepartment);
+
+  //= ========================
+  // Project Routes
+  //= ========================
+
+  // Set user routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/project", projectRoutes);
+
+  // Project details route
+  projectRoutes.get("/:id", authenticateJWT, getProjectDetails);
+
+  // Create or Update Project
+  projectRoutes.put("/", authenticateJWT, updateProject);
+
+  // Project delete route
+  projectRoutes.delete("/:id", authenticateJWT, deleteProject);
 
   //= ========================
   // Board Routes

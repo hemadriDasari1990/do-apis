@@ -1,6 +1,6 @@
 import { Document } from "mongoose";
 
-export default interface OrganizationInstance extends Document {
+export default interface UserInstance extends Document {
   title: string;
   description: string;
   email: string;

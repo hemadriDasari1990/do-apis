@@ -10,12 +10,13 @@ import {
 import { NextFunction, Request, Response } from "express";
 
 import EmailService from "../../services/email";
-import Organization from "../../models/organization";
 import Token from "../../models/token";
+import User from "../../models/user";
 import bcrypt from "bcrypt";
 import config from "config";
+import { createMember } from "../member";
 import crypto from "crypto";
-import { getOrganizationByEmail } from "../organization";
+import { getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { socket } from "../../index";
@@ -36,9 +37,9 @@ export async function authenticateJWT(
   const authHeader: string = req.headers.authorization as string;
   if (authHeader) {
     const token: string = authHeader.split(" ")[1];
-    const organization: any = await Organization.findOne({ token: token });
+    const user: any = await User.findOne({ token: token });
     let secret: any;
-    if (organization?.token) {
+    if (user?.token) {
       secret = config.get("refreshTokenSecret");
     } else {
       secret = config.get("accessTokenSecret");
@@ -70,31 +71,26 @@ export async function login(req: Request, res: Response): Promise<any> {
   try {
     const email: string = req.body.email;
     const password: string = req.body.password;
-    const organization: { [Key: string]: any } = await getOrganizationByEmail(
-      email
-    );
-    if (!organization) {
+    const user: { [Key: string]: any } = await getUserByEmail(email);
+    if (!user) {
       return res
         .status(422)
         .json({ message: "Email is not registered with us" });
     }
-    if (!organization?.isVerified) {
+    if (!user?.isVerified) {
       return res.status(422).json({
         message:
           "Your account is not verified yet. Please check your inbox and confirm your email",
       });
     }
     // Check password
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      organization.password
-    );
+    const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
       return res.status(422).json({ message: "Incorrect Password" });
     const payload = {
-      _id: organization._id,
-      title: organization.title,
-      description: organization.description,
+      _id: user._id,
+      title: user.name,
+      description: user.description,
     };
 
     // Sign token
@@ -106,7 +102,7 @@ export async function login(req: Request, res: Response): Promise<any> {
     if (!refreshToken) {
       return res.status(500).json({ message: "Error while logging in" });
     }
-    await Organization.findByIdAndUpdate(organization._id, {
+    await User.findByIdAndUpdate(user._id, {
       token: refreshToken,
     });
     await socket.emit(`login-success`);
@@ -130,15 +126,15 @@ export async function login(req: Request, res: Response): Promise<any> {
  */
 export async function refreshToken(req: Request, res: Response): Promise<any> {
   try {
-    const organization: any = await Organization.findOne({
+    const user: any = await User.findOne({
       token: req.body.refreshToken,
     });
-    if (!organization) {
+    if (!user) {
       return res.status(401).json({ error: "Token expired!" });
     }
     //extract payload from refresh token and generate a new access token and send it
     const payload: any = jwt.verify(
-      organization?.token,
+      user?.token,
       config.get("refreshTokenSecret")
     );
     // Sign token
@@ -167,7 +163,7 @@ export async function refreshToken(req: Request, res: Response): Promise<any> {
  */
 export async function logout(req: Request, res: Response): Promise<any> {
   try {
-    await Organization.findByIdAndUpdate(req.body.organizationId, {
+    await User.findByIdAndUpdate(req.body.userId, {
       token: null,
     });
     return res.status(200).json({ success: "User logged out!" });
@@ -195,10 +191,10 @@ export async function forgotPassword(
         .json({ errorId: REQUIRED, message: "Email is required" });
     }
     const emailService = await new EmailService();
-    const organization: any = await Organization.findOne({
+    const user: any = await User.findOne({
       email: req.body.email,
     });
-    if (!organization) {
+    if (!user) {
       return res.status(409).json({
         errorId: NOT_FOUND,
         message: "Email does not exist! Please create account",
@@ -206,13 +202,13 @@ export async function forgotPassword(
     }
 
     const token: any = new Token({
-      organizationId: organization._id,
+      userId: user._id,
       token: crypto.randomBytes(16).toString("hex"),
       createdAt: Date.now(),
     });
     await token.save();
     await Token.find({
-      organizationId: organization._id,
+      userId: user._id,
       token: { $ne: token?.token },
     })
       .remove()
@@ -223,7 +219,7 @@ export async function forgotPassword(
       {
         url: config.get("url"),
         confirm_link: `${config.get("url")}/reset-password/${token?.token}`,
-        name: organization.title,
+        name: user.name,
       },
       req.body.email,
       "Resetting your letsdoretro password"
@@ -264,12 +260,12 @@ export async function validateForgotPassword(
         message: "Password reset token is invalid or has expired",
       });
     }
-    const organization: any = await Organization.findOne({
-      _id: token.organizationId,
+    const user: any = await User.findOne({
+      _id: token.userId,
     });
-    if (organization) {
+    if (user) {
       return res.status(200).json({
-        organization: { _id: organization._id },
+        user: { _id: user._id },
         message: "Token verified successfully. Please set new password",
       });
     }
@@ -305,39 +301,47 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
           "We are unable to find a valid token. Your token my have expired.",
       });
     }
-    const organization: any = await Organization.findOne({
-      _id: token.organizationId,
+    const user: any = await User.findOne({
+      _id: token.userId,
     });
-    if (!organization) {
+    if (!user) {
       return res.status(500).send({
         errorId: NOT_FOUND,
         message: "We are unable to find a user for this token.",
       });
     }
-    if (organization?.isVerified) {
+    if (user?.isVerified) {
       return res.status(500).send({
         errorId: ALREADY_VERIFIED,
         message: "This account has already been verified. Please login",
       });
     }
     // Verify and save the user
-    organization.isVerified = true;
-    organization.isActive = true;
-    const saved = await organization.save();
-    if (!saved) {
+    user.isVerified = true;
+    user.isActive = true;
+    const userUpdated = await user.save();
+    if (!userUpdated) {
       return res.status(500).send({
         errorId: INTERNAL_SERVER_ERROR,
         message: "Error while verifying the account ",
       });
     }
+    const member = {
+      name: userUpdated.name,
+      email: userUpdated.email,
+      userId: userUpdated?._id,
+      isVerified: userUpdated.isVerified,
+      isAuthor: true,
+    };
+    await createMember(member);
     await emailService.sendEmail(
       "/templates/welcome.ejs",
       {
         url: config.get("url"),
         login_link: `${config.get("url")}/login`,
-        name: organization.title,
+        name: user.name,
       },
-      organization.email,
+      user.email,
       "Welcome to letsdoretro.com"
     );
     return res
@@ -366,22 +370,22 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
         .json({ errorId: NOT_FOUND, message: "Email address is required" });
     }
     const emailService = await new EmailService();
-    const organization: any = await Organization.findOne({
+    const user: any = await User.findOne({
       email: req.body.email,
     });
-    if (!organization) {
+    if (!user) {
       return res.status(500).json({
         errorId: NOT_FOUND,
         message: "We are unable to find a user with that email.",
       });
     }
-    if (organization.isVerified)
+    if (user.isVerified)
       return res.status(500).json({
         errorId: ALREADY_VERIFIED,
         message: "This account has already been verified. Please log in.",
       });
     const token = new Token({
-      organizationId: organization._id,
+      userId: user._id,
       token: crypto.randomBytes(16).toString("hex"),
     });
     const newToken: any = await token.save();
@@ -390,14 +394,13 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
       {
         url: config.get("url"),
         confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
-        name: organization.title,
+        name: user.name,
       },
       req.body.email,
       "Please confirm your email"
     );
     return res.status(200).json({
-      message:
-        "A verification email has been sent to " + organization.email + ".",
+      message: "A verification email has been sent to " + user.email + ".",
     });
   } catch (err) {
     return res
@@ -423,12 +426,12 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
       return res.status(500).json({ message: "Confirm Password is required" });
     }
     const emailService = await new EmailService();
-    const organization: any = await Organization.findOne({
-      _id: mongoose.Types.ObjectId(req.body.organizationId),
+    const user: any = await User.findOne({
+      _id: mongoose.Types.ObjectId(req.body.userId),
     });
     const isPasswordSame = await bcrypt.compare(
       req.body.password.trim(),
-      organization.password.trim()
+      user.password.trim()
     );
     if (isPasswordSame) {
       return res.status(500).json({
@@ -441,7 +444,7 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
       Number(config.get("bcryptSalt"))
     );
     const query = {
-        _id: mongoose.Types.ObjectId(req.body.organizationId),
+        _id: mongoose.Types.ObjectId(req.body.userId),
       },
       update = {
         $set: {
@@ -449,11 +452,7 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
         },
       },
       options = { useFindAndModify: true };
-    const updated: any = await Organization.findOneAndUpdate(
-      query,
-      update,
-      options
-    );
+    const updated: any = await User.findOneAndUpdate(query, update, options);
     if (!updated) {
       return res
         .status(500)
@@ -464,13 +463,13 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
       {
         url: config.get("url"),
         login_link: `${config.get("url")}/login`,
-        name: updated.title,
+        name: updated.name,
       },
       updated.email,
       "Your letsdoretro password has been changed"
     );
     await Token.find({
-      organizationId: updated._id,
+      userId: updated._id,
     })
       .remove()
       .exec();

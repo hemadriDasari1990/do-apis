@@ -5,3 +5,4 @@ export declare function startOrCompleteBoard(req: Request, res: Response, next: 
 export declare function getBoardDetails(req: Request, res: Response): Promise<any>;
 export declare function deleteBoard(req: Request, res: Response, next: NextFunction): Promise<any>;
 export declare function findBoardsByProjectAndDelete(projectId: string): Promise<any>;
+export declare function addTeamsToBoad(teams: Array<string>, boardId: string): Promise<any>;

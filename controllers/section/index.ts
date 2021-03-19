@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { noteAddFields, notesLookup } from "../../util/noteFilters";
 
+import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Section from "../../models/section";
 import { findNotesBySectionAndDelete } from "../note";
 import mongoose from "mongoose";
@@ -50,15 +51,33 @@ export async function updateSection(
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const section = await getSection({
+      $and: [{ title: req.body.title }, { userId: req.body.userId }],
+    });
+    if (section) {
+      return res.status(409).json({
+        errorId: RESOURCE_ALREADY_EXISTS,
+        message: `Section with ${section?.title} already exist. Please choose different name`,
+      });
+    }
     const updated = await Section.findOneAndUpdate(query, update, options);
     if (!updated) {
       return next(updated);
     }
     socket.emit("update-section", updated);
-    // await addDepartmentToOrganization(updated?._id, req.body.organizationId);
+    // await addDepartmentToUser(updated?._id, req.body.userId);
     return res.status(200).send(updated);
   } catch (err) {
     return res.status(500).send(err || err.message);
+  }
+}
+
+async function getSection(query: { [Key: string]: any }): Promise<any> {
+  try {
+    const section = await Section.findOne(query);
+    return section;
+  } catch (err) {
+    throw err | err.message;
   }
 }
 
@@ -111,8 +130,7 @@ export async function deleteSection(
   next: NextFunction
 ): Promise<any> {
   try {
-    await findNotesBySectionAndDelete(req.params.id);
-    const deleted = await Section.findByIdAndRemove(req.params.id);
+    const deleted = deleteSectionAndNotes(req.params.id);
     if (!deleted) {
       res.status(500).json({ message: `Cannot delete resource` });
       return next(deleted);
@@ -121,6 +139,17 @@ export async function deleteSection(
     return res.status(200).send(deleted);
   } catch (err) {
     return res.status(500).send(err || err.message);
+  }
+}
+
+async function deleteSectionAndNotes(sectionId: string) {
+  try {
+    await findNotesBySectionAndDelete(sectionId);
+    const deleted = await Section.findByIdAndRemove(sectionId);
+    return deleted;
+  } catch (err) {
+    throw `Error while deleting section and notes associated ${err ||
+      err.message}`;
   }
 }
 
@@ -140,6 +169,27 @@ export async function removeNoteFromSection(
     return updated;
   } catch (err) {
     throw `Error while removing note from section ${err || err.message}`;
+  }
+}
+
+export async function findSectionsByBoardAndDelete(
+  boardId: string
+): Promise<any> {
+  try {
+    const sectionsList = await getSections(boardId);
+    if (!sectionsList?.length) {
+      return;
+    }
+    const deleted = sectionsList.reduce(
+      async (promise: Promise<any>, section: { [Key: string]: any }) => {
+        await promise;
+        await deleteSectionAndNotes(section._id);
+      },
+      [Promise.resolve()]
+    );
+    return deleted;
+  } catch (err) {
+    throw err || err.message;
   }
 }
 

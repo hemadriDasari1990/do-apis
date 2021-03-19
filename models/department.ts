@@ -5,9 +5,9 @@ delete mongoose.connection.models["Department"];
 const Schema = mongoose.Schema;
 const DepartmentSchema = new Schema(
   {
-    organizationId: {
+    userId: {
       type: Schema.Types.ObjectId,
-      ref: "Organization",
+      ref: "User",
       required: true,
       index: true,
     },
@@ -42,6 +42,6 @@ const DepartmentSchema = new Schema(
   }
 );
 
-DepartmentSchema.index({ organizationId: 1, title: 1 }, { unique: true });
+DepartmentSchema.index({ userId: 1, title: 1 }, { unique: true });
 
 export default mongoose.model("Department", DepartmentSchema);

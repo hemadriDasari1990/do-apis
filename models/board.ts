@@ -29,8 +29,8 @@ const BoardSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ["pending", "inprogress", "completed"],
-      default: "pending",
+      enum: ["draft", "pending", "inprogress", "completed"],
+      default: "draft",
       index: true,
     },
     startedAt: {
@@ -51,6 +51,12 @@ const BoardSchema = new Schema(
         ref: "Section",
       },
     ],
+    teams: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Team",
+      },
+    ],
   },
   {
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.
@@ -58,5 +64,6 @@ const BoardSchema = new Schema(
 );
 
 BoardSchema.index({ projectId: 1, title: 1 }, { unique: true });
+BoardSchema.index({ title: 1, sprint: 1 }, { unique: true });
 
 export default mongoose.model("Board", BoardSchema);

@@ -2,7 +2,8 @@ import { NextFunction, Request, Response } from "express";
 import { projectAddFields, projectsLookup } from "../../util/projectFilters";
 
 import Department from "../../models/department";
-import { addDepartmentToOrganization } from "../organization";
+import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
+import { addDepartmentToUser } from "../user";
 import { findProjectsByDepartmentAndDelete } from "../project";
 import mongoose from "mongoose";
 
@@ -15,10 +16,19 @@ export async function updateDepartment(
     const update = {
       title: req.body.title,
       description: req.body.description,
-      organizationId: req.body.organizationId,
+      userId: req.body.userId,
       status: req.body.status || "active",
     };
-    const options = { upsert: true, new: true };
+    const options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const department = await getDepartment({
+      $and: [{ title: req.body.title }, { userId: req.body.userId }],
+    });
+    if (department) {
+      return res.status(409).json({
+        errorId: RESOURCE_ALREADY_EXISTS,
+        message: `Department with ${department?.title} already exist. Please choose different name`,
+      });
+    }
     const updated: any = await Department.findByIdAndUpdate(
       req.body.departmentId
         ? req.body.departmentId
@@ -29,7 +39,7 @@ export async function updateDepartment(
     if (!updated) {
       return next(updated);
     }
-    await addDepartmentToOrganization(updated?._id, req.body.organizationId);
+    await addDepartmentToUser(updated?._id, req.body.userId);
     return res.status(200).send(updated);
   } catch (err) {
     return res.status(500).send(err || err.message);
@@ -50,6 +60,15 @@ export async function getDepartmentDetails(
     return res.status(200).json(departments ? departments[0] : null);
   } catch (err) {
     return res.status(500).send(err || err.message);
+  }
+}
+
+async function getDepartment(query: { [Key: string]: any }): Promise<any> {
+  try {
+    const department = await Department.findOne(query);
+    return department;
+  } catch (err) {
+    throw err | err.message;
   }
 }
 

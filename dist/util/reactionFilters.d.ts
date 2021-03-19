@@ -5,6 +5,72 @@ declare const reactionLookup: {
             reactions: string;
         };
         pipeline: ({
+            $lookup: {
+                from: string;
+                let: {
+                    reactedBy: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            teams: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    member: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    team: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $unwind?: undefined;
+                        } | {
+                            $unwind: string;
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                })[];
+                as: string;
+            };
+        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -13,11 +79,20 @@ declare const reactionLookup: {
                 };
             };
             $sort?: undefined;
+            $unwind?: undefined;
         } | {
             $sort: {
                 _id: number;
             };
             $match?: undefined;
+            $unwind?: undefined;
+        } | {
+            $unwind: {
+                path: string;
+                preserveNullAndEmptyArrays: boolean;
+            };
+            $match?: undefined;
+            $sort?: undefined;
         })[];
         as: string;
     };
@@ -28,7 +103,73 @@ declare const reactionPlusOneLookup: {
         let: {
             reactions: string;
         };
-        pipeline: {
+        pipeline: ({
+            $lookup: {
+                from: string;
+                let: {
+                    reactedBy: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            teams: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    member: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    team: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $unwind?: undefined;
+                        } | {
+                            $unwind: string;
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                })[];
+                as: string;
+            };
+        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -37,7 +178,14 @@ declare const reactionPlusOneLookup: {
                 };
                 type: string;
             };
-        }[];
+            $unwind?: undefined;
+        } | {
+            $unwind: {
+                path: string;
+                preserveNullAndEmptyArrays: boolean;
+            };
+            $match?: undefined;
+        })[];
         as: string;
     };
 };
@@ -47,7 +195,73 @@ declare const reactionPlusTwoLookup: {
         let: {
             reactions: string;
         };
-        pipeline: {
+        pipeline: ({
+            $lookup: {
+                from: string;
+                let: {
+                    reactedBy: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            teams: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    member: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    team: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $unwind?: undefined;
+                        } | {
+                            $unwind: string;
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                })[];
+                as: string;
+            };
+        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -56,7 +270,14 @@ declare const reactionPlusTwoLookup: {
                 };
                 type: string;
             };
-        }[];
+            $unwind?: undefined;
+        } | {
+            $unwind: {
+                path: string;
+                preserveNullAndEmptyArrays: boolean;
+            };
+            $match?: undefined;
+        })[];
         as: string;
     };
 };
@@ -66,7 +287,73 @@ declare const reactionDeserveLookup: {
         let: {
             reactions: string;
         };
-        pipeline: {
+        pipeline: ({
+            $lookup: {
+                from: string;
+                let: {
+                    reactedBy: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            teams: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    member: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    team: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $unwind?: undefined;
+                        } | {
+                            $unwind: string;
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                })[];
+                as: string;
+            };
+        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -75,7 +362,14 @@ declare const reactionDeserveLookup: {
                 };
                 type: string;
             };
-        }[];
+            $unwind?: undefined;
+        } | {
+            $unwind: {
+                path: string;
+                preserveNullAndEmptyArrays: boolean;
+            };
+            $match?: undefined;
+        })[];
         as: string;
     };
 };
@@ -85,7 +379,73 @@ declare const reactionDisAgreeLookup: {
         let: {
             reactions: string;
         };
-        pipeline: {
+        pipeline: ({
+            $lookup: {
+                from: string;
+                let: {
+                    reactedBy: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            teams: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    member: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    team: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $unwind?: undefined;
+                        } | {
+                            $unwind: string;
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                })[];
+                as: string;
+            };
+        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -94,7 +454,14 @@ declare const reactionDisAgreeLookup: {
                 };
                 type: string;
             };
-        }[];
+            $unwind?: undefined;
+        } | {
+            $unwind: {
+                path: string;
+                preserveNullAndEmptyArrays: boolean;
+            };
+            $match?: undefined;
+        })[];
         as: string;
     };
 };
@@ -104,7 +471,73 @@ declare const reactionLoveLookup: {
         let: {
             reactions: string;
         };
-        pipeline: {
+        pipeline: ({
+            $lookup: {
+                from: string;
+                let: {
+                    reactedBy: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            teams: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    member: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    team: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $unwind?: undefined;
+                        } | {
+                            $unwind: string;
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                })[];
+                as: string;
+            };
+        } | {
             $match: {
                 $expr: {
                     $in: (string | {
@@ -113,7 +546,14 @@ declare const reactionLoveLookup: {
                 };
                 type: string;
             };
-        }[];
+            $unwind?: undefined;
+        } | {
+            $unwind: {
+                path: string;
+                preserveNullAndEmptyArrays: boolean;
+            };
+            $match?: undefined;
+        })[];
         as: string;
     };
 };

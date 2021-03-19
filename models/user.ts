@@ -1,12 +1,12 @@
-import OrganizationInstance from "../types/organization";
+import UserInstance from "../types/user";
 import bcrypt from "bcrypt";
 import config from "config";
 import mongoose from "mongoose";
 
 const Schema = mongoose.Schema;
-const OrganizationSchema = new Schema(
+const UserSchema = new Schema(
   {
-    title: {
+    name: {
       type: String,
       trim: true,
       minlength: 1,
@@ -47,10 +47,29 @@ const OrganizationSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    type: {
+      type: String,
+      required: true,
+      enum: ["commercial", "individual"],
+      default: "commercial",
+      index: true,
+    },
     departments: [
       {
         type: Schema.Types.ObjectId,
         ref: "Department",
+      },
+    ],
+    teams: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Team",
+      },
+    ],
+    members: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Member",
       },
     ],
   },
@@ -59,12 +78,12 @@ const OrganizationSchema = new Schema(
   }
 );
 
-// OrganizationSchema.statics.EncryptPassword = async function(password) {
+// UserSchema.statics.EncryptPassword = async function(password) {
 //   const hash = await bcrypt.hash(password, 12);
 //   return hash;
 // };
 
-OrganizationSchema.pre<OrganizationInstance>("save", async function(next) {
+UserSchema.pre<UserInstance>("save", async function(next) {
   if (!this.isModified("password")) {
     return next();
   }
@@ -76,4 +95,4 @@ OrganizationSchema.pre<OrganizationInstance>("save", async function(next) {
   next();
 });
 
-export default mongoose.model("Organization", OrganizationSchema);
+export default mongoose.model("User", UserSchema);

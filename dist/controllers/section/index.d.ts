@@ -9,4 +9,5 @@ export declare function addAndRemoveNoteFromSection(data: {
 }): Promise<any>;
 export declare function deleteSection(req: Request, res: Response, next: NextFunction): Promise<any>;
 export declare function removeNoteFromSection(noteId: string, sectionId: string): Promise<any>;
+export declare function findSectionsByBoardAndDelete(boardId: string): Promise<any>;
 export declare function addNoteToSection(noteId: string, sectionId: string): Promise<any>;

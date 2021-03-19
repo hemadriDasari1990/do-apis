@@ -16,6 +16,11 @@ const ReactionSchema = new Schema(
       default: "agree",
       index: true,
     },
+    reactedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+      default: null,
+    },
   },
   {
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.
