@@ -13,3 +13,13 @@ export declare function deleteMember(req: Request, res: Response, next: NextFunc
 export declare function findMembersByTeamAndDelete(teamId: string): Promise<any>;
 export declare function addTeamMemberToMember(teamMemberId: string, memberId: string): Promise<any>;
 export declare function removeTeamFromMember(memberId: string, teamId: string): Promise<void>;
+export declare function sendInvitationsToMembers(memberIds: Array<string>, sender: {
+    [Key: string]: any;
+}, boardId: string): Promise<void | Error>;
+export declare function sendInviteToMember(board: {
+    [Key: string]: any;
+}, sender: {
+    [Key: string]: any;
+}, receiver: {
+    [Key: string]: any;
+}): Promise<void>;

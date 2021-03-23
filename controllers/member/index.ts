@@ -3,11 +3,12 @@ import {
   teamMemberTeamsAddFields,
   teamMemberTeamsLookup,
 } from "../../util/teamMemberFilters";
-
+import EmailService from "../../services/email";
 import Member from "../../models/member";
-// import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import { addMemberToUser } from "../user";
 import mongoose from "mongoose";
+import config from "config";
+import { getBoard } from "../board";
 
 export async function updateMember(
   req: Request,
@@ -15,14 +16,6 @@ export async function updateMember(
   next: NextFunction
 ): Promise<any> {
   try {
-    // const update = {
-    //   name: req.body.name,
-    //   email: req.body.email,
-    //   userId: req.body.userId,
-    //   status: req.body.status || "active",
-    //   isVerified: req.body.isVerified || false,
-    // };
-    // const options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const query = {
         _id: mongoose.Types.ObjectId(req.body.memberId),
       },
@@ -41,15 +34,6 @@ export async function updateMember(
         runValidators: true,
         strict: false,
       };
-    // const member = await getMember({
-    //   $and: [{ email: req.body.email }, { userId: req.body.userId }],
-    // });
-    // if (member) {
-    //   return res.status(409).json({
-    //     errorId: RESOURCE_ALREADY_EXISTS,
-    //     message: `Member name ${member?.name} already exist. Please choose different name`,
-    //   });
-    // }
     const updated: any = await Member.findOneAndUpdate(query, update, options);
     if (!updated) {
       return next(updated);
@@ -188,5 +172,62 @@ export async function removeTeamFromMember(memberId: string, teamId: string) {
     await Member.findByIdAndUpdate(memberId, { $pull: { teams: teamId } });
   } catch (err) {
     throw new Error("Cannot remove team from member");
+  }
+}
+
+export async function sendInvitationsToMembers(
+  memberIds: Array<string>,
+  sender: { [Key: string]: any },
+  boardId: string
+) {
+  try {
+    if (!memberIds?.length || !sender || !boardId) {
+      return;
+    }
+    const board: any = await getBoard({
+      _id: mongoose.Types.ObjectId(boardId),
+    });
+    if (!board) {
+      return;
+    }
+    console.log("memberIds", memberIds);
+    return await memberIds.reduce(async (promise: any, memberId: string) => {
+      await promise;
+      const member = await getMember({
+        _id: mongoose.Types.ObjectId(memberId),
+      });
+      await sendInviteToMember(board, sender, member);
+    }, Promise.resolve());
+  } catch (err) {
+    return new Error("Cannot remove team from member");
+  }
+}
+
+export async function sendInviteToMember(
+  board: { [Key: string]: any },
+  sender: { [Key: string]: any },
+  receiver: { [Key: string]: any }
+) {
+  try {
+    if (!sender || !receiver || !board) {
+      return;
+    }
+    const emailService = await new EmailService();
+    await emailService.sendEmail(
+      "/templates/invite.ejs",
+      {
+        url: config.get("url"),
+        invite_link: `${config.get("url")}/board/${board?._id}?source="email"`,
+        name: receiver?.name,
+        boardName: board?.title,
+        projectName: board?.project?.title,
+        senderName: sender?.name,
+      },
+      receiver.email,
+      `You have been invited to join retrospective board ${board?.title}`
+    );
+  } catch (err) {
+    console.log("err", err);
+    throw err | err.message;
   }
 }

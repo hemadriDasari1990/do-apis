@@ -6,3 +6,5 @@ export declare const ALREADY_VERIFIED = "ALREADY_VERIFIED";
 export declare const INTERNAL_SERVER_ERROR = "INTERNAL_SERVER_ERROR";
 export declare const VERIFIED = "VERIFIED";
 export declare const RESOURCE_ALREADY_EXISTS = "RESOURCE_ALREADY_EXISTS";
+export declare const TOKEN_MISSING = "TOKEN_MISSING";
+export declare const defaultSections: string[];

@@ -8,6 +8,128 @@ declare const boardsLookup: {
             $lookup: {
                 from: string;
                 let: {
+                    teams: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            members: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    member: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    team: string;
+                                };
+                                pipeline: {
+                                    $match: {
+                                        $expr: {
+                                            $eq: string[];
+                                        };
+                                    };
+                                }[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $in: (string | {
+                                        $ifNull: (string | never[])[];
+                                    })[];
+                                };
+                            };
+                            $unwind?: undefined;
+                        } | {
+                            $unwind: string;
+                            $match?: undefined;
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $addFields: {
+                        members: string;
+                        totalMembers: {
+                            $size: {
+                                $ifNull: (string | never[])[];
+                            };
+                        };
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                    };
+                    $sort?: undefined;
+                } | {
+                    $sort: {
+                        _id: number;
+                    };
+                    $match?: undefined;
+                })[];
+                as: string;
+            };
+        } | {
+            $addFields: {
+                members: string;
+                activeMembers: string;
+                inActiveMembers: string;
+                totalMembers: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalActiveMembers: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalInActiveMembers: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                teams: string;
+                activeTeams: string;
+                inActiveTeams: string;
+                totalTeams: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalActiveTeams: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                totalInActiveTeams: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+            };
+        } | {
+            $lookup: {
+                from: string;
+                let: {
                     sections: string;
                 };
                 pipeline: ({

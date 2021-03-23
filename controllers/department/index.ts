@@ -6,6 +6,7 @@ import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import { addDepartmentToUser } from "../user";
 import { findProjectsByDepartmentAndDelete } from "../project";
 import mongoose from "mongoose";
+import { socket } from "../../index";
 
 export async function updateDepartment(
   req: Request,
@@ -60,6 +61,20 @@ export async function getDepartmentDetails(
     return res.status(200).json(departments ? departments[0] : null);
   } catch (err) {
     return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getDepartments(userId: string): Promise<any> {
+  try {
+    const query = { userId: mongoose.Types.ObjectId(userId) };
+    const departments = await Department.aggregate([
+      { $match: query },
+      projectsLookup,
+      projectAddFields,
+    ]);
+    socket.emit("get-departments", departments);
+  } catch (err) {
+    socket.emit("get-departments", err);
   }
 }
 

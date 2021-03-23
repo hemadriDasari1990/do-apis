@@ -6,8 +6,9 @@ import {
   TOKEN_EXPIRED,
   UNAUTHORIZED,
   VERIFIED,
+  TOKEN_MISSING,
 } from "../../util/constants";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 
 import EmailService from "../../services/email";
 import Token from "../../models/token";
@@ -20,6 +21,7 @@ import { getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { socket } from "../../index";
+import { getToken } from "../../util";
 
 /**
  * Validate the token
@@ -35,28 +37,30 @@ export async function authenticateJWT(
   next: NextFunction
 ): Promise<any> {
   const authHeader: string = req.headers.authorization as string;
-  if (authHeader) {
-    const token: string = authHeader.split(" ")[1];
-    const user: any = await User.findOne({ token: token });
-    let secret: any;
-    if (user?.token) {
-      secret = config.get("refreshTokenSecret");
-    } else {
-      secret = config.get("accessTokenSecret");
-    }
-    jwt.verify(token, secret, (err: any, user: any) => {
-      if (err) {
-        return res.status(401).json({ status: "error", code: UNAUTHORIZED });
-      }
-      if (!user) {
-        return res.status(401).json({ status: "error", code: UNAUTHORIZED });
-      } else {
-        return next();
-      }
+  const token = getToken(authHeader);
+  if (!token) {
+    return res.status(500).json({
+      errorId: TOKEN_MISSING,
+      message: "Token is missing",
+      code: UNAUTHORIZED,
     });
-  } else {
-    return res.status(401).json({ status: "error", code: UNAUTHORIZED });
   }
+  const user: any = await User.findOne({ token: token });
+  let secret: any;
+  if (user?.token) {
+    secret = config.get("refreshTokenSecret");
+  } else {
+    secret = config.get("accessTokenSecret");
+  }
+  jwt.verify(token, secret, (err: any, user: any) => {
+    if (err) {
+      return res.status(401).json({ status: "error", code: UNAUTHORIZED });
+    }
+    if (!user) {
+      return res.status(401).json({ status: "error", code: UNAUTHORIZED });
+    }
+    return next();
+  });
 }
 
 /**
@@ -89,8 +93,9 @@ export async function login(req: Request, res: Response): Promise<any> {
       return res.status(422).json({ message: "Incorrect Password" });
     const payload = {
       _id: user._id,
-      title: user.name,
+      name: user.name,
       description: user.description,
+      email: user.email,
     };
 
     // Sign token

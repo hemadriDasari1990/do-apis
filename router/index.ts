@@ -3,6 +3,7 @@ import {
   deleteTeam,
   getTeams,
   updateTeam,
+  sendInvitationToTeams,
 } from "../controllers/team";
 import {
   authenticateJWT,
@@ -59,7 +60,7 @@ import {
 import express, { Application } from "express";
 
 import { createOrUpdateReaction } from "../controllers/reaction";
-import { refreshToken } from "../controllers/auth";
+import { refreshToken, logout } from "../controllers/auth";
 
 export default function(app: Application) {
   // Initializing route groups
@@ -85,6 +86,9 @@ export default function(app: Application) {
 
   // Login
   authRoutes.post("/login", login);
+
+  // Logout
+  authRoutes.post("/logout", logout);
 
   // refresh token
   authRoutes.post("/refresh-token", refreshToken);
@@ -144,6 +148,9 @@ export default function(app: Application) {
 
   // Create or Update Team
   teamRoutes.put("/:id/member", authenticateJWT, addOrRemoveMemberFromTeam);
+
+  // Send invitations to team members
+  teamRoutes.post("/invitation", authenticateJWT, sendInvitationToTeams);
 
   // Team delete route
   teamRoutes.delete("/:id", authenticateJWT, deleteTeam);

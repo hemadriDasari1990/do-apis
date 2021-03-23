@@ -26,6 +26,14 @@ const BoardSchema = new Schema(
       default: 0,
       unique: true,
     },
+    isSystemName: {
+      type: Boolean,
+      default: false,
+    },
+    isDefaultBoard: {
+      type: Boolean,
+      default: false,
+    },
     status: {
       type: String,
       required: true,
@@ -44,6 +52,14 @@ const BoardSchema = new Schema(
     isLocked: {
       type: Boolean,
       default: false,
+    },
+    inviteSent: {
+      type: Boolean,
+      default: false,
+    },
+    inviteCount: {
+      type: Number,
+      default: 0,
     },
     sections: [
       {

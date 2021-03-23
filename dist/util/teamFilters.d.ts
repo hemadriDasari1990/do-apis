@@ -11,6 +11,36 @@ declare const teamsLookup: {
                     members: string;
                 };
                 pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            member: string;
+                        };
+                        pipeline: {
+                            $match: {
+                                $expr: {
+                                    $eq: string[];
+                                };
+                            };
+                        }[];
+                        as: string;
+                    };
+                } | {
+                    $lookup: {
+                        from: string;
+                        let: {
+                            team: string;
+                        };
+                        pipeline: {
+                            $match: {
+                                $expr: {
+                                    $eq: string[];
+                                };
+                            };
+                        }[];
+                        as: string;
+                    };
+                } | {
                     $match: {
                         $expr: {
                             $in: (string | {
@@ -18,49 +48,17 @@ declare const teamsLookup: {
                             })[];
                         };
                     };
-                    $sort?: undefined;
+                    $unwind?: undefined;
                 } | {
-                    $sort: {
-                        _id: number;
-                    };
+                    $unwind: string;
                     $match?: undefined;
                 })[];
                 as: string;
             };
         } | {
-            $lookup: {
-                from: string;
-                let: {
-                    members: string;
-                };
-                pipeline: {
-                    $match: {
-                        $expr: {
-                            $in: (string | {
-                                $ifNull: (string | never[])[];
-                            })[];
-                        };
-                        status: string;
-                    };
-                }[];
-                as: string;
-            };
-        } | {
             $addFields: {
                 members: string;
-                activeMembers: string;
-                inActiveMembers: string;
                 totalMembers: {
-                    $size: {
-                        $ifNull: (string | never[])[];
-                    };
-                };
-                totalActiveMembers: {
-                    $size: {
-                        $ifNull: (string | never[])[];
-                    };
-                };
-                totalInActiveMembers: {
                     $size: {
                         $ifNull: (string | never[])[];
                     };

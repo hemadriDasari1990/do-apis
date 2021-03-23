@@ -55,6 +55,15 @@ export async function getProjectDetails(
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const projects = await Project.aggregate([
       { $match: query },
+      {
+        $sort: { _id: -1 },
+      },
+      {
+        $skip: parseInt(req.query.offset as string),
+      },
+      {
+        $limit: parseInt(req.query.limit as string),
+      },
       boardsLookup,
       boardAddFields,
     ]);

@@ -5,3 +5,4 @@ export declare function deleteTeam(req: Request, res: Response, next: NextFuncti
 export declare function addOrRemoveMemberFromTeam(req: Request, res: Response): Promise<any>;
 export declare function addTeamMemberToTeam(teamMemberId: string, teamId: string): Promise<any>;
 export declare function removeMemberFromTeam(memberId: string, teamId: string): Promise<void>;
+export declare function sendInvitationToTeams(req: Request, res: Response): Promise<Response<any, Record<string, any>>>;

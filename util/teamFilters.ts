@@ -1,9 +1,7 @@
 import {
-  activeMemberLookup,
-  inActiveMemberLookup,
-  memberAddFields,
-  membersLookup,
-} from "./memberFilters";
+  teamMemberMembersLookup,
+  teamMemberMembersAddFields,
+} from "./teamMemberFilters";
 
 import Team from "../models/team";
 
@@ -20,10 +18,8 @@ const teamsLookup = {
       {
         $sort: { _id: 1 },
       },
-      membersLookup,
-      activeMemberLookup,
-      inActiveMemberLookup,
-      memberAddFields,
+      teamMemberMembersLookup,
+      teamMemberMembersAddFields,
     ],
     as: "teams",
   },

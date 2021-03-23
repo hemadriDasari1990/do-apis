@@ -7,6 +7,14 @@ import { addBoardToProject } from "../project";
 import { findSectionsByBoardAndDelete } from "../section";
 import mongoose from "mongoose";
 import { saveSection } from "../section";
+import {
+  teamsLookup,
+  inActiveTeamsLookup,
+  activeTeamsLookup,
+  teamAddFields,
+} from "../../util/teamFilters";
+import { defaultSections } from "../../util/constants";
+import { projectsLookup } from "../../util/projectFilters";
 
 export async function addSectionToBoard(
   sectionId: string,
@@ -33,17 +41,6 @@ export async function updateBoard(
   next: NextFunction
 ): Promise<any> {
   try {
-    const query = { _id: mongoose.Types.ObjectId(req.body.boardId) },
-      update = {
-        $set: {
-          title: req.body.title,
-          description: req.body.description,
-          sprint: req.body.sprint,
-          projectId: req.body.projectId,
-          status: req.body.status || "draft",
-        },
-      },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const boardDetails = await getBoard({
       $and: [{ title: req.body.title }, { projectId: req.body.projectId }],
     });
@@ -53,11 +50,38 @@ export async function updateBoard(
         message: `Board with ${boardDetails?.title} already exist. Please choose different name`,
       });
     }
+    const boardsCount: number = await Board.find({
+      projectId: req.body.projectId,
+    }).count();
+
+    const query = { _id: mongoose.Types.ObjectId(req.body.boardId) },
+      update = {
+        $set: {
+          ...(req.body.isSystemName
+            ? {
+                title: "Retro " + (boardsCount + 1),
+              }
+            : {
+                title: req.body.title + (boardsCount + 1),
+              }),
+          description: req.body.description,
+          projectId: req.body.projectId,
+          status: req.body.status || "draft",
+          sprint: boardsCount + 1,
+          isDefaultBoard: req.body.isDefaultBoard,
+          isSystemName: req.body.isSystemName,
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated: any = await Board.findOneAndUpdate(query, update, options);
     if (!updated) {
       return next(updated);
     }
-    if (updated?.status !== "draft") {
+    if (
+      updated?.status !== "draft" &&
+      !req.body.isDefaultBoard &&
+      req.body.noOfSections
+    ) {
       await Array(parseInt(req.body.noOfSections))
         .fill(0)
         .reduce(async (promise) => {
@@ -68,8 +92,27 @@ export async function updateBoard(
           });
           await addSectionToBoard(section?._id, updated._id);
         }, Promise.resolve());
-      await addBoardToProject(updated?._id, req.body.projectId);
+    }
+    if (
+      updated?.status !== "draft" &&
+      req.body.isDefaultBoard &&
+      !req.body.noOfSections
+    ) {
+      (await defaultSections?.length) &&
+        defaultSections.reduce(async (promise, defaultSectionTitle) => {
+          await promise;
+          const section = await saveSection({
+            boardId: updated._id,
+            title: defaultSectionTitle,
+          });
+          await addSectionToBoard(section?._id, updated._id);
+        }, Promise.resolve());
+    }
+    if (req.body.teams?.length) {
       await addTeamsToBoad(req.body.teams, updated?._id);
+    }
+    if (req.body.projectId) {
+      await addBoardToProject(updated?._id, req.body.projectId);
     }
     const board = await getBoardDetailsLocal(updated?._id);
     return res.status(200).send(board);
@@ -123,11 +166,16 @@ export async function getBoardDetails(
   }
 }
 
-async function getBoardDetailsLocal(boardId: string): Promise<any> {
+export async function getBoardDetailsLocal(boardId: string): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(boardId) };
     const boards = await Board.aggregate([
       { $match: query },
+      projectsLookup,
+      teamsLookup,
+      inActiveTeamsLookup,
+      activeTeamsLookup,
+      teamAddFields,
       sectionsLookup,
       sectionAddFields,
     ]);
@@ -148,17 +196,23 @@ export async function deleteBoard(
       res.status(500).json({ message: `Cannot delete resource` });
       return next(deleted);
     }
-    return res
-      .status(200)
-      .json({ message: "Resource has been deleted successfully" });
+    return res.status(200).json({
+      deleted: true,
+      message: "Resource has been deleted successfully",
+    });
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
 }
 
-async function getBoard(query: { [Key: string]: any }): Promise<any> {
+export async function getBoard(query: { [Key: string]: any }): Promise<any> {
   try {
-    const board = await Board.findOne(query);
+    const board = await Board.findOne(query).populate([
+      {
+        path: "projectId",
+        model: "Project",
+      },
+    ]);
     return board;
   } catch (err) {
     throw err | err.message;

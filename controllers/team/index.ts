@@ -4,17 +4,24 @@ import {
   findMembersByTeamAndDelete,
   getMember,
   removeTeamFromMember,
+  sendInvitationsToMembers,
 } from "../member";
 import {
   teamMemberMembersAddFields,
   teamMemberMembersLookup,
 } from "../../util/teamMemberFilters";
+import jwt from "jsonwebtoken";
 
 // import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Team from "../../models/team";
 import TeamMember from "../../models/teamMember";
 import { addTeamToUser } from "../user";
 import mongoose from "mongoose";
+import { getToken } from "../../util";
+import { REQUIRED } from "../../util/constants";
+import Board from "../../models/board";
+import { getMemberIds } from "../../util/member";
+import { getBoard } from "../board";
 
 export async function updateTeam(
   req: Request,
@@ -104,8 +111,12 @@ export async function getTeams(req: Request, res: Response): Promise<any> {
 
 async function getTeam(query: { [Key: string]: any }): Promise<any> {
   try {
-    const team = await Team.findOne(query);
-    return team;
+    const teams = await Team.aggregate([
+      { $match: query },
+      teamMemberMembersLookup,
+      teamMemberMembersAddFields,
+    ]);
+    return teams ? teams[0] : null;
   } catch (err) {
     throw err | err.message;
   }
@@ -269,5 +280,49 @@ export async function removeMemberFromTeam(memberId: string, teamId: string) {
     await Team.findByIdAndUpdate(teamId, { $pull: { members: memberId } });
   } catch (err) {
     throw new Error("Error while removing team from member");
+  }
+}
+
+export async function sendInvitationToTeams(req: Request, res: Response) {
+  try {
+    const teamIds: Array<string> = req.body.teamIds;
+    if (!teamIds || !teamIds?.length) {
+      return res.status(500).json({
+        errorId: REQUIRED,
+        message: `Team id's are required in an array`,
+      });
+    }
+    const authHeader: string = req.headers.authorization as string;
+    const token = getToken(authHeader);
+    const sender: any = jwt.decode(token);
+    await teamIds.reduce(async (promise: any, teamId: string) => {
+      await promise;
+      const team: any = await getTeam({
+        _id: mongoose.Types.ObjectId(teamId),
+      });
+      const memberIds = await getMemberIds(team?.members);
+      await sendInvitationsToMembers(memberIds, sender, req.body.boardId);
+    }, Promise.resolve());
+    const board: any = await getBoard({
+      _id: mongoose.Types.ObjectId(req.body.boardId),
+    });
+    const update = {
+      $set: {
+        inviteSent: true,
+        inviteCount: board?.inviteCount + 1,
+      },
+    };
+    const updatedBoard = await Board.findByIdAndUpdate(
+      req.body.boardId,
+      update,
+      { new: true }
+    );
+    return res.status(200).json({
+      board: updatedBoard,
+      inviteSent: true,
+      message: `Invitations has been sent to ${teamIds?.length} teams`,
+    });
+  } catch (err) {
+    throw new Error("Error while sending invite to teams");
   }
 }

@@ -1,6 +1,7 @@
 import { sectionAddFields, sectionsLookup } from "./sectionFilters";
 
 import Board from "../models/board";
+import { teamsLookup, teamAddFields } from "./teamFilters";
 
 const boardsLookup = {
   $lookup: {
@@ -15,6 +16,8 @@ const boardsLookup = {
       {
         $sort: { _id: 1 },
       },
+      teamsLookup,
+      teamAddFields,
       sectionsLookup,
       sectionAddFields,
     ],
