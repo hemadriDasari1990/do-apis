@@ -10,14 +10,13 @@ import {
   teamMemberMembersAddFields,
   teamMemberMembersLookup,
 } from "../../util/teamMemberFilters";
-import jwt from "jsonwebtoken";
 
 // import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Team from "../../models/team";
 import TeamMember from "../../models/teamMember";
 import { addTeamToUser } from "../user";
 import mongoose from "mongoose";
-import { getToken } from "../../util";
+import { getToken, decodeToken } from "../../util";
 import { REQUIRED } from "../../util/constants";
 import Board from "../../models/board";
 import { getMemberIds } from "../../util/member";
@@ -294,7 +293,7 @@ export async function sendInvitationToTeams(req: Request, res: Response) {
     }
     const authHeader: string = req.headers.authorization as string;
     const token = getToken(authHeader);
-    const sender: any = jwt.decode(token);
+    const sender: any = decodeToken(token);
     await teamIds.reduce(async (promise: any, teamId: string) => {
       await promise;
       const team: any = await getTeam({

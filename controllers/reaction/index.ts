@@ -1,27 +1,24 @@
-import { Request, Response } from "express";
 import { addReactionToNote, getNote, removeReactionFromNote } from "../note";
 import { memberLookup } from "../../util/memberFilters";
 
 import Reaction from "../../models/reaction";
 import mongoose from "mongoose";
-import { socket } from "../../index";
 import { getMember } from "../member";
 
-export async function createOrUpdateReaction(
-  req: Request,
-  res: Response
-): Promise<any> {
+export async function createOrUpdateReaction(payload: {
+  [Key: string]: any;
+}): Promise<any> {
   try {
     /* Get the admin member */
     const member: any = await getMember({
-      userId: req.body.reactedBy,
+      userId: payload.reactedBy,
       isAuthor: true,
       isVerified: true,
     });
-    const query = req.body.reactedBy
+    const query = payload.reactedBy
         ? {
             $and: [
-              { noteId: mongoose.Types.ObjectId(req.body.noteId) },
+              { noteId: mongoose.Types.ObjectId(payload.noteId) },
               { reactedBy: mongoose.Types.ObjectId(member?._id) },
             ],
           }
@@ -30,52 +27,49 @@ export async function createOrUpdateReaction(
           },
       update = {
         $set: {
-          noteId: req.body.noteId,
+          noteId: payload.noteId,
           reactedBy: member?._id,
-          type: req.body?.type,
+          type: payload?.type,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
 
     const note = await getNote({
-      _id: mongoose.Types.ObjectId(req.body?.noteId),
+      _id: mongoose.Types.ObjectId(payload?.noteId),
     });
     const reactionDetails = await getReaction({
       $and: [
         { reactedBy: mongoose.Types.ObjectId(member?._id) },
-        { noteId: mongoose.Types.ObjectId(req.body.noteId) },
+        { noteId: mongoose.Types.ObjectId(payload?.noteId) },
       ],
     });
     /* Remove only if member is known */
     if (
       reactionDetails &&
-      req.body.reactedBy &&
-      reactionDetails?.type === req.body?.type
+      payload.reactedBy &&
+      reactionDetails?.type === payload?.type
     ) {
       if (note?.reactions?.includes(reactionDetails?._id)) {
-        await removeReactionFromNote(reactionDetails?._id, req.body?.noteId);
+        await removeReactionFromNote(reactionDetails?._id, payload?.noteId);
       }
       await removeReactionById(reactionDetails?._id);
-      await socket.emit(`new-reaction-${req.body.noteId}`, {
+      return {
         removed: true,
         ...reactionDetails,
-      });
-      return res.status(200).send({ removed: true, ...reactionDetails });
+      };
     }
 
     const reactionUpdated: any = await updateReaction(query, update, options);
     if (!reactionUpdated) {
-      return res.status(500).send("Error while updating reaction");
+      return {};
     }
     const newReaction: any = await getReaction({
       _id: mongoose.Types.ObjectId(reactionUpdated?._id),
     });
     if (!note?.reactions?.includes(newReaction?._id)) {
-      const added = await addReactionToNote(newReaction._id, req.body.noteId);
-      await socket.emit(`new-reaction-${added?._id}`, newReaction);
+      await addReactionToNote(newReaction._id, payload.noteId);
     }
-    await socket.emit(`new-reaction-${note?._id}`, newReaction);
-    return res.status(200).send(newReaction);
+    return newReaction;
   } catch (err) {
     throw new Error(err || err.message);
   }

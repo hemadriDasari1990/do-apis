@@ -24,7 +24,6 @@ const BoardSchema = new Schema(
     sprint: {
       type: Number,
       default: 0,
-      unique: true,
     },
     isSystemName: {
       type: Boolean,
@@ -80,6 +79,6 @@ const BoardSchema = new Schema(
 );
 
 BoardSchema.index({ projectId: 1, title: 1 }, { unique: true });
-BoardSchema.index({ title: 1, sprint: 1 }, { unique: true });
+BoardSchema.index({ projectId: 1, title: 1, sprint: 1 }, { unique: true });
 
 export default mongoose.model("Board", BoardSchema);

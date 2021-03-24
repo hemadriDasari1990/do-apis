@@ -121,36 +121,35 @@ export async function updateBoard(
   }
 }
 
-export async function startOrCompleteBoard(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function startOrCompleteBoard(payload: {
+  [Key: string]: any;
+}): Promise<any> {
   try {
-    const query = { _id: mongoose.Types.ObjectId(req.body.id) },
+    const query = { _id: mongoose.Types.ObjectId(payload.id) },
       update =
-        req.params.action === "start"
+        payload.action === "start"
           ? {
               $set: {
-                startedAt: req.body.startedAt,
+                startedAt: payload.startedAt,
                 status: "inprogress",
               },
             }
           : {
               $set: {
-                completedAt: req.body.completedAt,
+                completedAt: payload.completedAt,
                 status: "completed",
                 isLocked: true,
               },
             };
-    const updated = await Board.findOneAndUpdate(query, update);
+    const options = { new: true }; // return updated document
+    const updated = await Board.findOneAndUpdate(query, update, options);
     if (!updated) {
-      return next(updated);
+      return updated;
     }
     const board = await getBoardDetailsLocal(updated?._id);
-    return res.status(200).send(board);
+    return board;
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    return err || err.message;
   }
 }
 

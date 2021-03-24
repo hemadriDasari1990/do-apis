@@ -15,12 +15,7 @@ import {
   verifyAccount,
 } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
-import {
-  createSection,
-  deleteSection,
-  getSectionsByBoardId,
-  updateSection,
-} from "../controllers/section";
+import { getSectionsByBoardId } from "../controllers/section";
 import {
   createUser,
   deleteUser,
@@ -32,7 +27,6 @@ import {
 import {
   deleteBoard,
   getBoardDetails,
-  startOrCompleteBoard,
   updateBoard,
 } from "../controllers/board";
 import {
@@ -46,12 +40,7 @@ import {
   getMembersByUser,
   updateMember,
 } from "../controllers/member";
-import {
-  deleteNote,
-  getNotesBySectionId,
-  markReadNote,
-  updateNote,
-} from "../controllers/note";
+import { getNotesBySectionId } from "../controllers/note";
 import {
   deleteProject,
   getProjectDetails,
@@ -59,7 +48,6 @@ import {
 } from "../controllers/project";
 import express, { Application } from "express";
 
-import { createOrUpdateReaction } from "../controllers/reaction";
 import { refreshToken, logout } from "../controllers/auth";
 
 export default function(app: Application) {
@@ -72,7 +60,6 @@ export default function(app: Application) {
     boardRoutes = express.Router(),
     sectionRoutes = express.Router(),
     noteRoutes = express.Router(),
-    reactionRoutes = express.Router(),
     teamRoutes = express.Router(),
     memberRoutes = express.Router(),
     feedbackRoutes = express.Router();
@@ -222,9 +209,6 @@ export default function(app: Application) {
   // Board delete route
   boardRoutes.delete("/:id", authenticateJWT, deleteBoard);
 
-  // Start or complete the board
-  boardRoutes.put("/session/:action", authenticateJWT, startOrCompleteBoard);
-
   //= ========================
   // Section Routes
   //= ========================
@@ -235,15 +219,6 @@ export default function(app: Application) {
   // Section details route
   sectionRoutes.get("/:boardId", getSectionsByBoardId);
 
-  // Section creation route
-  sectionRoutes.post("/", authenticateJWT, createSection);
-
-  // Update or Create Section
-  sectionRoutes.put("/", authenticateJWT, updateSection);
-
-  // Section delete route
-  sectionRoutes.delete("/:id", authenticateJWT, deleteSection);
-
   //= ========================
   // Note Routes
   //= ========================
@@ -253,25 +228,6 @@ export default function(app: Application) {
 
   // Note details route
   noteRoutes.get("/:sectionId", getNotesBySectionId);
-
-  // Note or Create board
-  noteRoutes.put("/", updateNote);
-
-  // Mark read
-  noteRoutes.put("/:id/mark-read", authenticateJWT, markReadNote);
-
-  // Note delete route
-  noteRoutes.delete("/:id", authenticateJWT, deleteNote);
-
-  //= ========================
-  // Like Routes
-  //= ========================
-
-  // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use("/react", reactionRoutes);
-
-  // Like creation route
-  reactionRoutes.put("/", createOrUpdateReaction);
 
   //= ========================
   // Feedback Routes

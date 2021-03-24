@@ -1,28 +1,10 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import { noteAddFields, notesLookup } from "../../util/noteFilters";
 
 import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Section from "../../models/section";
 import { findNotesBySectionAndDelete } from "../note";
 import mongoose from "mongoose";
-import { socket } from "../../index";
-
-export async function createSection(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
-  try {
-    const created = await saveSection(req.body);
-    if (!created) {
-      return next(created);
-    }
-    socket.emit("new-section", created);
-    return res.status(200).send("Title created Successfully");
-  } catch (err) {
-    throw new Error(err || err.message);
-  }
-}
 
 export async function saveSection(input: any) {
   try {
@@ -36,48 +18,45 @@ export async function saveSection(input: any) {
   }
 }
 
-export async function updateSection(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function updateSection(payload: {
+  [Key: string]: any;
+}): Promise<any> {
   try {
-    const query = { _id: mongoose.Types.ObjectId(req.body.sectionId) },
+    const query = { _id: mongoose.Types.ObjectId(payload?.sectionId) },
       update = {
         $set: {
-          title: req.body.title,
-          description: req.body.description,
-          projectId: req.body.projectId,
+          title: payload?.title,
+          description: payload?.description,
+          boardId: payload?.boardId,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const section = await getSection({
-      $and: [{ title: req.body.title }, { userId: req.body.userId }],
+      $and: [{ title: payload?.title }, { boardId: payload?.boardId }],
     });
     if (section) {
-      return res.status(409).json({
+      return {
         errorId: RESOURCE_ALREADY_EXISTS,
         message: `Section with ${section?.title} already exist. Please choose different name`,
-      });
+      };
     }
     const updated = await Section.findOneAndUpdate(query, update, options);
-    if (!updated) {
-      return next(updated);
-    }
-    socket.emit("update-section", updated);
-    // await addDepartmentToUser(updated?._id, req.body.userId);
-    return res.status(200).send(updated);
+    return updated;
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    return err;
   }
 }
 
-async function getSection(query: { [Key: string]: any }): Promise<any> {
+export async function getSection(query: { [Key: string]: any }): Promise<any> {
   try {
-    const section = await Section.findOne(query);
-    return section;
+    const sections = await Section.aggregate([
+      { $match: query },
+      notesLookup,
+      noteAddFields,
+    ]);
+    return sections ? sections[0] : null;
   } catch (err) {
-    throw err | err.message;
+    throw err || err.message;
   }
 }
 
@@ -123,21 +102,19 @@ async function getSections(boardId: string): Promise<any> {
   }
 }
 
-export async function deleteSection(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function deleteSection(sectionId: string): Promise<any> {
   try {
-    const deleted = deleteSectionAndNotes(req.params.id);
+    const deleted = deleteSectionAndNotes(sectionId);
     if (!deleted) {
-      res.status(500).json({ message: `Cannot delete resource` });
-      return next(deleted);
+      return deleted;
     }
-    socket.emit("delete-section", deleted);
-    return res.status(200).send(deleted);
+    return { deleted: true, _id: sectionId };
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    return {
+      deleted: false,
+      message: err || err?.message,
+      _id: sectionId,
+    };
   }
 }
 

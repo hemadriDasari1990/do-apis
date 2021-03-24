@@ -190,7 +190,6 @@ export async function sendInvitationsToMembers(
     if (!board) {
       return;
     }
-    console.log("memberIds", memberIds);
     return await memberIds.reduce(async (promise: any, memberId: string) => {
       await promise;
       const member = await getMember({
@@ -227,7 +226,6 @@ export async function sendInviteToMember(
       `You have been invited to join retrospective board ${board?.title}`
     );
   } catch (err) {
-    console.log("err", err);
     throw err | err.message;
   }
 }

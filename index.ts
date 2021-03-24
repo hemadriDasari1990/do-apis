@@ -28,8 +28,9 @@ app.get("/", (req: Request, res: Response) => {
 
 // socket.io handlers
 let socket = io(server, {
-  // enable cors
-  origins: "*:*",
+  cors: {
+    origin: "*",
+  },
 });
 // io.set('origins', '*:*')
 socketEvents(socket);

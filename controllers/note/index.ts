@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import {
   reactionAddFields,
   reactionDeserveLookup,
@@ -13,36 +13,25 @@ import Note from "../../models/note";
 import { addNoteToSection } from "../section";
 import { findReactionsByNoteAndDelete } from "../reaction";
 import mongoose from "mongoose";
-import { socket } from "../../index";
 
-export async function updateNote(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function updateNote(payload: {
+  [Key: string]: any;
+}): Promise<any> {
   try {
-    const update = {
-      description: req.body.description,
-      sectionId: req.body.sectionId,
-    };
-    const options = { upsert: true, new: true };
-    const updated: any = await Note.findByIdAndUpdate(
-      req.body.noteId ? req.body.noteId : new mongoose.Types.ObjectId(),
-      update,
-      options
-    );
-    if (!updated) {
-      return next(updated);
-    }
-    const added = await addNoteToSection(updated._id, req.body.sectionId);
-    if (!added) {
-      return next(added);
-    }
+    const query = { _id: mongoose.Types.ObjectId(payload.noteId) },
+      update = {
+        $set: {
+          description: payload.description,
+          sectionId: payload.sectionId,
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const updated: any = await Note.findOneAndUpdate(query, update, options);
+    await addNoteToSection(updated._id, payload.sectionId);
     const note = await getNoteDetails(updated?._id);
-    socket.emit(`update-note-${note?.sectionId}`, note);
-    return res.status(200).send(note);
+    return note;
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    return err || err.message;
   }
 }
 
@@ -87,46 +76,41 @@ async function getNoteDetails(noteId: string): Promise<any> {
   }
 }
 
-export async function markReadNote(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function markNoteRead(payload: {
+  [Key: string]: any;
+}): Promise<any> {
   try {
-    const query = { _id: mongoose.Types.ObjectId(req.params.id) },
+    const query = { _id: mongoose.Types.ObjectId(payload.id) },
       update = {
         $set: {
-          read: req.body.read,
+          read: payload.read,
         },
-      };
-    const noteUpdated: any = await Note.findOneAndUpdate(query, update);
-    if (!noteUpdated) {
-      res.status(500).json({ message: `Cannot Update note` });
-      return next(noteUpdated);
-    }
-    noteUpdated.read = req.body.read;
-    await socket.emit(`mark-read-${noteUpdated?._id}`, noteUpdated);
-    return res.status(200).send(noteUpdated);
+      },
+      options = { new: true };
+    const noteUpdated: any = await Note.findOneAndUpdate(
+      query,
+      update,
+      options
+    );
+    return noteUpdated;
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    return err || err.message;
   }
 }
 
-export async function deleteNote(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function deleteNote(id: string): Promise<any> {
   try {
-    const noteDeleted = await deleteNoteById(req.params.id);
-    if (!noteDeleted) {
-      res.status(500).json({ message: `Cannot delete resource` });
-      return next(noteDeleted);
+    const deleted = deleteNoteById(id);
+    if (!deleted) {
+      return deleted;
     }
-    socket.emit(`delete-note-${noteDeleted?.sectionId}`, noteDeleted);
-    return res.status(200).send(noteDeleted);
+    return { deleted: true, _id: id };
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    return {
+      deleted: false,
+      message: err || err?.message,
+      _id: id,
+    };
   }
 }
 
