@@ -8,21 +8,36 @@ import {
   reactionPlusOneLookup,
   reactionPlusTwoLookup,
 } from "../../util/reactionFilters";
+import { createdByLookUp, updatedByLookUp } from "../../util/noteFilters";
 
 import Note from "../../models/note";
 import { addNoteToSection } from "../section";
 import { findReactionsByNoteAndDelete } from "../reaction";
 import mongoose from "mongoose";
+import { getMember } from "../member";
 
 export async function updateNote(payload: {
   [Key: string]: any;
 }): Promise<any> {
   try {
+    const creator = payload.createdById
+      ? await getMember({
+          userId: mongoose.Types.ObjectId(payload.createdById),
+        })
+      : null;
+    const updator = payload.updatedById
+      ? await getMember({
+          userId: mongoose.Types.ObjectId(payload.updatedById),
+        })
+      : null;
     const query = { _id: mongoose.Types.ObjectId(payload.noteId) },
       update = {
         $set: {
           description: payload.description,
           sectionId: payload.sectionId,
+          createdById: creator ? creator?._id : payload.createdById || null,
+          updatedById: updator ? updator?._id : payload.updatedById || null,
+          isAnnonymous: payload.isAnnonymous || false,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
@@ -31,6 +46,7 @@ export async function updateNote(payload: {
     const note = await getNoteDetails(updated?._id);
     return note;
   } catch (err) {
+    console.log("error", err);
     return err || err.message;
   }
 }
@@ -43,6 +59,20 @@ export async function getNotesBySectionId(
     const query = { sectionId: mongoose.Types.ObjectId(req.params.sectionId) };
     const notes = await Note.aggregate([
       { $match: query },
+      createdByLookUp,
+      {
+        $unwind: {
+          path: "$createdBy",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      updatedByLookUp,
+      {
+        $unwind: {
+          path: "$updatedBy",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       reactionLookup,
       reactionDeserveLookup,
       reactionPlusOneLookup,
@@ -62,6 +92,20 @@ async function getNoteDetails(noteId: string): Promise<any> {
     const query = { _id: mongoose.Types.ObjectId(noteId) };
     const notes = await Note.aggregate([
       { $match: query },
+      createdByLookUp,
+      {
+        $unwind: {
+          path: "$createdBy",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      updatedByLookUp,
+      {
+        $unwind: {
+          path: "$updatedBy",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       reactionLookup,
       reactionDeserveLookup,
       reactionPlusOneLookup,

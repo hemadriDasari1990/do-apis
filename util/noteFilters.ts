@@ -10,12 +10,45 @@ import {
 
 import Note from "../models/note";
 import Section from "../models/section";
+import Member from "../models/member";
 
 const noteAddFields = {
   $addFields: {
     notes: "$notes",
     totalNotes: { $size: { $ifNull: ["$notes", []] } },
     section: { $ifNull: ["$section", [null]] },
+    createdBy: { $ifNull: ["$createdBy", [null]] },
+    updatedBy: { $ifNull: ["$updatedBy", [null]] },
+  },
+};
+
+const createdByLookUp = {
+  $lookup: {
+    from: Member.collection.name,
+    let: { createdById: "$createdById" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", { $ifNull: ["$$createdById", []] }] },
+        },
+      },
+    ],
+    as: "createdBy",
+  },
+};
+
+const updatedByLookUp = {
+  $lookup: {
+    from: Member.collection.name,
+    let: { updatedById: "$updatedById" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", { $ifNull: ["$$updatedById", []] }] },
+        },
+      },
+    ],
+    as: "updatedBy",
   },
 };
 
@@ -46,7 +79,12 @@ const notesLookup = {
           as: "section",
         },
       },
-      { $unwind: "$section" },
+      {
+        $unwind: {
+          path: "$section",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       reactionDisAgreeLookup,
       reactionPlusTwoLookup,
       reactionPlusOneLookup,
@@ -60,4 +98,4 @@ const notesLookup = {
   },
 };
 
-export { noteAddFields, notesLookup };
+export { noteAddFields, notesLookup, createdByLookUp, updatedByLookUp };

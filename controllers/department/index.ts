@@ -6,7 +6,6 @@ import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import { addDepartmentToUser } from "../user";
 import { findProjectsByDepartmentAndDelete } from "../project";
 import mongoose from "mongoose";
-import { socket } from "../../index";
 
 export async function updateDepartment(
   req: Request,
@@ -72,9 +71,9 @@ export async function getDepartments(userId: string): Promise<any> {
       projectsLookup,
       projectAddFields,
     ]);
-    socket.emit("get-departments", departments);
+    return departments;
   } catch (err) {
-    socket.emit("get-departments", err);
+    return err;
   }
 }
 

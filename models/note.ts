@@ -9,16 +9,34 @@ const NoteSchema = new Schema(
       required: true,
       index: true,
     },
+    createdById: {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+      index: true,
+      default: null,
+    },
+    updatedById: {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+      index: true,
+      default: null,
+    },
     description: {
       type: String,
       trim: true,
       minlength: 5,
+    },
+    isAnnonymous: {
+      type: Boolean,
+      default: false,
     },
     read: {
       type: Boolean,
       default: false,
     },
     reactions: [{ type: Schema.Types.ObjectId, ref: "Reaction" }],
+    createdBy: { type: Schema.Types.ObjectId, ref: "Member" },
+    updatedBy: { type: Schema.Types.ObjectId, ref: "Member" },
   },
   {
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.

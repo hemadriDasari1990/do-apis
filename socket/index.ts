@@ -1,13 +1,13 @@
 import socketio, { Socket } from "socket.io";
 
 import { addAndRemoveNoteFromSection } from "../controllers/section";
-import { getDepartments } from "../controllers/department";
 // import config from "config";
 // import jwt from "jsonwebtoken";
 import section from "./section";
 import note from "./note";
 import reaction from "./reaction";
 import board from "./board";
+import department from "./department";
 
 export default function socketEvents(io: socketio.Server) {
   // io.sockets.use(function(socket: any, next: any) {
@@ -33,6 +33,9 @@ export default function socketEvents(io: socketio.Server) {
       console.log("socket disconnected");
     });
 
+    /* Department socket events */
+    department(io, socket);
+
     /* Board socket events */
     board(io, socket);
 
@@ -48,11 +51,6 @@ export default function socketEvents(io: socketio.Server) {
     socket.on("move-note-to-section", async (body: { [Key: string]: any }) => {
       const updated = await addAndRemoveNoteFromSection(body);
       socket.emit("move-note-to-section", updated);
-    });
-
-    socket.on("get-departments", async (userId: string) => {
-      const departments = await getDepartments(userId);
-      socket.emit("get-departments", departments);
     });
   });
 }

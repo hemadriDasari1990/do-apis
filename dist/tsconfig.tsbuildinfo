@@ -627,7 +627,7 @@
         "affectsGlobalScope": false
       },
       "../controllers/department/index.ts": {
-        "version": "0e2f51122f843fcd711d3e8430b279849e841980a8aacb647ff5820f8a0d2f37",
+        "version": "25580def1f54d77fb3382d7a6de9f432ba75325e63f7efbed409d53f7cb117a5",
         "signature": "cc67c054a9812d9c82c7f2ca7801caefb314a7c8749730fd3cc8343967d3fde6",
         "affectsGlobalScope": false
       },
@@ -647,13 +647,13 @@
         "affectsGlobalScope": false
       },
       "../models/note.ts": {
-        "version": "0a32f4c0b2d3b8ac831f76e874c1da0a36ca96dbbc73768b84e36da714037b3d",
+        "version": "da23d4ebdaa27ef1a8125f3bd4e19c7bd86014439129ac4078b934fca6ec8f7f",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
       "../util/notefilters.ts": {
-        "version": "04d8490ff7695accaaaa08e107abaf0730e9056c84d6ab9d3530410d12c1df4f",
-        "signature": "8266266e6abc5fef744b1c70489f196f7b0f2395668cc2bbe6bfaafc17c2b3d9",
+        "version": "1d9379cf7c4a825c2ea88d6c587504e7a611b69096b01291aea84f91af4b0274",
+        "signature": "bb5a1c3a80acc246faafbc227c69b951a5413c265a2135436a39004e1b811a64",
         "affectsGlobalScope": false
       },
       "../controllers/reaction/index.ts": {
@@ -662,7 +662,7 @@
         "affectsGlobalScope": false
       },
       "../controllers/note/index.ts": {
-        "version": "d4a17f9567e1c7448b0bc66a62a8565991804fbae4e0e0db5fe0995795cf2e83",
+        "version": "18fb0348f7bba8cbf5c011de3706fb435568671f464fc5a08747640bcda7cf1c",
         "signature": "f495a752229becc5d2eccdfe6857dbb6746046f87a1c3875778cf7a432164116",
         "affectsGlobalScope": false
       },
@@ -672,12 +672,12 @@
         "affectsGlobalScope": false
       },
       "../controllers/board/index.ts": {
-        "version": "6ac532ff6293bf0156c003be3accff2bbea0fef05b5ebd0f57ea4e4ce981172e",
+        "version": "30f88d28c63305c2acf45d37afd99fb40e4e5b5524581567af178b43f823b7be",
         "signature": "bf39e581f0fb7f948c60c30678b9650377bcc49c8a51b3f70d8720dbebc3a225",
         "affectsGlobalScope": false
       },
       "../controllers/member/index.ts": {
-        "version": "ad3308bdfe3a9864f4086d4e1b384734ecb09d3957605defff2ab8c95ec70735",
+        "version": "0074e17686875027f51a991abe7b26fbaa26cf60d283a6947a13c0297247f7a4",
         "signature": "c187e81b5a1483aa752a3fa8e2aaf2073a3f3c742862cf16b29fadc0c9ea5457",
         "affectsGlobalScope": false
       },
@@ -692,7 +692,7 @@
         "affectsGlobalScope": false
       },
       "../util/member.ts": {
-        "version": "e9d07eb52031f98a8144056e8ac677d0f6018a75a2b69c97a60dcbb9844e8124",
+        "version": "16bacd48233b7f58ae4a1b0b5168070abacfc771057244b817382fc6797625d3",
         "signature": "9b38f5ffe5989cdffb13f958336901f2d539d4ca82472a36f6ec340886a943a1",
         "affectsGlobalScope": false
       },
@@ -786,8 +786,13 @@
         "signature": "3fe1a7fd968aa79a78c3ca6478269e686530ccd797261dabcb6a1a2b368be42e",
         "affectsGlobalScope": false
       },
+      "../socket/department/index.ts": {
+        "version": "727a6daff7f6a3d5a11dfeb2bcb361afb5306f5ecf065d2ef4c3c0ede09b0dc3",
+        "signature": "dad78700352869e2490ef43405c90231ba8787bea3d191db22adc8cc6aa833df",
+        "affectsGlobalScope": false
+      },
       "../socket/index.ts": {
-        "version": "507a9b9e4f0ed83a7b6ded3a2eea3a968082571831f0581e62a7d31464bd0af5",
+        "version": "a08e9df6b6c6acce85e1b0b605c222997bc0426956971c9f32f004ddd186e478",
         "signature": "5df492892acc6fca2d5fc5ff5adf4380d8a3575e35009b0fe169d57cc13ca91e",
         "affectsGlobalScope": false
       },
@@ -909,7 +914,6 @@
       "../controllers/department/index.ts": [
         "../controllers/project/index.ts",
         "../controllers/user/index.ts",
-        "../index.ts",
         "../models/department.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
@@ -931,11 +935,13 @@
         "../util/teammemberfilters.ts"
       ],
       "../controllers/note/index.ts": [
+        "../controllers/member/index.ts",
         "../controllers/reaction/index.ts",
         "../controllers/section/index.ts",
         "../models/note.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
+        "../util/notefilters.ts",
         "../util/reactionfilters.ts"
       ],
       "../controllers/project/index.ts": [
@@ -1439,11 +1445,15 @@
         "../controllers/board/index.ts",
         "../node_modules/socket.io/dist/index.d.ts"
       ],
-      "../socket/index.ts": [
+      "../socket/department/index.ts": [
         "../controllers/department/index.ts",
+        "../node_modules/socket.io/dist/index.d.ts"
+      ],
+      "../socket/index.ts": [
         "../controllers/section/index.ts",
         "../node_modules/socket.io/dist/index.d.ts",
         "../socket/board/index.ts",
+        "../socket/department/index.ts",
         "../socket/note/index.ts",
         "../socket/reaction/index.ts",
         "../socket/section/index.ts"
@@ -1501,6 +1511,7 @@
         "../util/teammemberfilters.ts"
       ],
       "../util/notefilters.ts": [
+        "../models/member.ts",
         "../models/note.ts",
         "../models/section.ts",
         "../util/reactionfilters.ts"
@@ -1973,6 +1984,9 @@
       "../socket/board/index.ts": [
         "../node_modules/socket.io/dist/index.d.ts"
       ],
+      "../socket/department/index.ts": [
+        "../node_modules/socket.io/dist/index.d.ts"
+      ],
       "../socket/index.ts": [
         "../node_modules/socket.io/dist/index.d.ts"
       ],
@@ -2156,6 +2170,7 @@
       "../services/email/index.ts",
       "../services/index.ts",
       "../socket/board/index.ts",
+      "../socket/department/index.ts",
       "../socket/index.ts",
       "../socket/note/index.ts",
       "../socket/reaction/index.ts",
