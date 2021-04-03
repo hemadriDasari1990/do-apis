@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 
 import ApplicationServer from "./server";
 import config from "config";
+import cors from "cors";
 import { createServer } from "http";
 import socketEvents from "./socket";
 
@@ -21,18 +22,23 @@ function onError(error: any) {
   console.log("There was an error:", error);
 }
 
+// Add headers
+app.use(cors());
+
 app.get("/", (req: Request, res: Response) => {
   console.log(req);
   res.send(`This is a landing page for letsdoretro service`);
 });
 
 // socket.io handlers
-let socket = io(server, {
+const socket = io(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
   },
 });
-// io.set('origins', '*:*')
+// io.set("origins", "*:*");
 socketEvents(socket);
 
 export { socket };

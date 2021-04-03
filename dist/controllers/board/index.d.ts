@@ -6,6 +6,7 @@ export declare function startOrCompleteBoard(payload: {
 }): Promise<any>;
 export declare function getBoardDetails(req: Request, res: Response): Promise<any>;
 export declare function getBoardDetailsLocal(boardId: string): Promise<any>;
+export declare function getBoards(req: Request, res: Response): Promise<any>;
 export declare function deleteBoard(req: Request, res: Response, next: NextFunction): Promise<any>;
 export declare function getBoard(query: {
     [Key: string]: any;

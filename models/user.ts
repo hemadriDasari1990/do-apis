@@ -12,11 +12,6 @@ const UserSchema = new Schema(
       minlength: 1,
       required: true,
     },
-    description: {
-      type: String,
-      trim: true,
-      minlength: 10,
-    },
     email: {
       type: String,
       // min: [5, "Too short, min is 5 characters"],
@@ -46,7 +41,7 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    type: {
+    accountType: {
       type: String,
       required: true,
       enum: ["commercial", "individual"],
@@ -57,6 +52,12 @@ const UserSchema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "Department",
+      },
+    ],
+    boards: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Board",
       },
     ],
     teams: [

@@ -20,7 +20,7 @@ declare const reactionLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    member: string;
+                                    memberId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -35,7 +35,7 @@ declare const reactionLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    team: string;
+                                    teamId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -119,7 +119,7 @@ declare const reactionPlusOneLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    member: string;
+                                    memberId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -134,7 +134,7 @@ declare const reactionPlusOneLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    team: string;
+                                    teamId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -211,7 +211,7 @@ declare const reactionPlusTwoLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    member: string;
+                                    memberId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -226,7 +226,7 @@ declare const reactionPlusTwoLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    team: string;
+                                    teamId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -303,7 +303,7 @@ declare const reactionDeserveLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    member: string;
+                                    memberId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -318,7 +318,7 @@ declare const reactionDeserveLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    team: string;
+                                    teamId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -373,7 +373,7 @@ declare const reactionDeserveLookup: {
         as: string;
     };
 };
-declare const reactionDisAgreeLookup: {
+declare const reactionMinusOneLookup: {
     $lookup: {
         from: string;
         let: {
@@ -395,7 +395,7 @@ declare const reactionDisAgreeLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    member: string;
+                                    memberId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -410,7 +410,7 @@ declare const reactionDisAgreeLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    team: string;
+                                    teamId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -487,7 +487,7 @@ declare const reactionLoveLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    member: string;
+                                    memberId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -502,7 +502,7 @@ declare const reactionLoveLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    team: string;
+                                    teamId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -579,7 +579,7 @@ declare const reactionAddFields: {
                 $ifNull: (string | never[])[];
             };
         };
-        totalDisAgreed: {
+        totalMinusOne: {
             $size: {
                 $ifNull: (string | never[])[];
             };
@@ -591,4 +591,4 @@ declare const reactionAddFields: {
         };
     };
 };
-export { reactionLookup, reactionPlusOneLookup, reactionPlusTwoLookup, reactionDeserveLookup, reactionDisAgreeLookup, reactionLoveLookup, reactionAddFields, };
+export { reactionLookup, reactionPlusOneLookup, reactionPlusTwoLookup, reactionDeserveLookup, reactionMinusOneLookup, reactionLoveLookup, reactionAddFields, };

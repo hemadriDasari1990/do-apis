@@ -1,2 +1,2 @@
-declare let socket: any;
+declare const socket: any;
 export { socket };

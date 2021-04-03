@@ -3,9 +3,7 @@
 
 <head>
     <%- include('./head'); %>
-    <script>
-
-    </script>
+    <script></script>
     <style type="text/css">
         .mail-body-container {
             background: #f9f9f9;
@@ -32,20 +30,20 @@
 
         .content {
             max-width: 700px;
-            Margin: 0 auto
+            margin: 0 auto;
         }
 
         .content-table {
             border-spacing: 0;
             font-family: gt-eesti, ArialMT, Helvetica, Arial, sans-serif;
-            Margin: 0 auto;
+            margin: 0 auto;
             padding: 24px;
             width: 100%;
-            max-width: 600px
+            max-width: 600px;
         }
 
         .pimary-button {
-            background-color: #1e1e58;
+            background-color: #172b4d;
             color: #fff;
             text-align: center;
             border-radius: 5px;
@@ -83,7 +81,7 @@
                                                 <tr>
                                                     <td>
                                                         <a href="http://8link.in/?ref=mail"
-                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;color:#1e1e58;"
+                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;color:#172b4d;"
                                                             target="_blank">
                                                             <img src="http://8link.in/assets/mail/logo.png"
                                                                 style="display:block" alt="8link" width="200"
@@ -107,8 +105,7 @@
                                                                 <tr>
                                                                     <td style="padding-bottom:16px;">
                                                                         <b style="font-size:28px;">
-                                                                            We're glad you're here,
-                                                                            <%= name %>!
+                                                                            We're glad you're here, <%= name %>!
                                                                         </b>
                                                                     </td>
                                                                 </tr>
@@ -116,7 +113,8 @@
                                                                     <td style="padding-bottom:12px;">
                                                                         <span
                                                                             style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">We
-                                                                            just want to confirm it's you. </span>
+                                                                            just want to confirm it's you.
+                                                                        </span>
                                                                     </td>
                                                                 </tr>
                                                             </tbody>
@@ -134,8 +132,9 @@
                                                                         <td class="pimary-button">
                                                                             <a class="pimary-button-style"
                                                                                 href="<%- confirm_link %>"
-                                                                                target="_blank"> Click to
-                                                                                confirm your email address </a>
+                                                                                target="_blank">
+                                                                                Click to confirm your email address
+                                                                            </a>
                                                                         </td>
                                                                     </tr>
                                                                 </tbody>
@@ -160,18 +159,12 @@
                                                                     <td>
                                                                         <span
                                                                             style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">If
-                                                                            you
-                                                                            didn't
-                                                                            create a
+                                                                            you didn't create a
                                                                             <a href="http://8link.in/?ref=mail"
-                                                                                style="color:#1e1e58;" target="_blank">
+                                                                                style="color:#172b4d;" target="_blank">
                                                                                 letsdoretro.com
                                                                             </a>
-                                                                            account,
-                                                                            just
-                                                                            delete
-                                                                            this
-                                                                            email.
+                                                                            account, just delete this email.
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -204,7 +197,7 @@
                                                                         <span
                                                                             style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">The
                                                                             <a href="http://8link.in/?ref=mail"
-                                                                                style="color:#1e1e58;" target="_blank">
+                                                                                style="color:#172b4d;" target="_blank">
                                                                                 letsdoretro.com
                                                                             </a>
                                                                             team.
@@ -230,7 +223,6 @@
     <footer>
         <%- include('./footer'); %>
     </footer>
-
 </body>
 
 </html>

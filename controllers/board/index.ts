@@ -15,6 +15,8 @@ import {
 } from "../../util/teamFilters";
 import { defaultSections } from "../../util/constants";
 import { projectsLookup } from "../../util/projectFilters";
+import { addBoardToUser } from "../user";
+import { getPagination } from "../../util";
 
 export async function addSectionToBoard(
   sectionId: string,
@@ -50,8 +52,11 @@ export async function updateBoard(
         message: `Board with ${boardDetails?.title} already exist. Please choose different name`,
       });
     }
+
     const boardsCount: number = await Board.find({
-      projectId: req.body.projectId,
+      ...(req.body.accountType === "commercial"
+        ? { projectId: req.body.projectId }
+        : { userId: req.body.userId }),
     }).count();
 
     const query = { _id: mongoose.Types.ObjectId(req.body.boardId) },
@@ -65,7 +70,9 @@ export async function updateBoard(
                 title: req.body.title + (boardsCount + 1),
               }),
           description: req.body.description,
-          projectId: req.body.projectId,
+          ...(req.body.accountType === "commercial"
+            ? { projectId: req.body.projectId }
+            : { userId: req.body.userId }),
           status: req.body.status || "draft",
           sprint: boardsCount + 1,
           isDefaultBoard: req.body.isDefaultBoard,
@@ -111,8 +118,11 @@ export async function updateBoard(
     if (req.body.teams?.length) {
       await addTeamsToBoad(req.body.teams, updated?._id);
     }
-    if (req.body.projectId) {
+    if (req.body.accountType === "commercial" && req.body.projectId) {
       await addBoardToProject(updated?._id, req.body.projectId);
+    }
+    if (req.body.accountType === "individual" && req.body.userId) {
+      await addBoardToUser(updated?._id, req.body.userId);
     }
     const board = await getBoardDetailsLocal(updated?._id);
     return res.status(200).send(board);
@@ -168,6 +178,8 @@ export async function getBoardDetails(
 export async function getBoardDetailsLocal(boardId: string): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(boardId) };
+    const increment = { $inc: { views: 1 } };
+    await Board.findOneAndUpdate(query, increment);
     const boards = await Board.aggregate([
       { $match: query },
       projectsLookup,
@@ -181,6 +193,52 @@ export async function getBoardDetailsLocal(boardId: string): Promise<any> {
     return boards ? boards[0] : null;
   } catch (err) {
     throw err || err.message;
+  }
+}
+
+export async function getBoards(req: Request, res: Response): Promise<any> {
+  try {
+    const query =
+      req.body.accountType === "commercial"
+        ? {
+            projectId: mongoose.Types.ObjectId(req.query.id as string),
+          }
+        : {
+            userId: mongoose.Types.ObjectId(req.query.id as string),
+          };
+    const aggregators = [];
+    const { limit, offset } = getPagination(
+      parseInt(req.query.page as string),
+      parseInt(req.query.size as string)
+    );
+    if (req.query.queryString?.length) {
+      aggregators.push({
+        $match: { $text: { $search: req.query.queryString, $language: "en" } },
+      });
+      aggregators.push({ $addFields: { score: { $meta: "textScore" } } });
+    }
+    aggregators.push({
+      $facet: {
+        data: [
+          { $match: query },
+          { $sort: { _id: -1 } },
+          { $skip: offset },
+          { $limit: limit },
+          teamsLookup,
+          inActiveTeamsLookup,
+          activeTeamsLookup,
+          teamAddFields,
+          sectionsLookup,
+          sectionAddFields,
+        ],
+        total: [{ $count: "count" }],
+      },
+    });
+
+    const boards = await Board.aggregate(aggregators);
+    return res.status(200).send(boards ? boards[0] : null);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
   }
 }
 

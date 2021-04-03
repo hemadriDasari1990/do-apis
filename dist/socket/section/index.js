@@ -1,22 +1,48 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = require("../../util");
 const section_1 = require("../../controllers/section");
-// import { decodeToken } from "../../util";
 function section(io, socket) {
     socket.on("update-section", async (payload) => {
-        // const query: any = socket.handshake.query;
-        const updated = await section_1.updateSection(Object.assign({}, payload));
-        io.emit(`update-section-response`, updated);
+        var _a;
+        try {
+            console.log("socket", (_a = socket.handshake) === null || _a === void 0 ? void 0 : _a.query);
+            const query = socket.handshake.query;
+            util_1.verifyToken(query === null || query === void 0 ? void 0 : query.token, io);
+            const updated = await section_1.updateSection(Object.assign(Object.assign({}, payload), { user: util_1.decodeToken(query === null || query === void 0 ? void 0 : query.token) }));
+            console.log("updated", updated);
+            io.emit(`update-section-response`, updated);
+        }
+        catch (err) {
+            throw err;
+        }
     });
     socket.on("create-section", async (payload) => {
-        // const query: any = socket.handshake.query;
-        const create = await section_1.updateSection(Object.assign({}, payload));
-        io.emit(`create-section-response`, create);
+        var _a;
+        try {
+            console.log("socket12", (_a = socket.handshake) === null || _a === void 0 ? void 0 : _a.query);
+            const query = socket.handshake.query;
+            util_1.verifyToken(query === null || query === void 0 ? void 0 : query.token, io);
+            const created = await section_1.updateSection(Object.assign({}, payload));
+            console.log("created", created);
+            io.emit(`create-section-response`, created);
+        }
+        catch (err) {
+            throw err;
+        }
     });
     socket.on("delete-section", async (sectionId) => {
-        const deleted = await section_1.deleteSection(sectionId);
-        io.emit(`delete-section-response`, deleted);
+        try {
+            const query = socket.handshake.query;
+            util_1.verifyToken(query === null || query === void 0 ? void 0 : query.token, io);
+            const user = util_1.decodeToken(query === null || query === void 0 ? void 0 : query.token);
+            const deleted = await section_1.deleteSection(sectionId, user === null || user === void 0 ? void 0 : user._id);
+            io.emit(`delete-section-response`, deleted);
+        }
+        catch (err) {
+            throw err;
+        }
     });
 }
 exports.default = section;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi9zb2NrZXQvc2VjdGlvbi9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUVBLHVEQUF5RTtBQUN6RSw0Q0FBNEM7QUFFNUMsU0FBd0IsT0FBTyxDQUFDLEVBQW1CLEVBQUUsTUFBYztJQUNqRSxNQUFNLENBQUMsRUFBRSxDQUFDLGdCQUFnQixFQUFFLEtBQUssRUFBRSxPQUErQixFQUFFLEVBQUU7UUFDcEUsNkNBQTZDO1FBQzdDLE1BQU0sT0FBTyxHQUFHLE1BQU0sdUJBQWEsbUJBQzlCLE9BQU8sRUFFVixDQUFDO1FBQ0gsRUFBRSxDQUFDLElBQUksQ0FBQyx5QkFBeUIsRUFBRSxPQUFPLENBQUMsQ0FBQztJQUM5QyxDQUFDLENBQUMsQ0FBQztJQUVILE1BQU0sQ0FBQyxFQUFFLENBQUMsZ0JBQWdCLEVBQUUsS0FBSyxFQUFFLE9BQStCLEVBQUUsRUFBRTtRQUNwRSw2Q0FBNkM7UUFDN0MsTUFBTSxNQUFNLEdBQUcsTUFBTSx1QkFBYSxtQkFDN0IsT0FBTyxFQUVWLENBQUM7UUFDSCxFQUFFLENBQUMsSUFBSSxDQUFDLHlCQUF5QixFQUFFLE1BQU0sQ0FBQyxDQUFDO0lBQzdDLENBQUMsQ0FBQyxDQUFDO0lBRUgsTUFBTSxDQUFDLEVBQUUsQ0FBQyxnQkFBZ0IsRUFBRSxLQUFLLEVBQUUsU0FBaUIsRUFBRSxFQUFFO1FBQ3RELE1BQU0sT0FBTyxHQUFHLE1BQU0sdUJBQWEsQ0FBQyxTQUFTLENBQUMsQ0FBQztRQUMvQyxFQUFFLENBQUMsSUFBSSxDQUFDLHlCQUF5QixFQUFFLE9BQU8sQ0FBQyxDQUFDO0lBQzlDLENBQUMsQ0FBQyxDQUFDO0FBQ0wsQ0FBQztBQXZCRCwwQkF1QkMifQ==
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi9zb2NrZXQvc2VjdGlvbi9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOztBQUFBLHFDQUFzRDtBQUN0RCx1REFBeUU7QUFHekUsU0FBd0IsT0FBTyxDQUFDLEVBQW1CLEVBQUUsTUFBYztJQUNqRSxNQUFNLENBQUMsRUFBRSxDQUFDLGdCQUFnQixFQUFFLEtBQUssRUFBRSxPQUErQixFQUFFLEVBQUU7O1FBQ3BFLElBQUk7WUFDRixPQUFPLENBQUMsR0FBRyxDQUFDLFFBQVEsUUFBRSxNQUFNLENBQUMsU0FBUywwQ0FBRSxLQUFLLENBQUMsQ0FBQztZQUMvQyxNQUFNLEtBQUssR0FBUSxNQUFNLENBQUMsU0FBUyxDQUFDLEtBQUssQ0FBQztZQUMxQyxrQkFBVyxDQUFDLEtBQUssYUFBTCxLQUFLLHVCQUFMLEtBQUssQ0FBRSxLQUFLLEVBQUUsRUFBRSxDQUFDLENBQUM7WUFDOUIsTUFBTSxPQUFPLEdBQUcsTUFBTSx1QkFBYSxpQ0FDOUIsT0FBTyxLQUNWLElBQUksRUFBRSxrQkFBVyxDQUFDLEtBQUssYUFBTCxLQUFLLHVCQUFMLEtBQUssQ0FBRSxLQUFLLENBQUMsSUFDL0IsQ0FBQztZQUNILE9BQU8sQ0FBQyxHQUFHLENBQUMsU0FBUyxFQUFFLE9BQU8sQ0FBQyxDQUFDO1lBQ2hDLEVBQUUsQ0FBQyxJQUFJLENBQUMseUJBQXlCLEVBQUUsT0FBTyxDQUFDLENBQUM7U0FDN0M7UUFBQyxPQUFPLEdBQUcsRUFBRTtZQUNaLE1BQU0sR0FBRyxDQUFDO1NBQ1g7SUFDSCxDQUFDLENBQUMsQ0FBQztJQUVILE1BQU0sQ0FBQyxFQUFFLENBQUMsZ0JBQWdCLEVBQUUsS0FBSyxFQUFFLE9BQStCLEVBQUUsRUFBRTs7UUFDcEUsSUFBSTtZQUNGLE9BQU8sQ0FBQyxHQUFHLENBQUMsVUFBVSxRQUFFLE1BQU0sQ0FBQyxTQUFTLDBDQUFFLEtBQUssQ0FBQyxDQUFDO1lBQ2pELE1BQU0sS0FBSyxHQUFRLE1BQU0sQ0FBQyxTQUFTLENBQUMsS0FBSyxDQUFDO1lBQzFDLGtCQUFXLENBQUMsS0FBSyxhQUFMLEtBQUssdUJBQUwsS0FBSyxDQUFFLEtBQUssRUFBRSxFQUFFLENBQUMsQ0FBQztZQUM5QixNQUFNLE9BQU8sR0FBRyxNQUFNLHVCQUFhLG1CQUM5QixPQUFPLEVBRVYsQ0FBQztZQUNILE9BQU8sQ0FBQyxHQUFHLENBQUMsU0FBUyxFQUFFLE9BQU8sQ0FBQyxDQUFDO1lBQ2hDLEVBQUUsQ0FBQyxJQUFJLENBQUMseUJBQXlCLEVBQUUsT0FBTyxDQUFDLENBQUM7U0FDN0M7UUFBQyxPQUFPLEdBQUcsRUFBRTtZQUNaLE1BQU0sR0FBRyxDQUFDO1NBQ1g7SUFDSCxDQUFDLENBQUMsQ0FBQztJQUVILE1BQU0sQ0FBQyxFQUFFLENBQUMsZ0JBQWdCLEVBQUUsS0FBSyxFQUFFLFNBQWlCLEVBQUUsRUFBRTtRQUN0RCxJQUFJO1lBQ0YsTUFBTSxLQUFLLEdBQVEsTUFBTSxDQUFDLFNBQVMsQ0FBQyxLQUFLLENBQUM7WUFDMUMsa0JBQVcsQ0FBQyxLQUFLLGFBQUwsS0FBSyx1QkFBTCxLQUFLLENBQUUsS0FBSyxFQUFFLEVBQUUsQ0FBQyxDQUFDO1lBQzlCLE1BQU0sSUFBSSxHQUFRLGtCQUFXLENBQUMsS0FBSyxhQUFMLEtBQUssdUJBQUwsS0FBSyxDQUFFLEtBQUssQ0FBQyxDQUFDO1lBQzVDLE1BQU0sT0FBTyxHQUFHLE1BQU0sdUJBQWEsQ0FBQyxTQUFTLEVBQUUsSUFBSSxhQUFKLElBQUksdUJBQUosSUFBSSxDQUFFLEdBQUcsQ0FBQyxDQUFDO1lBQzFELEVBQUUsQ0FBQyxJQUFJLENBQUMseUJBQXlCLEVBQUUsT0FBTyxDQUFDLENBQUM7U0FDN0M7UUFBQyxPQUFPLEdBQUcsRUFBRTtZQUNaLE1BQU0sR0FBRyxDQUFDO1NBQ1g7SUFDSCxDQUFDLENBQUMsQ0FBQztBQUNMLENBQUM7QUE1Q0QsMEJBNENDIn0=

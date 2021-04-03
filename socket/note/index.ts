@@ -1,6 +1,11 @@
+import {
+  deleteNote,
+  markNoteRead,
+  updateNote,
+  updateNotePosition,
+} from "../../controllers/note";
 import socketio, { Socket } from "socket.io";
 
-import { updateNote, deleteNote, markNoteRead } from "../../controllers/note";
 // import { decodeToken } from "../../util";
 
 export default function note(io: socketio.Server, socket: Socket) {
@@ -22,9 +27,9 @@ export default function note(io: socketio.Server, socket: Socket) {
     io.emit(`create-note-response-${payload?.sectionId}`, create);
   });
 
-  socket.on("delete-note", async (id: string) => {
-    const deleted = await deleteNote(id);
-    io.emit(`delete-note-response-${id}`, deleted);
+  socket.on("delete-note", async (payload: { [Key: string]: any }) => {
+    const deleted = await deleteNote(payload?.id, payload?.userId);
+    io.emit(`delete-note-response-${payload?.id}`, deleted);
   });
 
   socket.on("mark-note-read", async (payload: { [Key: string]: any }) => {
@@ -34,5 +39,14 @@ export default function note(io: socketio.Server, socket: Socket) {
       //   ...decodeToken(query?.token),
     });
     io.emit(`mark-note-read-response-${payload?.id}`, create);
+  });
+
+  socket.on("update-note-position", async (payload: { [Key: string]: any }) => {
+    // const query: any = socket.handshake.query;
+    const updated = await updateNotePosition({
+      ...payload,
+      //   ...decodeToken(query?.token),
+    });
+    io.emit(`update-note-position-response`, updated);
   });
 }

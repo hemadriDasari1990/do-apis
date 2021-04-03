@@ -1,7 +1,7 @@
 import {
   reactionAddFields,
   reactionDeserveLookup,
-  reactionDisAgreeLookup,
+  reactionMinusOneLookup,
   reactionLookup,
   reactionLoveLookup,
   reactionPlusOneLookup,
@@ -85,7 +85,7 @@ const notesLookup = {
           preserveNullAndEmptyArrays: true,
         },
       },
-      reactionDisAgreeLookup,
+      reactionMinusOneLookup,
       reactionPlusTwoLookup,
       reactionPlusOneLookup,
       reactionDeserveLookup,

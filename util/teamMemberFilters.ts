@@ -5,11 +5,11 @@ import TeamMember from "../models/teamMember";
 const memberLookUp = {
   $lookup: {
     from: Member.collection.name,
-    let: { member: "$member" },
+    let: { memberId: "$memberId" },
     pipeline: [
       {
         $match: {
-          $expr: { $eq: ["$_id", "$$member"] },
+          $expr: { $eq: ["$_id", "$$memberId"] },
         },
       },
     ],
@@ -20,11 +20,11 @@ const memberLookUp = {
 const teamLookUp = {
   $lookup: {
     from: Team.collection.name,
-    let: { team: "$team" },
+    let: { teamId: "$teamId" },
     pipeline: [
       {
         $match: {
-          $expr: { $eq: ["$_id", "$$team"] },
+          $expr: { $eq: ["$_id", "$$teamId"] },
         },
       },
     ],

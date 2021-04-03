@@ -18,6 +18,7 @@ import config from "config";
 import crypto from "crypto";
 // import bcrypt from "bcrypt";
 import mongoose from "mongoose";
+import { boardsLookup, boardAddFields } from "../../util/boardFilters";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
@@ -50,6 +51,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       email: req.body.email,
       password: req.body.password,
       isAgreed: req.body.isAgreed,
+      accountType: req.body.accountType,
     });
     const newOrg = await newUser.save();
     newOrg.password = undefined;
@@ -148,20 +150,27 @@ export async function getUserDetails(
 ): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
-    const users = await User.aggregate([
+    const aggregators: Array<{ [Key: string]: any }> = [
       { $match: query },
-      departmentsLookup,
-      departmentAddFields,
       teamsLookup,
       teamAddFields,
       membersLookup,
       memberAddFields,
-    ]);
-    const org: any = users ? users[0] : null;
-    if (org) {
-      org.password = undefined;
-      org.token = undefined;
-      return res.status(200).json(org);
+    ];
+    if (req.query.accountType === "commercial") {
+      aggregators.push(departmentsLookup);
+      aggregators.push(departmentAddFields);
+    }
+    if (req.query.accountType === "individual") {
+      aggregators.push(boardsLookup);
+      aggregators.push(boardAddFields);
+    }
+    const users = await User.aggregate(aggregators);
+    const user: any = users ? users[0] : null;
+    if (user) {
+      user.password = undefined;
+      user.token = undefined;
+      return res.status(200).json(user);
     }
     return res.status(401).json({ code: UNAUTHORIZED });
   } catch (err) {
@@ -312,5 +321,24 @@ export async function addMemberToUser(
     return user;
   } catch (err) {
     throw "Cannot add team" + err || err.message;
+  }
+}
+
+export async function addBoardToUser(
+  boardId: string,
+  userId: string
+): Promise<any> {
+  try {
+    if (!boardId || !userId) {
+      return;
+    }
+    const updated = await User.findByIdAndUpdate(
+      userId,
+      { $push: { boards: boardId } },
+      { new: true, useFindAndModify: false }
+    );
+    return updated;
+  } catch (err) {
+    throw `Error while adding board to user ${err || err.message}`;
   }
 }

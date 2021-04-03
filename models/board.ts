@@ -8,7 +8,13 @@ const BoardSchema = new Schema(
     projectId: {
       type: Schema.Types.ObjectId,
       ref: "Project",
-      required: true,
+      default: null,
+      index: true,
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
       index: true,
     },
     title: {
@@ -60,6 +66,10 @@ const BoardSchema = new Schema(
       type: Number,
       default: 0,
     },
+    views: {
+      type: Number,
+      default: 0,
+    },
     sections: [
       {
         type: Schema.Types.ObjectId,
@@ -80,5 +90,8 @@ const BoardSchema = new Schema(
 
 BoardSchema.index({ projectId: 1, title: 1 }, { unique: true });
 BoardSchema.index({ projectId: 1, title: 1, sprint: 1 }, { unique: true });
+BoardSchema.index({ userId: 1, title: 1 }, { unique: true });
+BoardSchema.index({ userId: 1, title: 1, sprint: 1 }, { unique: true });
+BoardSchema.index({ title: "text" });
 
 export default mongoose.model("Board", BoardSchema);

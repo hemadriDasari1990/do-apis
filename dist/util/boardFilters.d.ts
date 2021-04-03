@@ -20,7 +20,7 @@ declare const boardsLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    member: string;
+                                    memberId: string;
                                 };
                                 pipeline: {
                                     $match: {
@@ -35,7 +35,7 @@ declare const boardsLookup: {
                             $lookup: {
                                 from: string;
                                 let: {
-                                    team: string;
+                                    teamId: string;
                                 };
                                 pipeline: {
                                     $match: {

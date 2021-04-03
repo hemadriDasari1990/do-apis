@@ -34,6 +34,9 @@ const NoteSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    position: {
+      type: Number,
+    },
     reactions: [{ type: Schema.Types.ObjectId, ref: "Reaction" }],
     createdBy: { type: Schema.Types.ObjectId, ref: "Member" },
     updatedBy: { type: Schema.Types.ObjectId, ref: "Member" },
@@ -42,5 +45,7 @@ const NoteSchema = new Schema(
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.
   }
 );
+
+NoteSchema.index({ sectionId: 1, position: 1 }, { unique: true });
 
 export default mongoose.model("Note", NoteSchema);

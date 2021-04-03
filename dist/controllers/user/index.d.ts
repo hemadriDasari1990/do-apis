@@ -11,3 +11,4 @@ export declare function getUserByEmail(email: string): Promise<any>;
 export declare function addDepartmentToUser(departmentId: string, userId: string): Promise<any>;
 export declare function addTeamToUser(teamId: string, userId: string): Promise<any>;
 export declare function addMemberToUser(memberId: string, userId: string): Promise<any>;
+export declare function addBoardToUser(boardId: string, userId: string): Promise<any>;

@@ -9,6 +9,7 @@ import { addMemberToUser } from "../user";
 import mongoose from "mongoose";
 import config from "config";
 import { getBoard } from "../board";
+import { getPagination } from "../../util";
 
 export async function updateMember(
   req: Request,
@@ -78,12 +79,33 @@ export async function getMembersByUser(
     const query = {
       userId: mongoose.Types.ObjectId(req.query.userId as string),
     };
-    const members = await Member.aggregate([
-      { $match: query },
-      teamMemberTeamsLookup,
-      teamMemberTeamsAddFields,
-    ]);
-    return res.status(200).json(members);
+    const aggregators = [];
+    const { limit, offset } = getPagination(
+      parseInt(req.query.page as string),
+      parseInt(req.query.size as string)
+    );
+    if (req.query.queryString?.length) {
+      aggregators.push({
+        $match: { $text: { $search: req.query.queryString, $language: "en" } },
+      });
+      aggregators.push({ $addFields: { score: { $meta: "textScore" } } });
+    }
+    aggregators.push({
+      $facet: {
+        data: [
+          { $match: query },
+          { $sort: { _id: -1 } },
+          { $skip: offset },
+          { $limit: limit },
+          teamMemberTeamsLookup,
+          teamMemberTeamsAddFields,
+        ],
+        total: [{ $count: "count" }],
+      },
+    });
+
+    const members = await Member.aggregate(aggregators);
+    return res.status(200).send(members ? members[0] : null);
   } catch (err) {
     return res.status(500).send(err || err.message);
   }

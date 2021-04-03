@@ -1,7 +1,7 @@
 module.exports = {
   // Secret key for JWT signing and encryption
-  accessTokenSecret: "letsdoretro",
-  refreshTokenSecret: "letsdoretro12345",
+  "accessTokenSecret": "letsdoretro",
+  "refreshTokenSecret": "letsdoretro234",
   // Database connection information
   database: 'mongodb://localhost:27017/lets-do-retro',
   // Setting port for server

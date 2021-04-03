@@ -3,6 +3,7 @@ import { noteAddFields, notesLookup } from "../../util/noteFilters";
 
 import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Section from "../../models/section";
+import SectionActivity from "../../models/sectionActivity";
 import { findNotesBySectionAndDelete } from "../note";
 import mongoose from "mongoose";
 
@@ -40,7 +41,8 @@ export async function updateSection(payload: {
         message: `Section with ${section?.title} already exist. Please choose different name`,
       };
     }
-    const updated = await Section.findOneAndUpdate(query, update, options);
+    const updated: any = await Section.findOneAndUpdate(query, update, options);
+    await createSectionActivity(updated._id, "update", payload?.user?._id);
     return updated;
   } catch (err) {
     return err;
@@ -55,6 +57,24 @@ export async function getSection(query: { [Key: string]: any }): Promise<any> {
       noteAddFields,
     ]);
     return sections ? sections[0] : null;
+  } catch (err) {
+    throw err || err.message;
+  }
+}
+
+export async function createSectionActivity(
+  sectionId: string,
+  action: string,
+  userId?: string
+): Promise<any> {
+  try {
+    const activity = await new SectionActivity({
+      userId: userId,
+      sectionId: sectionId,
+      type: "section",
+      action: action,
+    });
+    await activity.save();
   } catch (err) {
     throw err || err.message;
   }
@@ -102,12 +122,16 @@ async function getSections(boardId: string): Promise<any> {
   }
 }
 
-export async function deleteSection(sectionId: string): Promise<any> {
+export async function deleteSection(
+  sectionId: string,
+  userId: string
+): Promise<any> {
   try {
-    const deleted = deleteSectionAndNotes(sectionId);
+    const deleted: any = deleteSectionAndNotes(sectionId);
     if (!deleted) {
       return deleted;
     }
+    await createSectionActivity(deleted._id, "delete", userId);
     return { deleted: true, _id: sectionId };
   } catch (err) {
     return {

@@ -1,9 +1,9 @@
 import { addReactionToNote, getNote, removeReactionFromNote } from "../note";
-import { memberLookup } from "../../util/memberFilters";
 
 import Reaction from "../../models/reaction";
-import mongoose from "mongoose";
 import { getMember } from "../member";
+import { memberLookup } from "../../util/memberFilters";
+import mongoose from "mongoose";
 
 export async function createOrUpdateReaction(payload: {
   [Key: string]: any;

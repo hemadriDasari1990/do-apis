@@ -28,6 +28,7 @@ import {
   deleteBoard,
   getBoardDetails,
   updateBoard,
+  getBoards,
 } from "../controllers/board";
 import {
   deleteDepartment,
@@ -202,6 +203,9 @@ export default function(app: Application) {
 
   // Board details route
   boardRoutes.get("/:id", getBoardDetails);
+
+  // Board details route
+  boardRoutes.get("/", getBoards);
 
   // Update or Create board
   boardRoutes.put("/", authenticateJWT, updateBoard);

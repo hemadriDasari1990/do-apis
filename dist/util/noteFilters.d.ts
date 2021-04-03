@@ -60,24 +60,6 @@ declare const notesLookup: {
             notes: string;
         };
         pipeline: ({
-            $addFields: {
-                notes: string;
-                totalNotes: {
-                    $size: {
-                        $ifNull: (string | never[])[];
-                    };
-                };
-                section: {
-                    $ifNull: (string | null[])[];
-                };
-                createdBy: {
-                    $ifNull: (string | null[])[];
-                };
-                updatedBy: {
-                    $ifNull: (string | null[])[];
-                };
-            };
-        } | {
             $lookup: {
                 from: string;
                 let: {
@@ -99,7 +81,7 @@ declare const notesLookup: {
                                     $lookup: {
                                         from: string;
                                         let: {
-                                            member: string;
+                                            memberId: string;
                                         };
                                         pipeline: {
                                             $match: {
@@ -114,98 +96,7 @@ declare const notesLookup: {
                                     $lookup: {
                                         from: string;
                                         let: {
-                                            team: string;
-                                        };
-                                        pipeline: {
-                                            $match: {
-                                                $expr: {
-                                                    $eq: string[];
-                                                };
-                                            };
-                                        }[];
-                                        as: string;
-                                    };
-                                } | {
-                                    $match: {
-                                        $expr: {
-                                            $in: (string | {
-                                                $ifNull: (string | never[])[];
-                                            })[];
-                                        };
-                                    };
-                                    $unwind?: undefined;
-                                } | {
-                                    $unwind: string;
-                                    $match?: undefined;
-                                })[];
-                                as: string;
-                            };
-                        } | {
-                            $match: {
-                                $expr: {
-                                    $eq: string[];
-                                };
-                            };
-                        })[];
-                        as: string;
-                    };
-                } | {
-                    $match: {
-                        $expr: {
-                            $in: (string | {
-                                $ifNull: (string | never[])[];
-                            })[];
-                        };
-                        type: string;
-                    };
-                    $unwind?: undefined;
-                } | {
-                    $unwind: {
-                        path: string;
-                        preserveNullAndEmptyArrays: boolean;
-                    };
-                    $match?: undefined;
-                })[];
-                as: string;
-            };
-        } | {
-            $lookup: {
-                from: string;
-                let: {
-                    reactions: string;
-                };
-                pipeline: ({
-                    $lookup: {
-                        from: string;
-                        let: {
-                            reactedBy: string;
-                        };
-                        pipeline: ({
-                            $lookup: {
-                                from: string;
-                                let: {
-                                    teams: string;
-                                };
-                                pipeline: ({
-                                    $lookup: {
-                                        from: string;
-                                        let: {
-                                            member: string;
-                                        };
-                                        pipeline: {
-                                            $match: {
-                                                $expr: {
-                                                    $eq: string[];
-                                                };
-                                            };
-                                        }[];
-                                        as: string;
-                                    };
-                                } | {
-                                    $lookup: {
-                                        from: string;
-                                        let: {
-                                            team: string;
+                                            teamId: string;
                                         };
                                         pipeline: {
                                             $match: {
@@ -267,6 +158,97 @@ declare const notesLookup: {
                 as: string;
             };
         } | {
+            $lookup: {
+                from: string;
+                let: {
+                    reactions: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            reactedBy: string;
+                        };
+                        pipeline: ({
+                            $lookup: {
+                                from: string;
+                                let: {
+                                    teams: string;
+                                };
+                                pipeline: ({
+                                    $lookup: {
+                                        from: string;
+                                        let: {
+                                            memberId: string;
+                                        };
+                                        pipeline: {
+                                            $match: {
+                                                $expr: {
+                                                    $eq: string[];
+                                                };
+                                            };
+                                        }[];
+                                        as: string;
+                                    };
+                                } | {
+                                    $lookup: {
+                                        from: string;
+                                        let: {
+                                            teamId: string;
+                                        };
+                                        pipeline: {
+                                            $match: {
+                                                $expr: {
+                                                    $eq: string[];
+                                                };
+                                            };
+                                        }[];
+                                        as: string;
+                                    };
+                                } | {
+                                    $match: {
+                                        $expr: {
+                                            $in: (string | {
+                                                $ifNull: (string | never[])[];
+                                            })[];
+                                        };
+                                    };
+                                    $unwind?: undefined;
+                                } | {
+                                    $unwind: string;
+                                    $match?: undefined;
+                                })[];
+                                as: string;
+                            };
+                        } | {
+                            $match: {
+                                $expr: {
+                                    $eq: string[];
+                                };
+                            };
+                        })[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                        type: string;
+                    };
+                    $unwind?: undefined;
+                } | {
+                    $unwind: {
+                        path: string;
+                        preserveNullAndEmptyArrays: boolean;
+                    };
+                    $match?: undefined;
+                })[];
+                as: string;
+            };
+        } | {
             $addFields: {
                 totalReactions: {
                     $size: {
@@ -288,7 +270,7 @@ declare const notesLookup: {
                         $ifNull: (string | never[])[];
                     };
                 };
-                totalDisAgreed: {
+                totalMinusOne: {
                     $size: {
                         $ifNull: (string | never[])[];
                     };
@@ -297,6 +279,24 @@ declare const notesLookup: {
                     $size: {
                         $ifNull: (string | never[])[];
                     };
+                };
+            };
+        } | {
+            $addFields: {
+                notes: string;
+                totalNotes: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                section: {
+                    $ifNull: (string | null[])[];
+                };
+                createdBy: {
+                    $ifNull: (string | null[])[];
+                };
+                updatedBy: {
+                    $ifNull: (string | null[])[];
                 };
             };
         } | {

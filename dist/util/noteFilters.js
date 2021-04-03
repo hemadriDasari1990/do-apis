@@ -81,7 +81,7 @@ const notesLookup = {
                     preserveNullAndEmptyArrays: true,
                 },
             },
-            reactionFilters_1.reactionDisAgreeLookup,
+            reactionFilters_1.reactionMinusOneLookup,
             reactionFilters_1.reactionPlusTwoLookup,
             reactionFilters_1.reactionPlusOneLookup,
             reactionFilters_1.reactionDeserveLookup,

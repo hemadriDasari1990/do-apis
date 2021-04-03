@@ -1,20 +1,21 @@
 import { Request, Response } from "express";
+import { createdByLookUp, updatedByLookUp } from "../../util/noteFilters";
 import {
   reactionAddFields,
   reactionDeserveLookup,
-  reactionDisAgreeLookup,
   reactionLookup,
   reactionLoveLookup,
+  reactionMinusOneLookup,
   reactionPlusOneLookup,
   reactionPlusTwoLookup,
 } from "../../util/reactionFilters";
-import { createdByLookUp, updatedByLookUp } from "../../util/noteFilters";
 
 import Note from "../../models/note";
+import NoteActivity from "../../models/noteActivity";
 import { addNoteToSection } from "../section";
 import { findReactionsByNoteAndDelete } from "../reaction";
-import mongoose from "mongoose";
 import { getMember } from "../member";
+import mongoose from "mongoose";
 
 export async function updateNote(payload: {
   [Key: string]: any;
@@ -38,15 +39,16 @@ export async function updateNote(payload: {
           createdById: creator ? creator?._id : payload.createdById || null,
           updatedById: updator ? updator?._id : payload.updatedById || null,
           isAnnonymous: payload.isAnnonymous || false,
+          position: payload?.position,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated: any = await Note.findOneAndUpdate(query, update, options);
     await addNoteToSection(updated._id, payload.sectionId);
+    await createNoteActivity(updated._id, "update", payload?.user?._id);
     const note = await getNoteDetails(updated?._id);
     return note;
   } catch (err) {
-    console.log("error", err);
     return err || err.message;
   }
 }
@@ -77,7 +79,7 @@ export async function getNotesBySectionId(
       reactionDeserveLookup,
       reactionPlusOneLookup,
       reactionPlusTwoLookup,
-      reactionDisAgreeLookup,
+      reactionMinusOneLookup,
       reactionLoveLookup,
       reactionAddFields,
     ]);
@@ -110,7 +112,7 @@ async function getNoteDetails(noteId: string): Promise<any> {
       reactionDeserveLookup,
       reactionPlusOneLookup,
       reactionPlusTwoLookup,
-      reactionDisAgreeLookup,
+      reactionMinusOneLookup,
       reactionLoveLookup,
       reactionAddFields,
     ]);
@@ -136,18 +138,24 @@ export async function markNoteRead(payload: {
       update,
       options
     );
+    await createNoteActivity(
+      noteUpdated._id,
+      payload.read ? "read" : "un-read",
+      payload?.user?._id
+    );
     return noteUpdated;
   } catch (err) {
     return err || err.message;
   }
 }
 
-export async function deleteNote(id: string): Promise<any> {
+export async function deleteNote(id: string, userId: string): Promise<any> {
   try {
     const deleted = deleteNoteById(id);
     if (!deleted) {
       return deleted;
     }
+    await createNoteActivity(id, "delete", userId);
     return { deleted: true, _id: id };
   } catch (err) {
     return {
@@ -155,6 +163,24 @@ export async function deleteNote(id: string): Promise<any> {
       message: err || err?.message,
       _id: id,
     };
+  }
+}
+
+export async function createNoteActivity(
+  notedId: string,
+  action: string,
+  userId?: string
+): Promise<any> {
+  try {
+    const activity = await new NoteActivity({
+      userId: userId,
+      notedId: notedId,
+      type: "note",
+      action: action,
+    });
+    await activity.save();
+  } catch (err) {
+    throw err || err.message;
   }
 }
 
@@ -219,6 +245,41 @@ export async function getNote(query: { [Key: string]: any }): Promise<any> {
     return note;
   } catch (err) {
     throw err | err.message;
+  }
+}
+
+export async function updateNotePosition(payload: {
+  [Key: string]: any;
+}): Promise<any> {
+  try {
+    if (!payload) {
+      return { updated: false };
+    }
+    const sourceNote = await getNote({
+      _id: mongoose.Types.ObjectId(payload?.sourceId),
+    });
+    const destinationNote = await getNote({
+      _id: mongoose.Types.ObjectId(payload?.destinationId),
+    });
+    if (sourceNote && destinationNote) {
+      await Note.findByIdAndUpdate(sourceNote?._id, {
+        position: destinationNote?.position,
+      });
+    }
+
+    if (sourceNote && destinationNote) {
+      await Note.findByIdAndUpdate(destinationNote?._id, {
+        position: sourceNote?.position,
+      });
+    }
+    return {
+      updated: true,
+    };
+  } catch (err) {
+    return {
+      updated: false,
+      error: err | err.message,
+    };
   }
 }
 

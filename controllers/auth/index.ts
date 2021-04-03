@@ -4,11 +4,11 @@ import {
   NOT_FOUND,
   REQUIRED,
   TOKEN_EXPIRED,
+  TOKEN_MISSING,
   UNAUTHORIZED,
   VERIFIED,
-  TOKEN_MISSING,
 } from "../../util/constants";
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 
 import EmailService from "../../services/email";
 import Token from "../../models/token";
@@ -17,11 +17,11 @@ import bcrypt from "bcrypt";
 import config from "config";
 import { createMember } from "../member";
 import crypto from "crypto";
+import { getToken } from "../../util";
 import { getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { socket } from "../../index";
-import { getToken } from "../../util";
 
 /**
  * Validate the token
@@ -96,6 +96,7 @@ export async function login(req: Request, res: Response): Promise<any> {
       name: user.name,
       description: user.description,
       email: user.email,
+      accountType: user.accountType,
     };
 
     // Sign token
@@ -115,6 +116,7 @@ export async function login(req: Request, res: Response): Promise<any> {
       success: true,
       token: token,
       refreshToken: refreshToken,
+      accountType: user?.accountType,
     });
   } catch (err) {
     return res.status(500).json({ message: err | err.message });

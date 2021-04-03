@@ -1,4 +1,6 @@
+import config from "config";
 import jwt from "jsonwebtoken";
+import socketio from "socket.io";
 
 export function getToken(authHeader: string): any {
   if (!authHeader) {
@@ -13,4 +15,37 @@ export function decodeToken(token: string): any {
     return "";
   }
   return jwt.decode(token);
+}
+
+export function verifyToken(token: string, io: socketio.Server): any {
+  if (!token || token === null) {
+    io.emit("unauthorised", null);
+    return "";
+  }
+  return jwt.verify(token, config.get("accessTokenSecret"), function(
+    err: any,
+    decoded: any
+  ) {
+    if (err) {
+      io.emit("unauthorised", null);
+    }
+    return decoded;
+  });
+}
+
+export function getPagination(page: number, size: number) {
+  const limit = size ? +size : 8;
+  console.log("size", +size);
+  const offset = page ? page * limit : 0;
+
+  return { limit, offset };
+}
+
+export function getUser(authorization: string) {
+  if (!authorization) {
+    return;
+  }
+  const token = getToken(authorization);
+  const user: any = decodeToken(token);
+  return user;
 }

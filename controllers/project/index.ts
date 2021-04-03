@@ -115,7 +115,7 @@ export async function addBoardToProject(
     );
     return updated;
   } catch (err) {
-    throw `Error while adding note to section ${err || err.message}`;
+    throw `Error while adding board to project ${err || err.message}`;
   }
 }
 

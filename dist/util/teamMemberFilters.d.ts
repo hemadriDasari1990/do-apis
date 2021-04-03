@@ -8,7 +8,7 @@ declare const teamMemberTeamsLookup: {
             $lookup: {
                 from: string;
                 let: {
-                    member: string;
+                    memberId: string;
                 };
                 pipeline: {
                     $match: {
@@ -23,7 +23,7 @@ declare const teamMemberTeamsLookup: {
             $lookup: {
                 from: string;
                 let: {
-                    team: string;
+                    teamId: string;
                 };
                 pipeline: {
                     $match: {
@@ -60,7 +60,7 @@ declare const teamMemberMembersLookup: {
             $lookup: {
                 from: string;
                 let: {
-                    member: string;
+                    memberId: string;
                 };
                 pipeline: {
                     $match: {
@@ -75,7 +75,7 @@ declare const teamMemberMembersLookup: {
             $lookup: {
                 from: string;
                 let: {
-                    team: string;
+                    teamId: string;
                 };
                 pipeline: {
                     $match: {

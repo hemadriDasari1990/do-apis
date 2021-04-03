@@ -207,13 +207,13 @@ export async function addOrRemoveMemberFromTeam(
 ): Promise<any> {
   try {
     const query = {
-        team: mongoose.Types.ObjectId(req.body.teamId),
-        member: mongoose.Types.ObjectId(req.body.memberId),
+        teamId: mongoose.Types.ObjectId(req.body.teamId),
+        memberId: mongoose.Types.ObjectId(req.body.memberId),
       },
       update = {
         $set: {
-          team: req.body.teamId,
-          member: req.body.memberId,
+          teamId: req.body.teamId,
+          memberId: req.body.memberId,
         },
       },
       options = { upsert: true, new: true };
