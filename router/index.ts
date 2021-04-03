@@ -2,8 +2,8 @@ import {
   addOrRemoveMemberFromTeam,
   deleteTeam,
   getTeams,
-  updateTeam,
   sendInvitationToTeams,
+  updateTeam,
 } from "../controllers/team";
 import {
   authenticateJWT,
@@ -15,7 +15,6 @@ import {
   verifyAccount,
 } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
-import { getSectionsByBoardId } from "../controllers/section";
 import {
   createUser,
   deleteUser,
@@ -27,36 +26,31 @@ import {
 import {
   deleteBoard,
   getBoardDetails,
-  updateBoard,
   getBoards,
+  updateBoard,
 } from "../controllers/board";
-import {
-  deleteDepartment,
-  getDepartmentDetails,
-  updateDepartment,
-} from "../controllers/department";
 import {
   deleteMember,
   getMemberDetails,
   getMembersByUser,
   updateMember,
 } from "../controllers/member";
-import { getNotesBySectionId } from "../controllers/note";
 import {
   deleteProject,
   getProjectDetails,
   updateProject,
 } from "../controllers/project";
 import express, { Application } from "express";
+import { logout, refreshToken } from "../controllers/auth";
 
-import { refreshToken, logout } from "../controllers/auth";
+import { getNotesBySectionId } from "../controllers/note";
+import { getSectionsByBoardId } from "../controllers/section";
 
 export default function(app: Application) {
   // Initializing route groups
   const apiRoutes = express.Router(),
     authRoutes = express.Router(),
     userRoutes = express.Router(),
-    departmentRoutes = express.Router(),
     projectRoutes = express.Router(),
     boardRoutes = express.Router(),
     sectionRoutes = express.Router(),
@@ -161,22 +155,6 @@ export default function(app: Application) {
 
   // Member delete route
   memberRoutes.delete("/:id", authenticateJWT, deleteMember);
-
-  //= ========================
-  // Department Routes
-  //= ========================
-
-  // Set user routes as subgroup/middleware to apiRoutes
-  apiRoutes.use("/department", departmentRoutes);
-
-  // Department details route
-  departmentRoutes.get("/:id", authenticateJWT, getDepartmentDetails);
-
-  // Create or Update Department
-  departmentRoutes.put("/", authenticateJWT, updateDepartment);
-
-  // Department delete route
-  departmentRoutes.delete("/:id", authenticateJWT, deleteDepartment);
 
   //= ========================
   // Project Routes

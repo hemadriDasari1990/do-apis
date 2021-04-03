@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 import {
-  activeDepartmentsLookup,
-  departmentAddFields,
-  departmentsLookup,
-  inActiveDepartmentsLookup,
-} from "../../util/departmentFilters";
+  activeProjectsLookup,
+  inActiveProjectsLookup,
+  projectAddFields,
+  projectsLookup,
+} from "../../util/projectFilters";
 import { memberAddFields, membersLookup } from "../../util/memberFilters";
 import { teamAddFields, teamsLookup } from "../../util/teamFilters";
 
@@ -18,7 +18,6 @@ import config from "config";
 import crypto from "crypto";
 // import bcrypt from "bcrypt";
 import mongoose from "mongoose";
-import { boardsLookup, boardAddFields } from "../../util/boardFilters";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
@@ -51,7 +50,6 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       email: req.body.email,
       password: req.body.password,
       isAgreed: req.body.isAgreed,
-      accountType: req.body.accountType,
     });
     const newOrg = await newUser.save();
     newOrg.password = undefined;
@@ -156,15 +154,9 @@ export async function getUserDetails(
       teamAddFields,
       membersLookup,
       memberAddFields,
+      projectsLookup,
+      projectAddFields,
     ];
-    if (req.query.accountType === "commercial") {
-      aggregators.push(departmentsLookup);
-      aggregators.push(departmentAddFields);
-    }
-    if (req.query.accountType === "individual") {
-      aggregators.push(boardsLookup);
-      aggregators.push(boardAddFields);
-    }
     const users = await User.aggregate(aggregators);
     const user: any = users ? users[0] : null;
     if (user) {
@@ -186,10 +178,10 @@ export async function getUserSummary(
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const userSummary = await User.aggregate([
       { $match: query },
-      activeDepartmentsLookup,
-      departmentsLookup,
-      inActiveDepartmentsLookup,
-      departmentAddFields,
+      activeProjectsLookup,
+      inActiveProjectsLookup,
+      projectsLookup,
+      projectAddFields,
       teamsLookup,
       teamAddFields,
       membersLookup,

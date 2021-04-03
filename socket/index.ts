@@ -3,7 +3,6 @@ import socketio, { Socket } from "socket.io";
 import { addAndRemoveNoteFromSection } from "../controllers/section";
 import board from "./board";
 // import config from "config";
-import department from "./department";
 // import jwt from "jsonwebtoken";
 import note from "./note";
 import reaction from "./reaction";
@@ -42,8 +41,6 @@ export default function socketEvents(io: socketio.Server) {
   // Set socket.io listeners.
   io.sockets.on("connection", (socket: Socket) => {
     console.log("client connected");
-    /* Department socket events */
-    department(io, socket);
 
     /* Board socket events */
     board(io, socket);

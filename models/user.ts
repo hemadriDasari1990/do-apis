@@ -45,19 +45,13 @@ const UserSchema = new Schema(
       type: String,
       required: true,
       enum: ["commercial", "individual"],
-      default: "commercial",
+      default: "individual",
       index: true,
     },
-    departments: [
+    projects: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Department",
-      },
-    ],
-    boards: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Board",
+        ref: "Project",
       },
     ],
     teams: [
