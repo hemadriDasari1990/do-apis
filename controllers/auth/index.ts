@@ -1,5 +1,6 @@
 import {
   ALREADY_VERIFIED,
+  INCORRECT_PASSWORD,
   INTERNAL_SERVER_ERROR,
   NOT_FOUND,
   REQUIRED,
@@ -11,11 +12,11 @@ import {
 import { NextFunction, Request, Response } from "express";
 
 import EmailService from "../../services/email";
+import Member from "../../models/member";
 import Token from "../../models/token";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import config from "config";
-import { createMember } from "../member";
 import crypto from "crypto";
 import { getToken } from "../../util";
 import { getUserByEmail } from "../user";
@@ -77,9 +78,9 @@ export async function login(req: Request, res: Response): Promise<any> {
     const password: string = req.body.password;
     const user: { [Key: string]: any } = await getUserByEmail(email);
     if (!user) {
-      return res
-        .status(422)
-        .json({ message: "Email is not registered with us" });
+      return res.status(422).json({
+        message: "Email is not registered with us. Please create an account",
+      });
     }
     if (!user?.isVerified) {
       return res.status(422).json({
@@ -90,7 +91,9 @@ export async function login(req: Request, res: Response): Promise<any> {
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
-      return res.status(422).json({ message: "Incorrect Password" });
+      return res
+        .status(422)
+        .json({ errorId: INCORRECT_PASSWORD, message: "Incorrect Password" });
     const payload = {
       _id: user._id,
       name: user.name,
@@ -156,7 +159,7 @@ export async function refreshToken(req: Request, res: Response): Promise<any> {
       token: token,
     });
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    return res.status(401).send(err || err.message);
   }
 }
 
@@ -317,30 +320,37 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
         message: "We are unable to find a user for this token.",
       });
     }
-    if (user?.isVerified) {
+    if (user?.isVerified && user.email === user.newEmail) {
       return res.status(500).send({
         errorId: ALREADY_VERIFIED,
         message: "This account has already been verified. Please login",
       });
     }
+    const currentEmail = user.email;
     // Verify and save the user
     user.isVerified = true;
     user.isActive = true;
+    user.email = user.newEmail; // Add new email address to current email address
     const userUpdated = await user.save();
     if (!userUpdated) {
       return res.status(500).send({
         errorId: INTERNAL_SERVER_ERROR,
-        message: "Error while verifying the account ",
+        message: "Error while verifying the account",
       });
     }
-    const member = {
-      name: userUpdated.name,
-      email: userUpdated.email,
-      userId: userUpdated?._id,
-      isVerified: userUpdated.isVerified,
-      isAuthor: true,
-    };
-    await createMember(member);
+    const memberQuery = { email: currentEmail, userId: userUpdated?._id },
+      updateMember = {
+        $set: {
+          name: userUpdated.name,
+          email: userUpdated.email,
+          userId: userUpdated?._id,
+          isVerified: userUpdated.isVerified,
+          isAuthor: true,
+        },
+      },
+      memberOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
+    await Member.findOneAndUpdate(memberQuery, updateMember, memberOptions);
+
     await emailService.sendEmail(
       "/templates/welcome.ejs",
       {

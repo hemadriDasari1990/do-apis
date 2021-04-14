@@ -1,4 +1,5 @@
 import Section from "../models/section";
+import { notesLookup } from "./noteFilters";
 
 const sectionsLookup = {
   $lookup: {
@@ -13,6 +14,7 @@ const sectionsLookup = {
       {
         $sort: { _id: 1 },
       },
+      notesLookup,
     ],
     as: "sections",
   },

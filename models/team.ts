@@ -43,5 +43,6 @@ const TeamSchema = new Schema(
 );
 
 TeamSchema.index({ userId: 1, name: 1 }, { unique: true });
+TeamSchema.index({ name: "text" });
 
 export default mongoose.model("Team", TeamSchema);

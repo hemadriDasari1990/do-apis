@@ -1,6 +1,6 @@
 import {
-  teamMemberMembersLookup,
   teamMemberMembersAddFields,
+  teamMemberMembersLookup,
 } from "./teamMemberFilters";
 
 import Team from "../models/team";

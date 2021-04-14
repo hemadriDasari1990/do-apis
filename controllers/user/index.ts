@@ -1,8 +1,18 @@
+import {
+  EMAIL_VERIFIED,
+  INCORRECT_PASSWORD,
+  PASSWORDS_ARE_NOT_SAME,
+  PASSWORDS_ARE_SAME,
+  UNAUTHORIZED,
+  USER_ALREADY_EXIST,
+  USER_NOT_FOUND,
+} from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 import {
   activeProjectsLookup,
   inActiveProjectsLookup,
   projectAddFields,
+  projectAddTotalFields,
   projectsLookup,
 } from "../../util/projectFilters";
 import { memberAddFields, membersLookup } from "../../util/memberFilters";
@@ -12,12 +22,14 @@ import Board from "../../models/board";
 import EmailService from "../../services/email";
 import Project from "../../models/project";
 import Token from "../../models/token";
-import { UNAUTHORIZED } from "../../util/constants";
 import User from "../../models/user";
+import bcrypt from "bcrypt";
 import config from "config";
 import crypto from "crypto";
-// import bcrypt from "bcrypt";
+import { getUser } from "../../util";
 import mongoose from "mongoose";
+
+// import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
@@ -25,29 +37,30 @@ export async function createUser(req: Request, res: Response): Promise<any> {
     const user = await getUserByEmail(req.body.email);
     if (user && !user?.isVerified) {
       return res.status(400).json({
-        errorId: "USER_ALREADY_EXIST",
+        errorId: USER_ALREADY_EXIST,
         message: `An account with following email ${req.body.email} already exist but not verified yet. Please check your inbox`,
       });
     }
 
     if (user && user?.isVerified) {
       return res.status(400).json({
-        errorId: "EMAIL_VERIFIED",
+        errorId: EMAIL_VERIFIED,
         message: `An account with following email ${req.body.email} already exist and verified. Please login!`,
       });
     }
 
-    // const hashedPassword = await bcrypt.hash(req.body.password, 10);
-    // if(!hashedPassword){
-    //   return res
-    //       .status(400)
-    //       .json({ message: 'Error hashing password' });
-    // }
+    if (req.body.password?.trim() !== req.body.confirmPassword?.trim()) {
+      return res.status(400).json({
+        errorId: EMAIL_VERIFIED,
+        message: `Password and Confirm Password do not match`,
+      });
+    }
 
     const newUser: { [Key: string]: any } = new User({
       name: req.body.name,
       description: req.body.description,
       email: req.body.email,
+      newEmail: req.body.email, // This flag is required for changing email address
       password: req.body.password,
       isAgreed: req.body.isAgreed,
     });
@@ -113,6 +126,7 @@ export async function confirmEmail(req: Request, res: Response): Promise<any> {
     return res.status(500).json(err || err.message);
   }
 }
+
 export async function resendActivationLink(
   req: Request,
   res: Response
@@ -155,7 +169,7 @@ export async function getUserDetails(
       membersLookup,
       memberAddFields,
       projectsLookup,
-      projectAddFields,
+      projectAddTotalFields,
     ];
     const users = await User.aggregate(aggregators);
     const user: any = users ? users[0] : null;
@@ -187,12 +201,12 @@ export async function getUserSummary(
       membersLookup,
       memberAddFields,
     ]);
-    const org: any = userSummary ? userSummary[0] : null;
-    if (org) {
-      org.password = undefined;
-      org.token = undefined;
+    const user: any = userSummary ? userSummary[0] : null;
+    if (user) {
+      user.password = undefined;
+      user.token = undefined;
     }
-    return res.status(200).json(org);
+    return res.status(200).json(user);
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
@@ -210,6 +224,39 @@ export async function getUsers(req: Request, res: Response): Promise<any> {
     return res.status(200).json({
       users,
     });
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getBoardsByUser(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const query = {
+      _id: mongoose.Types.ObjectId(req.params.id),
+    };
+    const aggregators = [
+      { $match: query },
+      projectsLookup,
+      {
+        $unwind: "$projects",
+      },
+      {
+        $unwind: "$projects.boards",
+      },
+      { $replaceRoot: { newRoot: "$projects.boards" } },
+      {
+        $sort: {
+          _id: -1,
+        },
+      },
+      { $limit: parseInt(req.query.limit as string) },
+    ];
+
+    const boards = await User.aggregate(aggregators);
+    return res.status(200).send(boards);
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
@@ -316,21 +363,178 @@ export async function addMemberToUser(
   }
 }
 
-export async function addBoardToUser(
-  boardId: string,
+export async function addProjectToUser(
+  projectId: string,
   userId: string
 ): Promise<any> {
   try {
-    if (!boardId || !userId) {
+    if (!projectId || !userId) {
       return;
     }
     const updated = await User.findByIdAndUpdate(
       userId,
-      { $push: { boards: boardId } },
+      { $push: { projects: projectId } },
       { new: true, useFindAndModify: false }
     );
     return updated;
   } catch (err) {
-    throw `Error while adding board to user ${err || err.message}`;
+    throw `Error while adding project to user ${err || err.message}`;
+  }
+}
+
+export async function updateUser(req: Request, res: Response) {
+  try {
+    if (
+      !req.body.email?.trim()?.length ||
+      !req.body.password?.trim()?.length ||
+      !req.body.currentEmail?.trim()?.length
+    ) {
+      return;
+    }
+    const user = await getUser(req.headers.authorization as string);
+
+    const userFromDb: any = await User.findOne({
+      _id: mongoose.Types.ObjectId(user?._id),
+    });
+
+    if (!userFromDb) {
+      return res.status(500).json({
+        errorId: USER_NOT_FOUND,
+        errorMessage: "User not found",
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      req.body.password,
+      userFromDb?.password
+    );
+    if (!isPasswordValid) {
+      return res.status(422).json({
+        errorId: INCORRECT_PASSWORD,
+        errorMessage: "Incorrect Password",
+      });
+    }
+    const emailService = await new EmailService();
+    const query = { _id: mongoose.Types.ObjectId(userFromDb?._id) },
+      update = {
+        $set: {
+          newEmail: req.body.email, // This flag is required for changing email address
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const updatedUser: any = await User.findOneAndUpdate(
+      query,
+      update,
+      options
+    );
+    const tokenQuery = { userId: updatedUser._id },
+      updateToken = {
+        $set: {
+          userId: updatedUser._id,
+          token: crypto.randomBytes(16).toString("hex"),
+        },
+      },
+      tokenOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const newToken: any = await Token.findOneAndUpdate(
+      tokenQuery,
+      updateToken,
+      tokenOptions
+    );
+    await emailService.sendEmail(
+      "/templates/account-confirmation.ejs",
+      {
+        url: config.get("url"),
+        confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
+        name: updatedUser.name,
+      },
+      req.body.email,
+      "Please confirm your email"
+    );
+    return res.status(200).send({
+      updated: true,
+      message:
+        "We've sent an email confirmation link to your new email address. Please check your inbox",
+    });
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function updatePassword(req: Request, res: Response) {
+  try {
+    if (
+      !req.body.newPassword?.trim()?.length ||
+      !req.body.currentPassword?.trim()?.length ||
+      !req.body.newConfirmPassword?.trim()?.length
+    ) {
+      return;
+    }
+
+    if (req.body.newPassword?.trim() !== req.body.newConfirmPassword?.trim()) {
+      return res.status(422).json({
+        errorId: PASSWORDS_ARE_NOT_SAME,
+        errorMessage:
+          "New password and re entered one are not same. Please check",
+      });
+    }
+    const user = await getUser(req.headers.authorization as string);
+
+    const userFromDb: any = await User.findOne({
+      _id: mongoose.Types.ObjectId(user?._id),
+    });
+
+    if (!userFromDb) {
+      return res.status(500).json({
+        errorId: USER_NOT_FOUND,
+        errorMessage: "User not found",
+      });
+    }
+
+    const isCurrentPasswordSame = await bcrypt.compare(
+      req.body.currentPassword?.trim(),
+      userFromDb?.password?.trim()
+    );
+    if (!isCurrentPasswordSame) {
+      return res.status(422).json({
+        errorId: PASSWORDS_ARE_NOT_SAME,
+        errorMessage: "You've provide incorrect current password. Please check",
+      });
+    }
+
+    const isPasswordSame = await bcrypt.compare(
+      req.body.newPassword?.trim(),
+      userFromDb?.password?.trim()
+    );
+    if (isPasswordSame) {
+      return res.status(422).json({
+        errorId: PASSWORDS_ARE_SAME,
+        errorMessage:
+          "New password can't be same as old password. Please choose different one",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(
+      req.body.newPassword?.trim(),
+      Number(config.get("bcryptSalt"))
+    );
+    const update = {
+        $set: {
+          password: hashedPassword,
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    await User.findByIdAndUpdate(
+      mongoose.Types.ObjectId(userFromDb?._id),
+      update,
+      options
+    );
+
+    return res.status(200).send({
+      updated: true,
+      message:
+        "Your password is successfully changed. Please login with new password",
+    });
+  } catch (err) {
+    return res.status(500).send(err || err.message);
   }
 }

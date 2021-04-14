@@ -52,6 +52,8 @@ const MemberSchema = new Schema(
 );
 
 MemberSchema.index({ userId: 1, email: 1 }, { unique: true });
-MemberSchema.index({ name: "text" });
-
+MemberSchema.index(
+  { name: "text", email: "text" },
+  { weights: { name: 1, email: 2 } }
+);
 export default mongoose.model("Member", MemberSchema);

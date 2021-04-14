@@ -9,6 +9,7 @@ export declare function getMembersByUser(req: Request, res: Response): Promise<a
 export declare function getMember(query: {
     [Key: string]: any;
 }): Promise<any>;
+export declare function searchMembers(queryString: string): Promise<any>;
 export declare function deleteMember(req: Request, res: Response, next: NextFunction): Promise<any>;
 export declare function findMembersByTeamAndDelete(teamId: string): Promise<any>;
 export declare function addTeamMemberToMember(teamMemberId: string, memberId: string): Promise<any>;
@@ -22,4 +23,4 @@ export declare function sendInviteToMember(board: {
     [Key: string]: any;
 }, receiver: {
     [Key: string]: any;
-}): Promise<void>;
+}): Promise<any>;

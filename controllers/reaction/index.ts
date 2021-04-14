@@ -1,9 +1,17 @@
+import { Request, Response } from "express";
 import { addReactionToNote, getNote, removeReactionFromNote } from "../note";
 
+import Board from "../../models/board";
+import Note from "../../models/note";
 import Reaction from "../../models/reaction";
+import Section from "../../models/section";
 import { getMember } from "../member";
+import { getPagination } from "../../util";
 import { memberLookup } from "../../util/memberFilters";
 import mongoose from "mongoose";
+import { notesLookup } from "../../util/noteFilters";
+import { reactionLookup } from "../../util/reactionFilters";
+import { sectionsLookup } from "../../util/sectionFilters";
 
 export async function createOrUpdateReaction(payload: {
   [Key: string]: any;
@@ -134,6 +142,34 @@ async function getReactionsByNote(query: { [Key: string]: any }): Promise<any> {
   }
 }
 
+export async function getReactions(req: Request, res: Response): Promise<any> {
+  try {
+    const query = {
+      noteId: mongoose.Types.ObjectId(req.query.noteId as string),
+    };
+    const aggregators = [];
+    const { limit, offset } = getPagination(
+      parseInt(req.query.page as string),
+      parseInt(req.query.size as string)
+    );
+    aggregators.push({
+      $facet: {
+        data: [
+          { $match: query },
+          { $sort: { _id: -1 } },
+          { $skip: offset },
+          { $limit: limit },
+        ],
+        total: [{ $match: query }, { $count: "count" }],
+      },
+    });
+    const reactions = await Reaction.aggregate(aggregators);
+    return res.status(200).send(reactions ? reactions[0] : reactions);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
 export async function getReaction(query: { [Key: string]: any }): Promise<any> {
   try {
     const reaction = await Reaction.aggregate([
@@ -149,5 +185,113 @@ export async function getReaction(query: { [Key: string]: any }): Promise<any> {
     return reaction ? reaction[0] : null;
   } catch (err) {
     throw err | err.message;
+  }
+}
+
+export async function getReactionSummaryByBoard(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const query = { _id: mongoose.Types.ObjectId(req.params.boardId) };
+    const reactionsSummary = await Board.aggregate([
+      { $match: query },
+      sectionsLookup,
+      {
+        $unwind: "$sections",
+      },
+      {
+        $unwind: "$sections.notes",
+      },
+      {
+        $unwind: "$sections.notes.reactions",
+      },
+      { $replaceRoot: { newRoot: "$sections.notes.reactions" } },
+      {
+        $group: {
+          _id: null,
+          plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
+          plusTwo: { $sum: { $cond: [{ $eq: ["$type", "plusTwo"] }, 1, 0] } },
+          minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
+          love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
+          deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
+          totalReactions: { $sum: 1 },
+        },
+      },
+    ]);
+    return res
+      .status(200)
+      .send(reactionsSummary ? reactionsSummary[0] : reactionsSummary);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getReactionSummaryBySection(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const query = { _id: mongoose.Types.ObjectId(req.params.sectionId) };
+    const reactionsSummary = await Section.aggregate([
+      { $match: query },
+      notesLookup,
+      {
+        $unwind: "$notes",
+      },
+      {
+        $unwind: "$notes.reactions",
+      },
+      { $replaceRoot: { newRoot: "$notes.reactions" } },
+      {
+        $group: {
+          _id: null,
+          plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
+          plusTwo: { $sum: { $cond: [{ $eq: ["$type", "plusTwo"] }, 1, 0] } },
+          minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
+          love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
+          deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
+          totalReactions: { $sum: 1 },
+        },
+      },
+    ]);
+    return res
+      .status(200)
+      .send(reactionsSummary ? reactionsSummary[0] : reactionsSummary);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getReactionSummaryByNote(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const query = { _id: mongoose.Types.ObjectId(req.params.noteId) };
+    const reactionsSummary = await Note.aggregate([
+      { $match: query },
+      reactionLookup,
+      {
+        $unwind: "$reactions",
+      },
+      { $replaceRoot: { newRoot: "$reactions" } },
+      {
+        $group: {
+          _id: null,
+          plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
+          plusTwo: { $sum: { $cond: [{ $eq: ["$type", "plusTwo"] }, 1, 0] } },
+          minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
+          love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
+          deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
+          totalReactions: { $sum: 1 },
+        },
+      },
+    ]);
+    return res
+      .status(200)
+      .send(reactionsSummary ? reactionsSummary[0] : reactionsSummary);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
   }
 }

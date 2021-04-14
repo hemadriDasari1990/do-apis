@@ -11,12 +11,6 @@ const BoardSchema = new Schema(
       default: null,
       index: true,
     },
-    userId: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
-      index: true,
-    },
     title: {
       type: String,
       trim: true,
@@ -31,10 +25,6 @@ const BoardSchema = new Schema(
       type: Number,
       default: 0,
     },
-    isSystemName: {
-      type: Boolean,
-      default: false,
-    },
     isDefaultBoard: {
       type: Boolean,
       default: false,
@@ -42,7 +32,7 @@ const BoardSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ["draft", "pending", "inprogress", "completed"],
+      enum: ["pending", "inprogress", "completed"],
       default: "draft",
       index: true,
     },
@@ -53,6 +43,10 @@ const BoardSchema = new Schema(
     completedAt: {
       type: Date,
       default: null,
+    },
+    isPrivate: {
+      type: Boolean,
+      default: true,
     },
     isLocked: {
       type: Boolean,
@@ -69,6 +63,10 @@ const BoardSchema = new Schema(
     views: {
       type: Number,
       default: 0,
+    },
+    project: {
+      type: Schema.Types.ObjectId,
+      ref: "Project",
     },
     sections: [
       {
@@ -90,8 +88,10 @@ const BoardSchema = new Schema(
 
 BoardSchema.index({ projectId: 1, title: 1 }, { unique: true });
 BoardSchema.index({ projectId: 1, title: 1, sprint: 1 }, { unique: true });
-BoardSchema.index({ userId: 1, title: 1 }, { unique: true });
-BoardSchema.index({ userId: 1, title: 1, sprint: 1 }, { unique: true });
-BoardSchema.index({ title: "text" });
+// BoardSchema.index({ "$**": "text" }); // for full text search with $text operator
+BoardSchema.index(
+  { title: "text", sprint: "text" },
+  { weights: { title: 1, sprint: 2 } }
+);
 
 export default mongoose.model("Board", BoardSchema);

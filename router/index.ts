@@ -1,7 +1,7 @@
 import {
   addOrRemoveMemberFromTeam,
   deleteTeam,
-  getTeams,
+  getTeamsByUser,
   sendInvitationToTeams,
   updateTeam,
 } from "../controllers/team";
@@ -16,15 +16,27 @@ import {
 } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
 import {
+  createSecurityQuestion,
+  getSecurityQuestions,
+} from "../controllers/securityQuestion";
+import {
+  createSecurityQuestionAnswer,
+  verifySecurityQuestionAnswer,
+} from "../controllers/securityQuestionAnswer";
+import {
   createUser,
   deleteUser,
   getAllSummary,
+  getBoardsByUser,
   getUserDetails,
   getUserSummary,
   getUsers,
+  updatePassword,
+  updateUser,
 } from "../controllers/user";
 import {
   deleteBoard,
+  downloadBoardReport,
   getBoardDetails,
   getBoards,
   updateBoard,
@@ -37,10 +49,16 @@ import {
 } from "../controllers/member";
 import {
   deleteProject,
-  getProjectDetails,
+  getProjects,
   updateProject,
 } from "../controllers/project";
 import express, { Application } from "express";
+import {
+  getReactionSummaryByBoard,
+  getReactionSummaryByNote,
+  getReactionSummaryBySection,
+  getReactions,
+} from "../controllers/reaction";
 import { logout, refreshToken } from "../controllers/auth";
 
 import { getNotesBySectionId } from "../controllers/note";
@@ -57,6 +75,8 @@ export default function(app: Application) {
     noteRoutes = express.Router(),
     teamRoutes = express.Router(),
     memberRoutes = express.Router(),
+    reactionRoutes = express.Router(),
+    securityQuestionRoutes = express.Router(),
     feedbackRoutes = express.Router();
 
   //= ========================
@@ -106,6 +126,15 @@ export default function(app: Application) {
   // User details route
   userRoutes.get("/:id", authenticateJWT, getUserDetails);
 
+  // Update user route
+  userRoutes.put("/", authenticateJWT, updateUser);
+
+  // Update password route
+  userRoutes.put("/update-password", authenticateJWT, updatePassword);
+
+  // Get Boards by user
+  userRoutes.get("/:id/boards", authenticateJWT, getBoardsByUser);
+
   // Update or Create User
   userRoutes.post("/", createUser);
 
@@ -123,7 +152,7 @@ export default function(app: Application) {
   apiRoutes.use("/team", teamRoutes);
 
   // Team details route
-  teamRoutes.get("/", authenticateJWT, getTeams);
+  teamRoutes.get("/", authenticateJWT, getTeamsByUser);
 
   // Create or Update Team
   teamRoutes.put("/", authenticateJWT, updateTeam);
@@ -164,7 +193,7 @@ export default function(app: Application) {
   apiRoutes.use("/project", projectRoutes);
 
   // Project details route
-  projectRoutes.get("/:id", authenticateJWT, getProjectDetails);
+  projectRoutes.get("/", authenticateJWT, getProjects);
 
   // Create or Update Project
   projectRoutes.put("/", authenticateJWT, updateProject);
@@ -179,17 +208,20 @@ export default function(app: Application) {
   // Set user routes as subgroup/middleware to apiRoutes
   apiRoutes.use("/board", boardRoutes);
 
-  // Board details route
-  boardRoutes.get("/:id", getBoardDetails);
+  // Get Boards route
+  boardRoutes.get("/", getBoards);
 
   // Board details route
-  boardRoutes.get("/", getBoards);
+  boardRoutes.get("/:id", getBoardDetails);
 
   // Update or Create board
   boardRoutes.put("/", authenticateJWT, updateBoard);
 
   // Board delete route
   boardRoutes.delete("/:id", authenticateJWT, deleteBoard);
+
+  // download board report
+  boardRoutes.get("/:id/download-report", authenticateJWT, downloadBoardReport);
 
   //= ========================
   // Section Routes
@@ -205,11 +237,34 @@ export default function(app: Application) {
   // Note Routes
   //= ========================
 
-  // Set user routes as subgroup/middleware to apiRoutes
+  // Set note routes as subgroup/middleware to apiRoutes
   apiRoutes.use("/note", noteRoutes);
 
   // Note details route
   noteRoutes.get("/:sectionId", getNotesBySectionId);
+
+  //= ========================
+  // Reaction Routes
+  //= ========================
+
+  // Set reaction routes as subgroup/middleware to apiRoutes
+
+  apiRoutes.use("/reactions", reactionRoutes);
+
+  // Get reactions summary by board ID
+  reactionRoutes.get("/:boardId/summary", getReactionSummaryByBoard);
+
+  // Get reactions summary by section ID
+  reactionRoutes.get(
+    "/:sectionId/section-summary",
+    getReactionSummaryBySection
+  );
+
+  // Get reactions summary by note ID
+  reactionRoutes.get("/:noteId/note-summary", getReactionSummaryByNote);
+
+  // Get reactions
+  reactionRoutes.get("/", getReactions);
 
   //= ========================
   // Feedback Routes
@@ -224,6 +279,32 @@ export default function(app: Application) {
   // Get Feedbacks
   feedbackRoutes.get("/", getFeedbacks);
 
+  //= ========================
+  // Security Questions Routes
+  //= ========================
+
+  // Set user routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/security-question", securityQuestionRoutes);
+
+  // Get Security Questions
+  securityQuestionRoutes.get("/", authenticateJWT, getSecurityQuestions);
+
+  // Get Security Questions
+  securityQuestionRoutes.post("/", authenticateJWT, createSecurityQuestion);
+
+  // create Security Question Answer
+  securityQuestionRoutes.post(
+    "/answer",
+    authenticateJWT,
+    createSecurityQuestionAnswer
+  );
+
+  // Verify Security Question Answer
+  securityQuestionRoutes.post(
+    "/verify",
+    authenticateJWT,
+    verifySecurityQuestionAnswer
+  );
   // Set url for API group routes
   app.use("/", apiRoutes);
 }

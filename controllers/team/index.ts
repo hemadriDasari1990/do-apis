@@ -6,21 +6,21 @@ import {
   removeTeamFromMember,
   sendInvitationsToMembers,
 } from "../member";
+import { decodeToken, getPagination, getToken } from "../../util";
 import {
   teamMemberMembersAddFields,
   teamMemberMembersLookup,
 } from "../../util/teamMemberFilters";
 
+import Board from "../../models/board";
+import { REQUIRED } from "../../util/constants";
 // import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Team from "../../models/team";
 import TeamMember from "../../models/teamMember";
 import { addTeamToUser } from "../user";
-import mongoose from "mongoose";
-import { getToken, decodeToken } from "../../util";
-import { REQUIRED } from "../../util/constants";
-import Board from "../../models/board";
-import { getMemberIds } from "../../util/member";
 import { getBoard } from "../board";
+import { getMemberIds } from "../../util/member";
+import mongoose from "mongoose";
 
 export async function updateTeam(
   req: Request,
@@ -92,19 +92,57 @@ export async function updateTeam(
 //   }
 // }
 
-export async function getTeams(req: Request, res: Response): Promise<any> {
+export async function getTeamsByUser(
+  req: Request,
+  res: Response
+): Promise<any> {
   try {
     const query = {
       userId: mongoose.Types.ObjectId(req.query.userId as string),
     };
+    const aggregators = [];
+    const { limit, offset } = getPagination(
+      parseInt(req.query.page as string),
+      parseInt(req.query.size as string)
+    );
+    if (req.query.queryString?.length) {
+      aggregators.push({
+        $match: {
+          $or: [{ name: { $regex: req.query.queryString, $options: "i" } }],
+        },
+      });
+    }
+    aggregators.push({
+      $facet: {
+        data: [
+          { $match: query },
+          { $sort: { _id: -1 } },
+          { $skip: offset },
+          { $limit: limit },
+          teamMemberMembersLookup,
+          teamMemberMembersAddFields,
+        ],
+        total: [{ $match: query }, { $count: "count" }],
+      },
+    });
+
+    const teams = await Team.aggregate(aggregators);
+    return res.status(200).send(teams ? teams[0] : teams);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getTeams(query: { [Key: string]: any }): Promise<any> {
+  try {
     const teams = await Team.aggregate([
       { $match: query },
       teamMemberMembersLookup,
       teamMemberMembersAddFields,
     ]);
-    return res.status(200).json(teams);
+    return teams;
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    throw err | err.message;
   }
 }
 

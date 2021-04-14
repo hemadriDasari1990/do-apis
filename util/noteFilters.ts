@@ -1,16 +1,16 @@
 import {
   reactionAddFields,
   reactionDeserveLookup,
-  reactionMinusOneLookup,
   reactionLookup,
   reactionLoveLookup,
+  reactionMinusOneLookup,
   reactionPlusOneLookup,
   reactionPlusTwoLookup,
 } from "./reactionFilters";
 
+import Member from "../models/member";
 import Note from "../models/note";
 import Section from "../models/section";
-import Member from "../models/member";
 
 const noteAddFields = {
   $addFields: {

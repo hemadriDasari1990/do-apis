@@ -3,13 +3,14 @@ import {
   teamMemberTeamsAddFields,
   teamMemberTeamsLookup,
 } from "../../util/teamMemberFilters";
+
 import EmailService from "../../services/email";
 import Member from "../../models/member";
 import { addMemberToUser } from "../user";
-import mongoose from "mongoose";
 import config from "config";
 import { getBoard } from "../board";
 import { getPagination } from "../../util";
+import mongoose from "mongoose";
 
 export async function updateMember(
   req: Request,
@@ -78,6 +79,7 @@ export async function getMembersByUser(
   try {
     const query = {
       userId: mongoose.Types.ObjectId(req.query.userId as string),
+      ...(req.query.status ? { status: req.query.status } : {}),
     };
     const aggregators = [];
     const { limit, offset } = getPagination(
@@ -86,9 +88,13 @@ export async function getMembersByUser(
     );
     if (req.query.queryString?.length) {
       aggregators.push({
-        $match: { $text: { $search: req.query.queryString, $language: "en" } },
+        $match: {
+          $or: [
+            { name: { $regex: req.query.queryString, $options: "i" } },
+            { email: { $regex: req.query.queryString, $options: "i" } },
+          ],
+        },
       });
-      aggregators.push({ $addFields: { score: { $meta: "textScore" } } });
     }
     aggregators.push({
       $facet: {
@@ -100,7 +106,7 @@ export async function getMembersByUser(
           teamMemberTeamsLookup,
           teamMemberTeamsAddFields,
         ],
-        total: [{ $count: "count" }],
+        total: [{ $match: query }, { $count: "count" }],
       },
     });
 
@@ -115,6 +121,24 @@ export async function getMember(query: { [Key: string]: any }): Promise<any> {
   try {
     const member = await Member.findOne(query);
     return member;
+  } catch (err) {
+    throw err | err.message;
+  }
+}
+
+export async function searchMembers(queryString: string): Promise<any> {
+  try {
+    const members = await Member.aggregate([
+      {
+        $match: {
+          $or: [
+            { name: { $regex: queryString, $options: "i" } },
+            { email: { $regex: queryString, $options: "i" } },
+          ],
+        },
+      },
+    ]);
+    return members;
   } catch (err) {
     throw err | err.message;
   }
@@ -234,7 +258,7 @@ export async function sendInviteToMember(
       return;
     }
     const emailService = await new EmailService();
-    await emailService.sendEmail(
+    const sent = await emailService.sendEmail(
       "/templates/invite.ejs",
       {
         url: config.get("url"),
@@ -247,6 +271,7 @@ export async function sendInviteToMember(
       receiver.email,
       `You have been invited to join retrospective board ${board?.title}`
     );
+    return sent;
   } catch (err) {
     throw err | err.message;
   }

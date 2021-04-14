@@ -40,6 +40,10 @@ const ProjectSchema = new Schema(
         ref: "Board",
       },
     ],
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
   },
   {
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.
@@ -48,5 +52,5 @@ const ProjectSchema = new Schema(
 );
 
 ProjectSchema.index({ userId: 1, title: 1 }, { unique: true });
-
+ProjectSchema.index({ title: "text" });
 export default mongoose.model("Project", ProjectSchema);

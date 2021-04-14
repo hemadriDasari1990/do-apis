@@ -7,6 +7,6 @@ declare class EmailService {
         [Key: string]: any;
     }, to: string, subject: string, attachments?: Array<{
         [Key: string]: any;
-    }>): Promise<void>;
+    }>): Promise<any>;
 }
 export default EmailService;

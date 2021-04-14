@@ -34,8 +34,10 @@ export function verifyToken(token: string, io: socketio.Server): any {
 }
 
 export function getPagination(page: number, size: number) {
+  if (!page && !size) {
+    return { limit: 0, offset: 0 };
+  }
   const limit = size ? +size : 8;
-  console.log("size", +size);
   const offset = page ? page * limit : 0;
 
   return { limit, offset };

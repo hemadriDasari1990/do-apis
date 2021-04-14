@@ -138,14 +138,8 @@ declare const notesLookup: {
                                 $ifNull: (string | never[])[];
                             })[];
                         };
+                        type: string;
                     };
-                    $sort?: undefined;
-                    $unwind?: undefined;
-                } | {
-                    $sort: {
-                        _id: number;
-                    };
-                    $match?: undefined;
                     $unwind?: undefined;
                 } | {
                     $unwind: {
@@ -153,7 +147,6 @@ declare const notesLookup: {
                         preserveNullAndEmptyArrays: boolean;
                     };
                     $match?: undefined;
-                    $sort?: undefined;
                 })[];
                 as: string;
             };
@@ -236,8 +229,14 @@ declare const notesLookup: {
                                 $ifNull: (string | never[])[];
                             })[];
                         };
-                        type: string;
                     };
+                    $sort?: undefined;
+                    $unwind?: undefined;
+                } | {
+                    $sort: {
+                        _id: number;
+                    };
+                    $match?: undefined;
                     $unwind?: undefined;
                 } | {
                     $unwind: {
@@ -245,8 +244,27 @@ declare const notesLookup: {
                         preserveNullAndEmptyArrays: boolean;
                     };
                     $match?: undefined;
+                    $sort?: undefined;
                 })[];
                 as: string;
+            };
+        } | {
+            $addFields: {
+                notes: string;
+                totalNotes: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                section: {
+                    $ifNull: (string | null[])[];
+                };
+                createdBy: {
+                    $ifNull: (string | null[])[];
+                };
+                updatedBy: {
+                    $ifNull: (string | null[])[];
+                };
             };
         } | {
             $addFields: {
@@ -279,24 +297,6 @@ declare const notesLookup: {
                     $size: {
                         $ifNull: (string | never[])[];
                     };
-                };
-            };
-        } | {
-            $addFields: {
-                notes: string;
-                totalNotes: {
-                    $size: {
-                        $ifNull: (string | never[])[];
-                    };
-                };
-                section: {
-                    $ifNull: (string | null[])[];
-                };
-                createdBy: {
-                    $ifNull: (string | null[])[];
-                };
-                updatedBy: {
-                    $ifNull: (string | null[])[];
                 };
             };
         } | {

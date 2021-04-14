@@ -7,6 +7,37 @@ import {
 } from "./boardFilters";
 
 import Project from "../models/project";
+import User from "../models/user";
+
+const userLookup = {
+  $lookup: {
+    from: User.collection.name,
+    let: { userId: "$userId" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", "$$userId"] },
+        },
+      },
+    ],
+    as: "user",
+  },
+};
+
+const projectLookup = {
+  $lookup: {
+    from: Project.collection.name,
+    let: { projectId: "$projectId" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", "$$projectId"] },
+        },
+      },
+    ],
+    as: "project",
+  },
+};
 
 const projectsLookup = {
   $lookup: {
@@ -21,11 +52,18 @@ const projectsLookup = {
       {
         $sort: { _id: 1 },
       },
-      boardsLookup,
+      userLookup,
       completedBoardsLookup,
       inProgressBoardsLookup,
       newBoardsLookup,
+      boardsLookup,
       boardAddFields,
+      {
+        $unwind: {
+          path: "$user",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ],
     as: "projects",
   },
@@ -111,6 +149,24 @@ const projectAddFields = {
     totalPublicProjects: {
       $size: { $ifNull: ["$publicProjects", []] },
     },
+    totalBoards: { $size: { $ifNull: ["$projects.totalBoards", []] } },
+    totalInProgressBoards: { $size: { $ifNull: ["$inProgressBoards", []] } },
+    totalNewBoards: { $size: { $ifNull: ["$newBoards", []] } },
+    totalCompletedBoards: { $size: { $ifNull: ["$completedBoards", []] } },
+  },
+};
+
+const projectAddTotalFields = {
+  $addFields: {
+    totalProjects: { $size: { $ifNull: ["$projects", []] } },
+    totalActiveProjects: { $size: { $ifNull: ["$activeProjects", []] } },
+    totalInActiveProjects: { $size: { $ifNull: ["$inActiveProjects", []] } },
+    totalPrivateProjects: {
+      $size: { $ifNull: ["$privateProjects", []] },
+    },
+    totalPublicProjects: {
+      $size: { $ifNull: ["$publicProjects", []] },
+    },
   },
 };
 
@@ -121,4 +177,7 @@ export {
   activeProjectsLookup,
   publicProjectsLookup,
   privateProjectsLookup,
+  userLookup,
+  projectAddTotalFields,
+  projectLookup,
 };

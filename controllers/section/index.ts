@@ -33,7 +33,7 @@ export async function updateSection(payload: {
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const section = await getSection({
-      $and: [{ title: payload?.title }, { boardId: payload?.boardId }],
+      $and: [{ title: payload?.title?.trim() }, { boardId: payload?.boardId }],
     });
     if (section) {
       return {

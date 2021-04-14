@@ -5,10 +5,13 @@ export declare function resendActivationLink(req: Request, res: Response): Promi
 export declare function getUserDetails(req: Request, res: Response): Promise<any>;
 export declare function getUserSummary(req: Request, res: Response): Promise<any>;
 export declare function getUsers(req: Request, res: Response): Promise<any>;
+export declare function getBoardsByUser(req: Request, res: Response): Promise<any>;
 export declare function getAllSummary(req: Request, res: Response): Promise<any>;
 export declare function deleteUser(req: Request, res: Response, next: NextFunction): Promise<any>;
 export declare function getUserByEmail(email: string): Promise<any>;
 export declare function addDepartmentToUser(departmentId: string, userId: string): Promise<any>;
 export declare function addTeamToUser(teamId: string, userId: string): Promise<any>;
 export declare function addMemberToUser(memberId: string, userId: string): Promise<any>;
-export declare function addBoardToUser(boardId: string, userId: string): Promise<any>;
+export declare function addProjectToUser(projectId: string, userId: string): Promise<any>;
+export declare function updateUser(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>;
+export declare function updatePassword(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>;

@@ -1,22 +1,25 @@
 import { NextFunction, Request, Response } from "express";
+import {
+  activeTeamsLookup,
+  inActiveTeamsLookup,
+  teamAddFields,
+  teamsLookup,
+} from "../../util/teamFilters";
+import { addBoardToProject, createProject } from "../project";
+import { createMember, sendInviteToMember } from "../member";
+import { getPagination, getUser } from "../../util";
 import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 import Board from "../../models/board";
 import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
-import { addBoardToProject } from "../project";
-import { findSectionsByBoardAndDelete } from "../section";
-import mongoose from "mongoose";
-import { saveSection } from "../section";
-import {
-  teamsLookup,
-  inActiveTeamsLookup,
-  activeTeamsLookup,
-  teamAddFields,
-} from "../../util/teamFilters";
+import XLSX from "xlsx";
+import { addMemberToUser } from "../user";
 import { defaultSections } from "../../util/constants";
-import { projectsLookup } from "../../util/projectFilters";
-import { addBoardToUser } from "../user";
-import { getPagination } from "../../util";
+import { findSectionsByBoardAndDelete } from "../section";
+import fs from "fs";
+import mongoose from "mongoose";
+import { projectLookup } from "../../util/projectFilters";
+import { saveSection } from "../section";
 
 export async function addSectionToBoard(
   sectionId: string,
@@ -43,8 +46,13 @@ export async function updateBoard(
   next: NextFunction
 ): Promise<any> {
   try {
+    const user = getUser(req.headers.authorization as string);
     const boardDetails = await getBoard({
-      $and: [{ title: req.body.title }, { projectId: req.body.projectId }],
+      $and: [
+        { title: req.body.title?.trim() },
+        { description: req.body.description?.trim() },
+        { projectId: req.body.projectId },
+      ],
     });
     if (boardDetails) {
       return res.status(409).json({
@@ -54,29 +62,18 @@ export async function updateBoard(
     }
 
     const boardsCount: number = await Board.find({
-      ...(req.body.accountType === "commercial"
-        ? { projectId: req.body.projectId }
-        : { userId: req.body.userId }),
+      projectId: req.body.projectId,
     }).count();
 
     const query = { _id: mongoose.Types.ObjectId(req.body.boardId) },
       update = {
         $set: {
-          ...(req.body.isSystemName
-            ? {
-                title: "Retro " + (boardsCount + 1),
-              }
-            : {
-                title: req.body.title + (boardsCount + 1),
-              }),
+          ...(!req.body.boardId ? { title: "Retro " + (boardsCount + 1) } : {}),
           description: req.body.description,
-          ...(req.body.accountType === "commercial"
-            ? { projectId: req.body.projectId }
-            : { userId: req.body.userId }),
-          status: req.body.status || "draft",
+          projectId: req.body.projectId,
+          status: req.body.status,
           sprint: boardsCount + 1,
           isDefaultBoard: req.body.isDefaultBoard,
-          isSystemName: req.body.isSystemName,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
@@ -84,11 +81,7 @@ export async function updateBoard(
     if (!updated) {
       return next(updated);
     }
-    if (
-      updated?.status !== "draft" &&
-      !req.body.isDefaultBoard &&
-      req.body.noOfSections
-    ) {
+    if (!req.body.isDefaultBoard && req.body.noOfSections) {
       await Array(parseInt(req.body.noOfSections))
         .fill(0)
         .reduce(async (promise) => {
@@ -100,11 +93,7 @@ export async function updateBoard(
           await addSectionToBoard(section?._id, updated._id);
         }, Promise.resolve());
     }
-    if (
-      updated?.status !== "draft" &&
-      req.body.isDefaultBoard &&
-      !req.body.noOfSections
-    ) {
+    if (req.body.isDefaultBoard && !req.body.noOfSections) {
       (await defaultSections?.length) &&
         defaultSections.reduce(async (promise, defaultSectionTitle) => {
           await promise;
@@ -118,11 +107,21 @@ export async function updateBoard(
     if (req.body.teams?.length) {
       await addTeamsToBoad(req.body.teams, updated?._id);
     }
-    if (req.body.accountType === "commercial" && req.body.projectId) {
+    /* Add existing project to board */
+    if (req.body.projectId) {
       await addBoardToProject(updated?._id, req.body.projectId);
     }
-    if (req.body.accountType === "individual" && req.body.userId) {
-      await addBoardToUser(updated?._id, req.body.userId);
+
+    /* Create new project and map board to project */
+    if (!req.body.projectId && req.body.projectTitle && user) {
+      const newProject = await createProject({
+        title: req.body.projectTitle,
+        userId: user?._id,
+      });
+      await Board.findByIdAndUpdate(updated._id, {
+        projectId: newProject?._id,
+      });
+      await addBoardToProject(updated?._id, newProject?._id);
     }
     const board = await getBoardDetailsLocal(updated?._id);
     return res.status(200).send(board);
@@ -163,26 +162,18 @@ export async function startOrCompleteBoard(payload: {
   }
 }
 
-export async function getBoardDetails(
-  req: Request,
-  res: Response
-): Promise<any> {
-  try {
-    const board = await getBoardDetailsLocal(req.params.id);
-    return res.status(200).send(board);
-  } catch (err) {
-    return res.status(500).send(err || err.message);
-  }
-}
-
 export async function getBoardDetailsLocal(boardId: string): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(boardId) };
-    const increment = { $inc: { views: 1 } };
-    await Board.findOneAndUpdate(query, increment);
     const boards = await Board.aggregate([
       { $match: query },
-      projectsLookup,
+      projectLookup,
+      {
+        $unwind: {
+          path: "$project",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       teamsLookup,
       inActiveTeamsLookup,
       activeTeamsLookup,
@@ -196,16 +187,26 @@ export async function getBoardDetailsLocal(boardId: string): Promise<any> {
   }
 }
 
+export async function getBoardDetails(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const board = await getBoardDetailsLocal(req.params.id);
+    const query = { _id: mongoose.Types.ObjectId(req.params.id) };
+    const increment = { $inc: { views: 1 } };
+    await Board.findOneAndUpdate(query, increment);
+    return res.status(200).send(board);
+  } catch (err) {
+    throw err || err.message;
+  }
+}
+
 export async function getBoards(req: Request, res: Response): Promise<any> {
   try {
-    const query =
-      req.body.accountType === "commercial"
-        ? {
-            projectId: mongoose.Types.ObjectId(req.query.id as string),
-          }
-        : {
-            userId: mongoose.Types.ObjectId(req.query.id as string),
-          };
+    const query = {
+      projectId: mongoose.Types.ObjectId(req.query.projectId as string),
+    };
     const aggregators = [];
     const { limit, offset } = getPagination(
       parseInt(req.query.page as string),
@@ -213,9 +214,13 @@ export async function getBoards(req: Request, res: Response): Promise<any> {
     );
     if (req.query.queryString?.length) {
       aggregators.push({
-        $match: { $text: { $search: req.query.queryString, $language: "en" } },
+        $match: {
+          $or: [
+            { title: { $regex: req.query.queryString, $options: "i" } },
+            { sprint: { $regex: req.query.queryString, $options: "i" } },
+          ],
+        },
       });
-      aggregators.push({ $addFields: { score: { $meta: "textScore" } } });
     }
     aggregators.push({
       $facet: {
@@ -231,12 +236,12 @@ export async function getBoards(req: Request, res: Response): Promise<any> {
           sectionsLookup,
           sectionAddFields,
         ],
-        total: [{ $count: "count" }],
+        total: [{ $match: query }, { $count: "count" }],
       },
     });
 
     const boards = await Board.aggregate(aggregators);
-    return res.status(200).send(boards ? boards[0] : null);
+    return res.status(200).send(boards ? boards[0] : boards);
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
@@ -338,5 +343,86 @@ export async function addTeamsToBoad(
     }, Promise.resolve());
   } catch (err) {
     throw `Error while adding team to board ${err || err.message}`;
+  }
+}
+
+export async function changeVisibility(payload: {
+  [Key: string]: any;
+}): Promise<any> {
+  try {
+    if (!payload || !payload?.id) {
+      return;
+    }
+    const updated = await Board.findByIdAndUpdate(
+      payload?.id,
+      { $set: { isPrivate: payload?.isPrivate } },
+      { new: true, useFindAndModify: false }
+    );
+    return updated;
+  } catch (err) {
+    return `Error while updating board visibility ${err || err.message}`;
+  }
+}
+
+export async function inviteMemberToBoard(payload: {
+  [Key: string]: any;
+}): Promise<any> {
+  try {
+    if (!payload || !payload?.id || !payload.user || !payload.member) {
+      return;
+    }
+    if (payload?.createMember) {
+      const created = await createMember({
+        email: payload?.member?.email,
+        name: payload?.member?.name,
+        userId: payload?.user?._id,
+      });
+      await addMemberToUser(created?._id, payload?.user?._id);
+    }
+
+    const board: any = await Board.findById({
+      _id: mongoose.Types.ObjectId(payload?.id),
+    });
+    const sent = await sendInviteToMember(
+      board,
+      payload?.user,
+      payload?.member
+    );
+    return sent;
+  } catch (err) {
+    return `Error while sending invitation ${err || err.message}`;
+  }
+}
+
+export async function downloadBoardReport(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const data: any = await getBoardDetailsLocal(req.params.id);
+
+    if (data && data?.sections?.length) {
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(data?.sections);
+      XLSX.utils.book_append_sheet(wb, ws, "report");
+      XLSX.writeFile(wb, `boardreport.xlsx`, {
+        bookType: "xlsx",
+        type: "binary",
+      });
+      const stream = fs.createReadStream(`boardreport.xlsx`);
+      res.setHeader(
+        "Content-Type",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      );
+      res.setHeader(
+        "Content-Disposition",
+        "attachment; filename=boardreport.xlsx"
+      );
+      stream.pipe(res);
+    } else {
+      throw new Error("No data found on this board");
+    }
+  } catch (err) {
+    throw new Error("Error while generating the report");
   }
 }

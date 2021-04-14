@@ -1,7 +1,8 @@
 import { sectionAddFields, sectionsLookup } from "./sectionFilters";
+import { teamAddFields, teamsLookup } from "./teamFilters";
 
 import Board from "../models/board";
-import { teamsLookup, teamAddFields } from "./teamFilters";
+import Project from "../models/project";
 
 const boardsLookup = {
   $lookup: {
@@ -15,6 +16,26 @@ const boardsLookup = {
       },
       {
         $sort: { _id: 1 },
+      },
+      {
+        $lookup: {
+          from: Project.collection.name,
+          let: { projectId: "$projectId" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$_id", "$$projectId"] },
+              },
+            },
+          ],
+          as: "project",
+        },
+      },
+      {
+        $unwind: {
+          path: "$project",
+          preserveNullAndEmptyArrays: true,
+        },
       },
       teamsLookup,
       teamAddFields,
@@ -32,8 +53,15 @@ const inProgressBoardsLookup = {
     pipeline: [
       {
         $match: {
-          $expr: { $in: ["$_id", { $ifNull: ["$$boards", []] }] },
-          status: "boards",
+          $expr: {
+            $in: [
+              "$_id",
+              {
+                $ifNull: ["$$boards", []],
+              },
+            ],
+          },
+          status: "inprogress",
         },
       },
     ],
@@ -48,7 +76,14 @@ const completedBoardsLookup = {
     pipeline: [
       {
         $match: {
-          $expr: { $in: ["$_id", { $ifNull: ["$$boards", []] }] },
+          $expr: {
+            $in: [
+              "$_id",
+              {
+                $ifNull: ["$$boards", []],
+              },
+            ],
+          },
           status: "completed",
         },
       },
@@ -64,7 +99,14 @@ const newBoardsLookup = {
     pipeline: [
       {
         $match: {
-          $expr: { $in: ["$_id", { $ifNull: ["$$boards", []] }] },
+          $expr: {
+            $in: [
+              "$_id",
+              {
+                $ifNull: ["$$boards", []],
+              },
+            ],
+          },
           status: "pending",
         },
       },

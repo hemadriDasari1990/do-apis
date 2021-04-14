@@ -52,7 +52,7 @@ class EmailService {
         html: data,
         attachments: attachments || [],
       };
-      await this.transporter.sendMail(mainOptions);
+      return await this.transporter.sendMail(mainOptions);
     } catch (err) {
       this.transporter.close();
       throw new Error(err || err.message);

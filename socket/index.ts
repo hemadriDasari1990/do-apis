@@ -2,9 +2,11 @@ import socketio, { Socket } from "socket.io";
 
 import { addAndRemoveNoteFromSection } from "../controllers/section";
 import board from "./board";
+import member from "./member";
 // import config from "config";
 // import jwt from "jsonwebtoken";
 import note from "./note";
+import project from "./project";
 import reaction from "./reaction";
 import section from "./section";
 
@@ -42,6 +44,9 @@ export default function socketEvents(io: socketio.Server) {
   io.sockets.on("connection", (socket: Socket) => {
     console.log("client connected");
 
+    /* Project socket events */
+    project(io, socket);
+
     /* Board socket events */
     board(io, socket);
 
@@ -53,6 +58,9 @@ export default function socketEvents(io: socketio.Server) {
 
     /* Reaction socket events */
     reaction(io, socket);
+
+    /* Member socket events */
+    member(io, socket);
 
     socket.on("move-note-to-section", async (body: { [Key: string]: any }) => {
       const updated = await addAndRemoveNoteFromSection(body);

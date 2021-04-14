@@ -20,6 +20,14 @@ const UserSchema = new Schema(
       lowercase: true,
       // required: "Email is required",
     },
+    newEmail: {
+      type: String,
+      // min: [5, "Too short, min is 5 characters"],
+      // max: [32, "Too long, max is 32 characters"],
+      unique: true,
+      lowercase: true,
+      // required: "Email is required",
+    },
     password: {
       type: String,
       min: [5, "Too short, min is 5 characters"],
@@ -88,5 +96,7 @@ UserSchema.pre<UserInstance>("save", async function(next) {
   this.password = hash;
   next();
 });
+
+UserSchema.index({ email: 1 }, { unique: true });
 
 export default mongoose.model("User", UserSchema);
