@@ -46,6 +46,6 @@ const NoteSchema = new Schema(
   }
 );
 
-NoteSchema.index({ sectionId: 1, position: 1 }, { unique: true });
+// NoteSchema.index({ sectionId: 1, position: 1 }, { unique: true });
 
 export default mongoose.model("Note", NoteSchema);

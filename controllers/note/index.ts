@@ -149,19 +149,24 @@ export async function markNoteRead(payload: {
   }
 }
 
-export async function deleteNote(id: string, userId: string): Promise<any> {
+export async function deleteNote(
+  id: string,
+  userId: string,
+  sectionId: string
+): Promise<any> {
   try {
     const deleted = deleteNoteById(id);
     if (!deleted) {
       return deleted;
     }
     await createNoteActivity(id, "delete", userId);
-    return { deleted: true, _id: id };
+    return { deleted: true, _id: id, sectionId };
   } catch (err) {
     return {
       deleted: false,
       message: err || err?.message,
       _id: id,
+      sectionId,
     };
   }
 }

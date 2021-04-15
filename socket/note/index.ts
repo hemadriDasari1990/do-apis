@@ -15,21 +15,31 @@ export default function note(io: socketio.Server, socket: Socket) {
       ...payload,
       //   ...decodeToken(query?.token),
     });
-    io.emit(`update-note-response-${updated?._id}`, updated);
+    io.emit(`update-note-response-${payload?.sectionId}`, updated);
   });
 
-  socket.on("create-note", async (payload: { [Key: string]: any }) => {
+  socket.on(`create-note`, async (payload: { [Key: string]: any }) => {
     // const query: any = socket.handshake.query;
-    const create = await updateNote({
+    const created = await updateNote({
       ...payload,
       //   ...decodeToken(query?.token),
     });
-    io.emit(`create-note-response-${payload?.sectionId}`, create);
+    if (created?._id) {
+      io.emit(`plus-note-count-response`, created);
+    }
+    io.emit(`create-note-response-${payload?.sectionId}`, created);
   });
 
   socket.on("delete-note", async (payload: { [Key: string]: any }) => {
-    const deleted = await deleteNote(payload?.id, payload?.userId);
-    io.emit(`delete-note-response-${payload?.id}`, deleted);
+    const deleted = await deleteNote(
+      payload?.id,
+      payload?.userId,
+      payload?.sectionId
+    );
+    if (deleted?.deleted) {
+      io.emit(`minus-note-count-response`, deleted);
+    }
+    io.emit(`delete-note-response-${payload?.sectionId}`, deleted);
   });
 
   socket.on("mark-note-read", async (payload: { [Key: string]: any }) => {
@@ -38,7 +48,7 @@ export default function note(io: socketio.Server, socket: Socket) {
       ...payload,
       //   ...decodeToken(query?.token),
     });
-    io.emit(`mark-note-read-response-${payload?.id}`, create);
+    io.emit(`mark-note-read-response`, create);
   });
 
   socket.on("update-note-position", async (payload: { [Key: string]: any }) => {

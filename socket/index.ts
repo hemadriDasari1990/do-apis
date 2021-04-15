@@ -64,7 +64,12 @@ export default function socketEvents(io: socketio.Server) {
 
     socket.on("move-note-to-section", async (body: { [Key: string]: any }) => {
       const updated = await addAndRemoveNoteFromSection(body);
-      socket.emit("move-note-to-section", updated);
+      socket.emit(
+        "move-note-to-section-response",
+        updated,
+        body.source,
+        body.destinaton
+      );
     });
   });
   io.sockets.on("disconnect", () => {

@@ -6,7 +6,7 @@ export declare function getNotesBySectionId(req: Request, res: Response): Promis
 export declare function markNoteRead(payload: {
     [Key: string]: any;
 }): Promise<any>;
-export declare function deleteNote(id: string, userId: string): Promise<any>;
+export declare function deleteNote(id: string, userId: string, sectionId: string): Promise<any>;
 export declare function createNoteActivity(notedId: string, action: string, userId?: string): Promise<any>;
 export declare function addReactionToNote(reactionId: string, noteId: string): Promise<any>;
 export declare function removeReactionFromNote(reactionId: string, noteId: string): Promise<void>;

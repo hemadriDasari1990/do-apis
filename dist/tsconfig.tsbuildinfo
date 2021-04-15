@@ -572,7 +572,7 @@
         "affectsGlobalScope": false
       },
       "../models/note.ts": {
-        "version": "a73dd8d3fdadc2ecefaf4425c55cc9b82cab60e484a82137a2efb9ded557d79d",
+        "version": "f85103629958a3ae449a522d25efdc106a458e7a4b458850e59b65b4e10ea92f",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
@@ -722,8 +722,8 @@
         "affectsGlobalScope": false
       },
       "../controllers/note/index.ts": {
-        "version": "cef7c7f7805ba3a51ee71131515dfa46c069028208fe3f12fae159a68be8ef39",
-        "signature": "04a17ad860c08e2221df8140c0bfd3bd84120bec0e4aaabcddc550854f96968d",
+        "version": "e9ae6e58aa8b17f21506b3ea2da4729073a451df88b743e486fdde123bb2373d",
+        "signature": "5f121c4345476900db985b8ed6fc76d97a7d4c483e6b51b0c70036b19bad86e5",
         "affectsGlobalScope": false
       },
       "../controllers/section/index.ts": {
@@ -807,7 +807,7 @@
         "affectsGlobalScope": false
       },
       "../socket/note/index.ts": {
-        "version": "2d29e55048aa27ec6cde75e9255ae9b09d87e512630084d3267a87fb566eb9b1",
+        "version": "ed527c5fecb97e5b70519a7a64939cc4f93a6ef10e3762ec01778fdee97c153e",
         "signature": "c7819bc5d43fe674e5c03ea4d44b924d36194a6d51c47a0c59ffb448a68a65fb",
         "affectsGlobalScope": false
       },
@@ -827,7 +827,7 @@
         "affectsGlobalScope": false
       },
       "../socket/index.ts": {
-        "version": "d9b6de648afc234796af213de6c237983a6d9e5949726330ee89160086c1823a",
+        "version": "74d839f501a5b0c3fd583163f27139ed4e38552dd7d4bb6cc7942347304ce604",
         "signature": "5df492892acc6fca2d5fc5ff5adf4380d8a3575e35009b0fe169d57cc13ca91e",
         "affectsGlobalScope": false
       },
