@@ -1,5 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import {
+  RESOURCE_ALREADY_EXISTS,
+  SECTION_COUNT_EXCEEDS,
+} from "../../util/constants";
+import {
   activeTeamsLookup,
   inActiveTeamsLookup,
   teamAddFields,
@@ -11,9 +15,10 @@ import { getPagination, getUser } from "../../util";
 import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 import Board from "../../models/board";
-import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import XLSX from "xlsx";
 import { addMemberToUser } from "../user";
+import { createActivity } from "../activity";
+import { createInvitedTeams } from "../invite";
 import { defaultSections } from "../../util/constants";
 import { findSectionsByBoardAndDelete } from "../section";
 import fs from "fs";
@@ -40,12 +45,32 @@ export async function addSectionToBoard(
   }
 }
 
+export async function checkIfNewBoardExists(projectId: string): Promise<any> {
+  try {
+    if (!projectId) {
+      return;
+    }
+    const board = await getBoard({
+      $and: [{ status: "new" }, { projectId: projectId }],
+    });
+    return board;
+  } catch (err) {
+    throw "Cannot get board details";
+  }
+}
+
 export async function updateBoard(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<any> {
   try {
+    if (!req.body.isDefaultBoard && req.body.noOfSections > 10) {
+      return res.status(500).json({
+        errorId: SECTION_COUNT_EXCEEDS,
+        message: `Max no of sections allowed are only 10`,
+      });
+    }
     const user = getUser(req.headers.authorization as string);
     const boardDetails = await getBoard({
       $and: [
@@ -59,6 +84,17 @@ export async function updateBoard(
         errorId: RESOURCE_ALREADY_EXISTS,
         message: `Board with ${boardDetails?.title} already exist. Please choose different name`,
       });
+    }
+
+    /* Check if board exists with status new */
+    if (!req.body.boardId) {
+      const boardExists = await checkIfNewBoardExists(req.body.projectId);
+      if (boardExists?._id) {
+        return res.status(409).json({
+          errorId: RESOURCE_ALREADY_EXISTS,
+          message: `Sorry you can't create another one as there is already one i.e., ${boardExists?.title} in new state.`,
+        });
+      }
     }
 
     const boardsCount: number = await Board.find({
@@ -106,6 +142,7 @@ export async function updateBoard(
     }
     if (req.body.teams?.length) {
       await addTeamsToBoad(req.body.teams, updated?._id);
+      await createInvitedTeams(req.body.teams, updated?._id);
     }
     /* Add existing project to board */
     if (req.body.projectId) {
@@ -116,6 +153,7 @@ export async function updateBoard(
     if (!req.body.projectId && req.body.projectTitle && user) {
       const newProject = await createProject({
         title: req.body.projectTitle,
+        description: req.body.projectDescription,
         userId: user?._id,
       });
       await Board.findByIdAndUpdate(updated._id, {
@@ -123,6 +161,14 @@ export async function updateBoard(
       });
       await addBoardToProject(updated?._id, newProject?._id);
     }
+    await createActivity({
+      userId: user?._id,
+      boardId: updated?._id,
+      title: `${updated?.title}`,
+      primaryAction: "board",
+      type: "board",
+      action: req.body.boardId ? "update" : "create",
+    });
     const board = await getBoardDetailsLocal(updated?._id);
     return res.status(200).send(board);
   } catch (err) {
@@ -151,10 +197,17 @@ export async function startOrCompleteBoard(payload: {
               },
             };
     const options = { new: true }; // return updated document
-    const updated = await Board.findOneAndUpdate(query, update, options);
+    const updated: any = await Board.findOneAndUpdate(query, update, options);
     if (!updated) {
       return updated;
     }
+    await createActivity({
+      userId: payload?.user?._id,
+      boardId: payload.id,
+      title: "the session",
+      type: "board",
+      action: payload.action === "start" ? "session-start" : "session-stop",
+    });
     const board = await getBoardDetailsLocal(updated?._id);
     return board;
   } catch (err) {
@@ -192,9 +245,17 @@ export async function getBoardDetails(
   res: Response
 ): Promise<any> {
   try {
+    const user = getUser(req.headers.authorization as string);
     const board = await getBoardDetailsLocal(req.params.id);
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const increment = { $inc: { views: 1 } };
+    await createActivity({
+      userId: user?._id,
+      boardId: board?._id,
+      title: `${board?.title}`,
+      type: "board",
+      action: "view",
+    });
     await Board.findOneAndUpdate(query, increment);
     return res.status(200).send(board);
   } catch (err) {
@@ -353,11 +414,20 @@ export async function changeVisibility(payload: {
     if (!payload || !payload?.id) {
       return;
     }
-    const updated = await Board.findByIdAndUpdate(
+    const updated: any = await Board.findByIdAndUpdate(
       payload?.id,
       { $set: { isPrivate: payload?.isPrivate } },
       { new: true, useFindAndModify: false }
     );
+    await createActivity({
+      userId: payload?.user?._id,
+      boardId: updated?._id,
+      title: `${updated?.title}`,
+      primaryAction: "visibility to",
+      primaryTitle: payload?.isPrivate ? "private" : "public",
+      type: "visibility",
+      action: payload?.isPrivate ? "private" : "public",
+    });
     return updated;
   } catch (err) {
     return `Error while updating board visibility ${err || err.message}`;
@@ -371,6 +441,7 @@ export async function inviteMemberToBoard(payload: {
     if (!payload || !payload?.id || !payload.user || !payload.member) {
       return;
     }
+
     if (payload?.createMember) {
       const created = await createMember({
         email: payload?.member?.email,
@@ -380,9 +451,7 @@ export async function inviteMemberToBoard(payload: {
       await addMemberToUser(created?._id, payload?.user?._id);
     }
 
-    const board: any = await Board.findById({
-      _id: mongoose.Types.ObjectId(payload?.id),
-    });
+    const board: any = await Board.findById(payload?.id);
     const sent = await sendInviteToMember(
       board,
       payload?.user,
@@ -390,7 +459,7 @@ export async function inviteMemberToBoard(payload: {
     );
     return sent;
   } catch (err) {
-    return `Error while sending invitation ${err || err.message}`;
+    return `Error while sending inviting ${err || err.message}`;
   }
 }
 
@@ -405,18 +474,18 @@ export async function downloadBoardReport(
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(data?.sections);
       XLSX.utils.book_append_sheet(wb, ws, "report");
-      XLSX.writeFile(wb, `boardreport.xlsx`, {
+      XLSX.writeFile(wb, `${data?.title}.xlsx`, {
         bookType: "xlsx",
         type: "binary",
       });
-      const stream = fs.createReadStream(`boardreport.xlsx`);
+      const stream = fs.createReadStream(`${data?.title}.xlsx`);
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
       res.setHeader(
         "Content-Disposition",
-        "attachment; filename=boardreport.xlsx"
+        `attachment; filename=${data?.title}.xlsx`
       );
       stream.pipe(res);
     } else {

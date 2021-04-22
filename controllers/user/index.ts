@@ -89,6 +89,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       newOrg,
     });
   } catch (err) {
+    console.log("errr", err);
     return res.status(500).json(err || err.message);
   }
 }
@@ -382,7 +383,7 @@ export async function addProjectToUser(
   }
 }
 
-export async function updateUser(req: Request, res: Response) {
+export async function updateEmail(req: Request, res: Response) {
   try {
     if (
       !req.body.email?.trim()?.length ||
@@ -533,6 +534,40 @@ export async function updatePassword(req: Request, res: Response) {
       updated: true,
       message:
         "Your password is successfully changed. Please login with new password",
+    });
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function updateName(req: Request, res: Response) {
+  try {
+    if (!req.body.name?.trim()?.length) {
+      return;
+    }
+    const user = await getUser(req.headers.authorization as string);
+    const userFromDb: any = await User.findOne({
+      _id: mongoose.Types.ObjectId(user?._id),
+    });
+
+    if (!userFromDb) {
+      return res.status(500).json({
+        errorId: USER_NOT_FOUND,
+        errorMessage: "User not found",
+      });
+    }
+
+    const query = { _id: mongoose.Types.ObjectId(userFromDb?._id) },
+      update = {
+        $set: {
+          name: req.body.name,
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    await User.findOneAndUpdate(query, update, options);
+    return res.status(200).send({
+      updated: true,
+      message: "Name has been updated successfully",
     });
   } catch (err) {
     return res.status(500).send(err || err.message);

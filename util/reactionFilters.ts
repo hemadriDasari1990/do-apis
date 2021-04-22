@@ -49,7 +49,7 @@ const reactionPlusOneLookup = {
   },
 };
 
-const reactionPlusTwoLookup = {
+const reactionHighlightLookup = {
   $lookup: {
     from: Reaction.collection.name,
     let: { reactions: "$reactions" },
@@ -57,7 +57,7 @@ const reactionPlusTwoLookup = {
       {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$reactions", []] }] },
-          type: "plusTwo",
+          type: "highlight",
         },
       },
       memberLookup,
@@ -68,7 +68,7 @@ const reactionPlusTwoLookup = {
         },
       },
     ],
-    as: "plusTwoReactions",
+    as: "highlightReactions",
   },
 };
 
@@ -145,7 +145,7 @@ const reactionAddFields = {
   $addFields: {
     totalReactions: { $size: { $ifNull: ["$reactions", []] } },
     totalPlusOne: { $size: { $ifNull: ["$plusOneReactions", []] } },
-    totalPlusTwo: { $size: { $ifNull: ["$plusTwoReactions", []] } },
+    totalHighlight: { $size: { $ifNull: ["$highlightReactions", []] } },
     totalDeserve: { $size: { $ifNull: ["$deserveReactions", []] } },
     totalMinusOne: { $size: { $ifNull: ["$minuOneReactions", []] } },
     totalLove: { $size: { $ifNull: ["$loveReactions", []] } },
@@ -155,7 +155,7 @@ const reactionAddFields = {
 export {
   reactionLookup,
   reactionPlusOneLookup,
-  reactionPlusTwoLookup,
+  reactionHighlightLookup,
   reactionDeserveLookup,
   reactionMinusOneLookup,
   reactionLoveLookup,

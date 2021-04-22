@@ -6,6 +6,8 @@ import {
 } from "../../controllers/note";
 import socketio, { Socket } from "socket.io";
 
+import { addAndRemoveNoteFromSection } from "../../controllers/section";
+
 // import { decodeToken } from "../../util";
 
 export default function note(io: socketio.Server, socket: Socket) {
@@ -31,11 +33,7 @@ export default function note(io: socketio.Server, socket: Socket) {
   });
 
   socket.on("delete-note", async (payload: { [Key: string]: any }) => {
-    const deleted = await deleteNote(
-      payload?.id,
-      payload?.userId,
-      payload?.sectionId
-    );
+    const deleted = await deleteNote(payload);
     if (deleted?.deleted) {
       io.emit(`minus-note-count-response`, deleted);
     }
@@ -44,11 +42,11 @@ export default function note(io: socketio.Server, socket: Socket) {
 
   socket.on("mark-note-read", async (payload: { [Key: string]: any }) => {
     // const query: any = socket.handshake.query;
-    const create = await markNoteRead({
+    const created = await markNoteRead({
       ...payload,
       //   ...decodeToken(query?.token),
     });
-    io.emit(`mark-note-read-response`, create);
+    io.emit(`mark-note-read-response-${created?.sectionId}`, created);
   });
 
   socket.on("update-note-position", async (payload: { [Key: string]: any }) => {
@@ -58,5 +56,24 @@ export default function note(io: socketio.Server, socket: Socket) {
       //   ...decodeToken(query?.token),
     });
     io.emit(`update-note-position-response`, updated);
+  });
+
+  socket.on("move-note-to-section", async (payload: { [Key: string]: any }) => {
+    const noteDetails = await addAndRemoveNoteFromSection(payload);
+    io.emit(
+      `move-note-to-source-section-response-${payload.sourceSectionId}`,
+      payload.source
+    );
+    io.emit(
+      `move-note-to-destination-section-response-${payload.destinationSectionId}`,
+      noteDetails,
+      payload.destination
+    );
+    io.emit(`minus-note-count-response`, {
+      sectionId: payload.sourceSectionId,
+    });
+    io.emit(`plus-note-count-response`, {
+      sectionId: payload.destinationSectionId,
+    });
   });
 }

@@ -17,7 +17,7 @@ module.exports = {
     "host": "smtp.gmail.com",
     "port": 587,
     "user": "letsdoretro@gmail.com",
-    "password": "quwxwozcwytvoiap" //nodemailer
+    "password": "pvsmpprvrhscqpsv" //nodemailer
   },
   "url": "http://localhost:3000",
 };

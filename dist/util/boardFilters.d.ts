@@ -217,8 +217,14 @@ declare const boardsLookup: {
                                                 $ifNull: (string | never[])[];
                                             })[];
                                         };
-                                        type: string;
                                     };
+                                    $sort?: undefined;
+                                    $unwind?: undefined;
+                                } | {
+                                    $sort: {
+                                        _id: number;
+                                    };
+                                    $match?: undefined;
                                     $unwind?: undefined;
                                 } | {
                                     $unwind: {
@@ -226,6 +232,7 @@ declare const boardsLookup: {
                                         preserveNullAndEmptyArrays: boolean;
                                     };
                                     $match?: undefined;
+                                    $sort?: undefined;
                                 })[];
                                 as: string;
                             };
@@ -308,14 +315,8 @@ declare const boardsLookup: {
                                                 $ifNull: (string | never[])[];
                                             })[];
                                         };
+                                        type: string;
                                     };
-                                    $sort?: undefined;
-                                    $unwind?: undefined;
-                                } | {
-                                    $sort: {
-                                        _id: number;
-                                    };
-                                    $match?: undefined;
                                     $unwind?: undefined;
                                 } | {
                                     $unwind: {
@@ -323,7 +324,6 @@ declare const boardsLookup: {
                                         preserveNullAndEmptyArrays: boolean;
                                     };
                                     $match?: undefined;
-                                    $sort?: undefined;
                                 })[];
                                 as: string;
                             };
@@ -357,7 +357,7 @@ declare const boardsLookup: {
                                         $ifNull: (string | never[])[];
                                     };
                                 };
-                                totalPlusTwo: {
+                                totalHighlight: {
                                     $size: {
                                         $ifNull: (string | never[])[];
                                     };

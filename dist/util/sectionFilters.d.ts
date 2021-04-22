@@ -89,8 +89,14 @@ declare const sectionsLookup: {
                                         $ifNull: (string | never[])[];
                                     })[];
                                 };
-                                type: string;
                             };
+                            $sort?: undefined;
+                            $unwind?: undefined;
+                        } | {
+                            $sort: {
+                                _id: number;
+                            };
+                            $match?: undefined;
                             $unwind?: undefined;
                         } | {
                             $unwind: {
@@ -98,6 +104,7 @@ declare const sectionsLookup: {
                                 preserveNullAndEmptyArrays: boolean;
                             };
                             $match?: undefined;
+                            $sort?: undefined;
                         })[];
                         as: string;
                     };
@@ -180,14 +187,8 @@ declare const sectionsLookup: {
                                         $ifNull: (string | never[])[];
                                     })[];
                                 };
+                                type: string;
                             };
-                            $sort?: undefined;
-                            $unwind?: undefined;
-                        } | {
-                            $sort: {
-                                _id: number;
-                            };
-                            $match?: undefined;
                             $unwind?: undefined;
                         } | {
                             $unwind: {
@@ -195,7 +196,6 @@ declare const sectionsLookup: {
                                 preserveNullAndEmptyArrays: boolean;
                             };
                             $match?: undefined;
-                            $sort?: undefined;
                         })[];
                         as: string;
                     };
@@ -229,7 +229,7 @@ declare const sectionsLookup: {
                                 $ifNull: (string | never[])[];
                             };
                         };
-                        totalPlusTwo: {
+                        totalHighlight: {
                             $size: {
                                 $ifNull: (string | never[])[];
                             };
@@ -315,6 +315,24 @@ declare const sectionsLookup: {
         as: string;
     };
 };
+declare const sectionLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            sectionId: string;
+        };
+        pipeline: {
+            $match: {
+                $expr: {
+                    $eq: (string | {
+                        $ifNull: (string | never[])[];
+                    })[];
+                };
+            };
+        }[];
+        as: string;
+    };
+};
 declare const sectionAddFields: {
     $addFields: {
         sections: string;
@@ -325,4 +343,4 @@ declare const sectionAddFields: {
         };
     };
 };
-export { sectionsLookup, sectionAddFields };
+export { sectionsLookup, sectionAddFields, sectionLookup };

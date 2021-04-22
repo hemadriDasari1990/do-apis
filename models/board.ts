@@ -32,7 +32,7 @@ const BoardSchema = new Schema(
     status: {
       type: String,
       required: true,
-      enum: ["pending", "inprogress", "completed"],
+      enum: ["new", "inprogress", "completed"],
       default: "draft",
       index: true,
     },
@@ -72,6 +72,12 @@ const BoardSchema = new Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "Section",
+      },
+    ],
+    actionItems: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "ActionItem",
       },
     ],
     teams: [

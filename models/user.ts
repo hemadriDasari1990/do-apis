@@ -93,6 +93,7 @@ UserSchema.pre<UserInstance>("save", async function(next) {
     this.password,
     Number(config.get("bcryptSalt"))
   );
+
   this.password = hash;
   next();
 });

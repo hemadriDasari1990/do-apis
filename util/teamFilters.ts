@@ -5,6 +5,23 @@ import {
 
 import Team from "../models/team";
 
+const teamLookup = {
+  $lookup: {
+    from: Team.collection.name,
+    let: { teamId: "$teamId" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", "$$teamId"] },
+        },
+      },
+      teamMemberMembersLookup,
+      teamMemberMembersAddFields,
+    ],
+    as: "team",
+  },
+};
+
 const teamsLookup = {
   $lookup: {
     from: Team.collection.name,
@@ -76,4 +93,10 @@ const teamAddFields = {
   },
 };
 
-export { teamsLookup, inActiveTeamsLookup, activeTeamsLookup, teamAddFields };
+export {
+  teamsLookup,
+  inActiveTeamsLookup,
+  activeTeamsLookup,
+  teamAddFields,
+  teamLookup,
+};

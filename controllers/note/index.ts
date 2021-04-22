@@ -3,19 +3,20 @@ import { createdByLookUp, updatedByLookUp } from "../../util/noteFilters";
 import {
   reactionAddFields,
   reactionDeserveLookup,
-  reactionLookup,
+  reactionHighlightLookup,
   reactionLoveLookup,
   reactionMinusOneLookup,
   reactionPlusOneLookup,
-  reactionPlusTwoLookup,
 } from "../../util/reactionFilters";
 
 import Note from "../../models/note";
-import NoteActivity from "../../models/noteActivity";
+import Section from "../../models/section";
 import { addNoteToSection } from "../section";
+import { createActivity } from "../activity";
 import { findReactionsByNoteAndDelete } from "../reaction";
 import { getMember } from "../member";
 import mongoose from "mongoose";
+import { sectionLookup } from "../../util/sectionFilters";
 
 export async function updateNote(payload: {
   [Key: string]: any;
@@ -44,8 +45,35 @@ export async function updateNote(payload: {
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated: any = await Note.findOneAndUpdate(query, update, options);
-    await addNoteToSection(updated._id, payload.sectionId);
-    await createNoteActivity(updated._id, "update", payload?.user?._id);
+    const sectionUpdated: any = await addNoteToSection(
+      updated._id,
+      payload.sectionId
+    );
+
+    if (payload.noteId) {
+      await createActivity({
+        userId: payload?.userId,
+        boardId: payload?.boardId,
+        title: `${payload.previousDescription}`,
+        primaryAction: "to",
+        primaryTitle: `${payload.description}`,
+        secondaryAction: "under",
+        secondaryTitle: sectionUpdated?.title,
+        type: "note",
+        action: "update",
+      });
+    } else {
+      await createActivity({
+        userId: payload?.userId,
+        boardId: payload?.boardId,
+        title: `${payload.description}`,
+        primaryAction: "under",
+        primaryTitle: sectionUpdated?.title,
+        type: "note",
+        action: "create",
+      });
+    }
+
     const note = await getNoteDetails(updated?._id);
     return note;
   } catch (err) {
@@ -75,13 +103,20 @@ export async function getNotesBySectionId(
           preserveNullAndEmptyArrays: true,
         },
       },
-      reactionLookup,
+
       reactionDeserveLookup,
       reactionPlusOneLookup,
-      reactionPlusTwoLookup,
+      reactionHighlightLookup,
       reactionMinusOneLookup,
       reactionLoveLookup,
       reactionAddFields,
+      sectionLookup,
+      {
+        $unwind: {
+          path: "$section",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ]);
     return res.status(200).json(notes);
   } catch (err) {
@@ -89,7 +124,7 @@ export async function getNotesBySectionId(
   }
 }
 
-async function getNoteDetails(noteId: string): Promise<any> {
+export async function getNoteDetails(noteId: string): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(noteId) };
     const notes = await Note.aggregate([
@@ -108,10 +143,9 @@ async function getNoteDetails(noteId: string): Promise<any> {
           preserveNullAndEmptyArrays: true,
         },
       },
-      reactionLookup,
       reactionDeserveLookup,
       reactionPlusOneLookup,
-      reactionPlusTwoLookup,
+      reactionHighlightLookup,
       reactionMinusOneLookup,
       reactionLoveLookup,
       reactionAddFields,
@@ -138,54 +172,47 @@ export async function markNoteRead(payload: {
       update,
       options
     );
-    await createNoteActivity(
-      noteUpdated._id,
-      payload.read ? "read" : "un-read",
-      payload?.user?._id
-    );
+    await createActivity({
+      boardId: payload?.boardId,
+      userId: payload?.userId,
+      title: ` ${noteUpdated?.description}`,
+      primaryAction: "as",
+      primaryTitle: payload.read ? "read" : "un read",
+      type: "note",
+      action: payload.read ? "read" : "un-read",
+    });
     return noteUpdated;
   } catch (err) {
     return err || err.message;
   }
 }
 
-export async function deleteNote(
-  id: string,
-  userId: string,
-  sectionId: string
-): Promise<any> {
+export async function deleteNote(payload: {
+  [Key: string]: any;
+}): Promise<any> {
   try {
-    const deleted = deleteNoteById(id);
+    const deleted: any = deleteNoteById(payload?.id);
     if (!deleted) {
       return deleted;
     }
-    await createNoteActivity(id, "delete", userId);
-    return { deleted: true, _id: id, sectionId };
+    const section: any = await Section.findById(payload?.sectionId);
+    await createActivity({
+      userId: payload?.userId,
+      boardId: payload?.boardId,
+      title: `${payload?.description}`,
+      primaryAction: "under",
+      primaryTitle: section?.title,
+      type: "note",
+      action: "delete",
+    });
+    return { deleted: true, _id: payload?.id, sectionId: payload?.sectionId };
   } catch (err) {
     return {
       deleted: false,
       message: err || err?.message,
-      _id: id,
-      sectionId,
+      _id: payload?.id,
+      sectionId: payload?.sectionId,
     };
-  }
-}
-
-export async function createNoteActivity(
-  notedId: string,
-  action: string,
-  userId?: string
-): Promise<any> {
-  try {
-    const activity = await new NoteActivity({
-      userId: userId,
-      notedId: notedId,
-      type: "note",
-      action: action,
-    });
-    await activity.save();
-  } catch (err) {
-    throw err || err.message;
   }
 }
 
@@ -205,6 +232,23 @@ export async function addReactionToNote(
     return updated;
   } catch (err) {
     throw `Error while adding reaction ${err || err.message}`;
+  }
+}
+
+export async function updateNoteSectionId(
+  noteId: string,
+  sectionId: string
+): Promise<any> {
+  try {
+    if (!noteId || !sectionId) {
+      return;
+    }
+    const updated = await Note.findByIdAndUpdate(noteId, {
+      sectionId: sectionId,
+    });
+    return updated;
+  } catch (err) {
+    throw `Error while updating new section ${err || err.message}`;
   }
 }
 

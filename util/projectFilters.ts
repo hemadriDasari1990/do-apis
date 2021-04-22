@@ -58,6 +58,18 @@ const projectsLookup = {
       newBoardsLookup,
       boardsLookup,
       boardAddFields,
+      // {
+      //   $unwind: {
+      //     path: "$completedBoards",
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
+      // {
+      //   $unwind: {
+      //     path: "$newBoards",
+      //     preserveNullAndEmptyArrays: true,
+      //   },
+      // },
       {
         $unwind: {
           path: "$user",
@@ -149,10 +161,10 @@ const projectAddFields = {
     totalPublicProjects: {
       $size: { $ifNull: ["$publicProjects", []] },
     },
-    totalBoards: { $size: { $ifNull: ["$projects.totalBoards", []] } },
-    totalInProgressBoards: { $size: { $ifNull: ["$inProgressBoards", []] } },
-    totalNewBoards: { $size: { $ifNull: ["$newBoards", []] } },
-    totalCompletedBoards: { $size: { $ifNull: ["$completedBoards", []] } },
+    totalBoards: "$projects.totalBoards",
+    totalInProgressBoards: "$projects.totalInProgressBoards",
+    totalNewBoards: "$projects.totalNewBoards",
+    totalCompletedBoards: "$projects.totalCompletedBoards",
   },
 };
 

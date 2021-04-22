@@ -189,7 +189,7 @@ declare const reactionPlusOneLookup: {
         as: string;
     };
 };
-declare const reactionPlusTwoLookup: {
+declare const reactionHighlightLookup: {
     $lookup: {
         from: string;
         let: {
@@ -569,7 +569,7 @@ declare const reactionAddFields: {
                 $ifNull: (string | never[])[];
             };
         };
-        totalPlusTwo: {
+        totalHighlight: {
             $size: {
                 $ifNull: (string | never[])[];
             };
@@ -591,4 +591,4 @@ declare const reactionAddFields: {
         };
     };
 };
-export { reactionLookup, reactionPlusOneLookup, reactionPlusTwoLookup, reactionDeserveLookup, reactionMinusOneLookup, reactionLoveLookup, reactionAddFields, };
+export { reactionLookup, reactionPlusOneLookup, reactionHighlightLookup, reactionDeserveLookup, reactionMinusOneLookup, reactionLoveLookup, reactionAddFields, };

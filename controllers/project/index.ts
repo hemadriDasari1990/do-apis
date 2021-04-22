@@ -1,5 +1,11 @@
 import { NextFunction, Request, Response } from "express";
-import { boardAddFields, boardsLookup } from "../../util/boardFilters";
+import {
+  boardAddFields,
+  inProgressBoardsLookup,
+  completedBoardsLookup,
+  newBoardsLookup,
+  boardsLookup,
+} from "../../util/boardFilters";
 import { getPagination, getUser } from "../../util";
 
 import Project from "../../models/project";
@@ -84,8 +90,11 @@ export async function getProjects(req: Request, res: Response): Promise<any> {
               preserveNullAndEmptyArrays: true,
             },
           },
-          boardAddFields,
+          inProgressBoardsLookup,
+          completedBoardsLookup,
+          newBoardsLookup,
           boardsLookup,
+          boardAddFields,
         ],
         total: [{ $match: query }, { $count: "count" }],
       },
@@ -116,6 +125,7 @@ export async function createProject(payload: {
     }
     const project = new Project({
       title: payload.title,
+      description: payload.description,
       userId: payload?.userId,
     });
     const created = await project.save();

@@ -6,69 +6,56 @@
     <script></script>
     <style type="text/css">
         .mail-body-container {
-            background: #fff;
-            padding: 25px 0;
+            background: #eef5ff;
+            padding: 0 0 25px 0;
             margin: 10px 0;
             border-radius: 6px;
         }
-
-        /* .mail-body {
-            border-spacing: 0;
-            border-collapse: collapse;
-            width: 100%;
-            vertical-align: top;
-            max-width: 640px;
-            margin: 0 auto;
-            padding: 0;
-            font-size: 15px;
-            font-family: Arial, Helvetica;
-        } */
 
         .text-center {
             text-align: center;
         }
 
         .content {
-            max-width: 700px;
-            margin: 0 auto;
+            min-width: 480px;
+            width: 100%;
+        }
+
+        center {
+            display: block;
+            text-align: -webkit-center;
         }
 
         .content-table {
             border-spacing: 0;
             font-family: gt-eesti, ArialMT, Helvetica, Arial, sans-serif;
             margin: 0 auto;
-            padding: 24px;
+            padding: 0 40px 40px 40px;
             width: 100%;
             max-width: 600px;
+            background: #fefefe;
         }
 
         .pimary-button {
-            background-color: #172b4d;
-            color: #fff;
-            text-align: center;
-            border-radius: 5px;
-            padding: 16px 30px;
-            font-weight: 500;
-            font-size: 16px;
-            line-height: 1;
-            box-shadow: "0px 3px 1px -2px rgb(0 0 0 / 20%), 0px 2px 2px 0px rgb(0 0 0 / 14%), 0px 1px 5px 0px rgb(0 0 0 / 12%)";
-        }
-
-        .pimary-button-style {
+            background: #2a79ff;
+            border-radius: 4px;
             color: #fff !important;
-            font-weight: 500;
-            font-size: 18px;
+            display: inline-block;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            line-height: 1.43;
+            margin: 0;
+            outline: 0;
+            padding: 20px 21px;
+            text-align: center;
             text-decoration: none;
+            width: 238px;
         }
     </style>
 </head>
 
 <body>
-    <header>
-        <div style="padding-top: 10px;">
-            <%- include('./header'); %>
-        </div>
-    </header>
     <table width="100%" cellpadding="0" cellspacing="0" border="0" class="mail-body-container">
         <tbody>
             <tr>
@@ -95,9 +82,14 @@
                                         </table>
                                     </td>
                                 </tr> -->
+                                <tr style="line-height:2px">
+                                    <td>
+                                        <%- include('./header'); %>
+                                    </td>
+                                </tr>
                                 <tr>
                                     <td>
-                                        <table style="margin-bottom:20px;width:100%" width="100%">
+                                        <table style="margin-bottom:20px;width:100%;margin-top:20px;" width="100%">
                                             <tbody>
                                                 <tr>
                                                     <td>
@@ -116,7 +108,11 @@
                                                                     <td style="padding-bottom:12px;">
                                                                         <span
                                                                             style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">
-                                                                            Nice to meet you, <%= name %>!</span>
+                                                                            Nice to meet you, </span>
+                                                                        <b
+                                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">
+                                                                            <%= name %>!
+                                                                        </b>
                                                                     </td>
                                                                 </tr>
                                                                 <tr>
@@ -136,23 +132,20 @@
                                                 </tr>
                                                 <tr>
                                                     <td>
-                                                        <center>
-                                                            <table
-                                                                style="background-color:#fff;margin-bottom:20px;table-layout:fixed"
-                                                                align="center" width="" cellspacing="0" cellpadding="0">
-                                                                <tbody>
-                                                                    <tr>
-                                                                        <td class="pimary-button">
-                                                                            <a class="pimary-button-style"
-                                                                                href="<%- login_link %>"
-                                                                                target="_blank">
-                                                                                Login Now
-                                                                            </a>
-                                                                        </td>
-                                                                    </tr>
-                                                                </tbody>
-                                                            </table>
-                                                        </center>
+                                                        <table
+                                                            style="background-color:#fff;margin-bottom:20px;table-layout:fixed"
+                                                            width="" cellspacing="0" cellpadding="0">
+                                                            <tbody>
+                                                                <tr>
+                                                                    <td>
+                                                                        <a class="pimary-button"
+                                                                            href="<%- login_link %>" target="_blank">
+                                                                            Login Now
+                                                                        </a>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -172,12 +165,8 @@
                                                                     <td>
                                                                         <span
                                                                             style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:14px;">If
-                                                                            you didn't create a
-                                                                            <a href="http://8link.in/?ref=mail"
-                                                                                style="color:#172b4d;" target="_blank">
-                                                                                letsdoretro.com
-                                                                            </a>
-                                                                            account, just delete this email.
+                                                                            you didn't create this account, just delete
+                                                                            this email.
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -201,19 +190,16 @@
                                                                 <tr>
                                                                     <td>
                                                                         <span
-                                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:14px;">Cheers,
+                                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">Happy
+                                                                            collaborating,
                                                                         </span>
                                                                     </td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td>
                                                                         <span
-                                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:14px;">The
-                                                                            <a href="http://8link.in/?ref=mail"
-                                                                                style="color:#172b4d;" target="_blank">
-                                                                                letsdoretro.com
-                                                                            </a>
-                                                                            team.
+                                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">
+                                                                            The letsdoretro Team
                                                                         </span>
                                                                     </td>
                                                                 </tr>
@@ -232,10 +218,6 @@
             </tr>
         </tbody>
     </table>
-
-    <footer>
-        <%- include('./footer'); %>
-    </footer>
 </body>
 
 </html>

@@ -1,3 +1,79 @@
+declare const teamLookup: {
+    $lookup: {
+        from: string;
+        let: {
+            teamId: string;
+        };
+        pipeline: ({
+            $lookup: {
+                from: string;
+                let: {
+                    members: string;
+                };
+                pipeline: ({
+                    $lookup: {
+                        from: string;
+                        let: {
+                            memberId: string;
+                        };
+                        pipeline: {
+                            $match: {
+                                $expr: {
+                                    $eq: string[];
+                                };
+                            };
+                        }[];
+                        as: string;
+                    };
+                } | {
+                    $lookup: {
+                        from: string;
+                        let: {
+                            teamId: string;
+                        };
+                        pipeline: {
+                            $match: {
+                                $expr: {
+                                    $eq: string[];
+                                };
+                            };
+                        }[];
+                        as: string;
+                    };
+                } | {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                    };
+                    $unwind?: undefined;
+                } | {
+                    $unwind: string;
+                    $match?: undefined;
+                })[];
+                as: string;
+            };
+        } | {
+            $addFields: {
+                members: string;
+                totalMembers: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+            };
+        } | {
+            $match: {
+                $expr: {
+                    $eq: string[];
+                };
+            };
+        })[];
+        as: string;
+    };
+};
 declare const teamsLookup: {
     $lookup: {
         from: string;
@@ -160,4 +236,4 @@ declare const teamAddFields: {
         };
     };
 };
-export { teamsLookup, inActiveTeamsLookup, activeTeamsLookup, teamAddFields };
+export { teamsLookup, inActiveTeamsLookup, activeTeamsLookup, teamAddFields, teamLookup, };

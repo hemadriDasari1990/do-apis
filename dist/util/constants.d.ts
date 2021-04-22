@@ -14,4 +14,5 @@ export declare const INCORRECT_PASSWORD = "INCORRECT_PASSWORD";
 export declare const ANSWER_NOT_MATCHING = "ANSWER_NOT_MATCHING";
 export declare const PASSWORDS_ARE_SAME = "PASSWORDS_ARE_SAME";
 export declare const PASSWORDS_ARE_NOT_SAME = "PASSWORDS_ARE_NOT_SAME";
+export declare const SECTION_COUNT_EXCEEDS = "SECTION_COUNT_EXCEEDS";
 export declare const defaultSections: string[];

@@ -17,6 +17,16 @@ declare const noteAddFields: {
         };
     };
 };
+declare const sectionNoteAddFields: {
+    $addFields: {
+        totalNotes: {
+            $size: {
+                $ifNull: (string | never[])[];
+            };
+        };
+        notes: never[];
+    };
+};
 declare const createdByLookUp: {
     $lookup: {
         from: string;
@@ -138,8 +148,14 @@ declare const notesLookup: {
                                 $ifNull: (string | never[])[];
                             })[];
                         };
-                        type: string;
                     };
+                    $sort?: undefined;
+                    $unwind?: undefined;
+                } | {
+                    $sort: {
+                        _id: number;
+                    };
+                    $match?: undefined;
                     $unwind?: undefined;
                 } | {
                     $unwind: {
@@ -147,6 +163,7 @@ declare const notesLookup: {
                         preserveNullAndEmptyArrays: boolean;
                     };
                     $match?: undefined;
+                    $sort?: undefined;
                 })[];
                 as: string;
             };
@@ -229,14 +246,8 @@ declare const notesLookup: {
                                 $ifNull: (string | never[])[];
                             })[];
                         };
+                        type: string;
                     };
-                    $sort?: undefined;
-                    $unwind?: undefined;
-                } | {
-                    $sort: {
-                        _id: number;
-                    };
-                    $match?: undefined;
                     $unwind?: undefined;
                 } | {
                     $unwind: {
@@ -244,27 +255,8 @@ declare const notesLookup: {
                         preserveNullAndEmptyArrays: boolean;
                     };
                     $match?: undefined;
-                    $sort?: undefined;
                 })[];
                 as: string;
-            };
-        } | {
-            $addFields: {
-                notes: string;
-                totalNotes: {
-                    $size: {
-                        $ifNull: (string | never[])[];
-                    };
-                };
-                section: {
-                    $ifNull: (string | null[])[];
-                };
-                createdBy: {
-                    $ifNull: (string | null[])[];
-                };
-                updatedBy: {
-                    $ifNull: (string | null[])[];
-                };
             };
         } | {
             $addFields: {
@@ -278,7 +270,7 @@ declare const notesLookup: {
                         $ifNull: (string | never[])[];
                     };
                 };
-                totalPlusTwo: {
+                totalHighlight: {
                     $size: {
                         $ifNull: (string | never[])[];
                     };
@@ -297,6 +289,24 @@ declare const notesLookup: {
                     $size: {
                         $ifNull: (string | never[])[];
                     };
+                };
+            };
+        } | {
+            $addFields: {
+                notes: string;
+                totalNotes: {
+                    $size: {
+                        $ifNull: (string | never[])[];
+                    };
+                };
+                section: {
+                    $ifNull: (string | null[])[];
+                };
+                createdBy: {
+                    $ifNull: (string | null[])[];
+                };
+                updatedBy: {
+                    $ifNull: (string | null[])[];
                 };
             };
         } | {
@@ -347,4 +357,4 @@ declare const notesLookup: {
         as: string;
     };
 };
-export { noteAddFields, notesLookup, createdByLookUp, updatedByLookUp };
+export { noteAddFields, notesLookup, createdByLookUp, updatedByLookUp, sectionNoteAddFields, };

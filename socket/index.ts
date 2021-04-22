@@ -1,6 +1,5 @@
 import socketio, { Socket } from "socket.io";
 
-import { addAndRemoveNoteFromSection } from "../controllers/section";
 import board from "./board";
 import member from "./member";
 // import config from "config";
@@ -9,6 +8,8 @@ import note from "./note";
 import project from "./project";
 import reaction from "./reaction";
 import section from "./section";
+import action from "./action";
+import actionItem from "./actionItem";
 
 export default function socketEvents(io: socketio.Server) {
   // io.sockets.use(function(socket: any, next: any) {
@@ -56,21 +57,17 @@ export default function socketEvents(io: socketio.Server) {
     /* Note socket events */
     note(io, socket);
 
+    /* Action socket events */
+    action(io, socket);
+
+    /* Action Item socket events */
+    actionItem(io, socket);
+
     /* Reaction socket events */
     reaction(io, socket);
 
     /* Member socket events */
     member(io, socket);
-
-    socket.on("move-note-to-section", async (body: { [Key: string]: any }) => {
-      const updated = await addAndRemoveNoteFromSection(body);
-      socket.emit(
-        "move-note-to-section-response",
-        updated,
-        body.source,
-        body.destinaton
-      );
-    });
   });
   io.sockets.on("disconnect", () => {
     console.log("client disconnected");

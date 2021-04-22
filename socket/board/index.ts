@@ -14,8 +14,10 @@ export default function board(io: socketio.Server, socket: Socket) {
     try {
       const query: any = socket.handshake.query;
       await verifyToken(query?.token, io);
+      const user: any = decodeToken(query?.token);
       const updated = await startOrCompleteBoard({
         ...payload,
+        user,
       });
       io.emit(`start-session-response`, updated);
     } catch (err) {
@@ -26,8 +28,10 @@ export default function board(io: socketio.Server, socket: Socket) {
     try {
       const query: any = socket.handshake.query;
       await verifyToken(query?.token, io);
+      const user: any = decodeToken(query?.token);
       const updated = await startOrCompleteBoard({
         ...payload,
+        user,
       });
       io.emit(`end-session-response`, updated);
     } catch (err) {
@@ -39,8 +43,10 @@ export default function board(io: socketio.Server, socket: Socket) {
     try {
       const query: any = socket.handshake.query;
       await verifyToken(query?.token, io);
+      const user: any = decodeToken(query?.token);
       const updated = await changeVisibility({
         ...payload,
+        user,
       });
       io.emit(`change-visibility-response`, updated);
     } catch (err) {

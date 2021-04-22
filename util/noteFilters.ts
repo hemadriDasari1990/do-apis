@@ -5,7 +5,7 @@ import {
   reactionLoveLookup,
   reactionMinusOneLookup,
   reactionPlusOneLookup,
-  reactionPlusTwoLookup,
+  reactionHighlightLookup,
 } from "./reactionFilters";
 
 import Member from "../models/member";
@@ -19,6 +19,13 @@ const noteAddFields = {
     section: { $ifNull: ["$section", [null]] },
     createdBy: { $ifNull: ["$createdBy", [null]] },
     updatedBy: { $ifNull: ["$updatedBy", [null]] },
+  },
+};
+
+const sectionNoteAddFields = {
+  $addFields: {
+    totalNotes: { $size: { $ifNull: ["$notes", []] } },
+    notes: [],
   },
 };
 
@@ -85,12 +92,12 @@ const notesLookup = {
           preserveNullAndEmptyArrays: true,
         },
       },
+      reactionLookup,
       reactionMinusOneLookup,
-      reactionPlusTwoLookup,
+      reactionHighlightLookup,
       reactionPlusOneLookup,
       reactionDeserveLookup,
       reactionLoveLookup,
-      reactionLookup,
       noteAddFields,
       reactionAddFields,
     ],
@@ -98,4 +105,10 @@ const notesLookup = {
   },
 };
 
-export { noteAddFields, notesLookup, createdByLookUp, updatedByLookUp };
+export {
+  noteAddFields,
+  notesLookup,
+  createdByLookUp,
+  updatedByLookUp,
+  sectionNoteAddFields,
+};

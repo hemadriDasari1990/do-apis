@@ -5,6 +5,7 @@ import Board from "../../models/board";
 import Note from "../../models/note";
 import Reaction from "../../models/reaction";
 import Section from "../../models/section";
+import { createActivity } from "../activity";
 import { getMember } from "../member";
 import { getPagination } from "../../util";
 import { memberLookup } from "../../util/memberFilters";
@@ -61,6 +62,15 @@ export async function createOrUpdateReaction(payload: {
         await removeReactionFromNote(reactionDetails?._id, payload?.noteId);
       }
       await removeReactionById(reactionDetails?._id);
+      await createActivity({
+        userId: payload.reactedBy,
+        boardId: payload?.boardId,
+        title: payload?.type,
+        primaryAction: "to",
+        primaryTitle: note?.description,
+        type: payload?.type,
+        action: "un-react",
+      });
       return {
         removed: true,
         ...reactionDetails,
@@ -76,7 +86,17 @@ export async function createOrUpdateReaction(payload: {
     });
     if (!note?.reactions?.includes(newReaction?._id)) {
       await addReactionToNote(newReaction._id, payload.noteId);
+      await createActivity({
+        userId: payload.reactedBy,
+        boardId: payload?.boardId,
+        title: payload?.type,
+        primaryAction: "to",
+        primaryTitle: note?.description,
+        type: payload?.type,
+        action: "react",
+      });
     }
+
     return newReaction;
   } catch (err) {
     throw new Error(err || err.message);
@@ -159,6 +179,13 @@ export async function getReactions(req: Request, res: Response): Promise<any> {
           { $sort: { _id: -1 } },
           { $skip: offset },
           { $limit: limit },
+          memberLookup,
+          {
+            $unwind: {
+              path: "$reactedBy",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
         ],
         total: [{ $match: query }, { $count: "count" }],
       },
@@ -211,7 +238,9 @@ export async function getReactionSummaryByBoard(
         $group: {
           _id: null,
           plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
-          plusTwo: { $sum: { $cond: [{ $eq: ["$type", "plusTwo"] }, 1, 0] } },
+          highlight: {
+            $sum: { $cond: [{ $eq: ["$type", "highlight"] }, 1, 0] },
+          },
           minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
           love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
           deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
@@ -247,7 +276,9 @@ export async function getReactionSummaryBySection(
         $group: {
           _id: null,
           plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
-          plusTwo: { $sum: { $cond: [{ $eq: ["$type", "plusTwo"] }, 1, 0] } },
+          highlight: {
+            $sum: { $cond: [{ $eq: ["$type", "highlight"] }, 1, 0] },
+          },
           minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
           love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
           deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
@@ -280,7 +311,9 @@ export async function getReactionSummaryByNote(
         $group: {
           _id: null,
           plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
-          plusTwo: { $sum: { $cond: [{ $eq: ["$type", "plusTwo"] }, 1, 0] } },
+          highlight: {
+            $sum: { $cond: [{ $eq: ["$type", "highlight"] }, 1, 0] },
+          },
           minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
           love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
           deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },

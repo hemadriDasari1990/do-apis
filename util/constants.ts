@@ -14,6 +14,7 @@ export const INCORRECT_PASSWORD = "INCORRECT_PASSWORD";
 export const ANSWER_NOT_MATCHING = "ANSWER_NOT_MATCHING";
 export const PASSWORDS_ARE_SAME = "PASSWORDS_ARE_SAME";
 export const PASSWORDS_ARE_NOT_SAME = "PASSWORDS_ARE_NOT_SAME";
+export const SECTION_COUNT_EXCEEDS = "SECTION_COUNT_EXCEEDS";
 
 export const defaultSections = [
   "What went well",
@@ -21,5 +22,6 @@ export const defaultSections = [
   "What to stop",
   "What to start",
   "New Learnings",
-  "Reconitions",
+  "Recognitions",
+  "Action items",
 ];

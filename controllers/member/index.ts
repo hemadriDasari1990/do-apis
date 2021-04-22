@@ -262,7 +262,9 @@ export async function sendInviteToMember(
       "/templates/invite.ejs",
       {
         url: config.get("url"),
-        invite_link: `${config.get("url")}/board/${board?._id}?source="email"`,
+        invite_link: `${config.get("url")}/board/${board?._id}?email=${
+          receiver?.email
+        }&name=${receiver?.name}`,
         name: receiver?.name,
         boardName: board?.title,
         projectName: board?.project?.title,

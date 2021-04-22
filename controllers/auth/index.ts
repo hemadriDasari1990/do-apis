@@ -19,7 +19,7 @@ import bcrypt from "bcrypt";
 import config from "config";
 import crypto from "crypto";
 import { getToken } from "../../util";
-import { getUserByEmail } from "../user";
+import { addMemberToUser, getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { socket } from "../../index";
@@ -323,7 +323,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
     if (user?.isVerified && user.email === user.newEmail) {
       return res.status(500).send({
         errorId: ALREADY_VERIFIED,
-        message: "This account has already been verified. Please login",
+        message: "This account has already been verified.",
       });
     }
     const currentEmail = user.email;
@@ -349,8 +349,12 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
         },
       },
       memberOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
-    await Member.findOneAndUpdate(memberQuery, updateMember, memberOptions);
-
+    const updated: any = await Member.findOneAndUpdate(
+      memberQuery,
+      updateMember,
+      memberOptions
+    );
+    await addMemberToUser(updated?._id, userUpdated?._id);
     await emailService.sendEmail(
       "/templates/welcome.ejs",
       {

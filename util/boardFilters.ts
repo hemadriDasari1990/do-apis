@@ -107,7 +107,7 @@ const newBoardsLookup = {
               },
             ],
           },
-          status: "pending",
+          status: "new",
         },
       },
     ],

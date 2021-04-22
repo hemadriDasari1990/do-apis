@@ -40,39 +40,6 @@ declare const projectsLookup: {
             $lookup: {
                 from: string;
                 let: {
-                    userId: string;
-                };
-                pipeline: {
-                    $match: {
-                        $expr: {
-                            $eq: string[];
-                        };
-                    };
-                }[];
-                as: string;
-            };
-        } | {
-            $lookup: {
-                from: string;
-                let: {
-                    boards: string;
-                };
-                pipeline: {
-                    $match: {
-                        $expr: {
-                            $in: (string | {
-                                $ifNull: (string | never[])[];
-                            })[];
-                        };
-                        status: string;
-                    };
-                }[];
-                as: string;
-            };
-        } | {
-            $lookup: {
-                from: string;
-                let: {
                     boards: string;
                 };
                 pipeline: ({
@@ -288,8 +255,14 @@ declare const projectsLookup: {
                                                         $ifNull: (string | never[])[];
                                                     })[];
                                                 };
-                                                type: string;
                                             };
+                                            $sort?: undefined;
+                                            $unwind?: undefined;
+                                        } | {
+                                            $sort: {
+                                                _id: number;
+                                            };
+                                            $match?: undefined;
                                             $unwind?: undefined;
                                         } | {
                                             $unwind: {
@@ -297,6 +270,7 @@ declare const projectsLookup: {
                                                 preserveNullAndEmptyArrays: boolean;
                                             };
                                             $match?: undefined;
+                                            $sort?: undefined;
                                         })[];
                                         as: string;
                                     };
@@ -379,14 +353,8 @@ declare const projectsLookup: {
                                                         $ifNull: (string | never[])[];
                                                     })[];
                                                 };
+                                                type: string;
                                             };
-                                            $sort?: undefined;
-                                            $unwind?: undefined;
-                                        } | {
-                                            $sort: {
-                                                _id: number;
-                                            };
-                                            $match?: undefined;
                                             $unwind?: undefined;
                                         } | {
                                             $unwind: {
@@ -394,7 +362,6 @@ declare const projectsLookup: {
                                                 preserveNullAndEmptyArrays: boolean;
                                             };
                                             $match?: undefined;
-                                            $sort?: undefined;
                                         })[];
                                         as: string;
                                     };
@@ -428,7 +395,7 @@ declare const projectsLookup: {
                                                 $ifNull: (string | never[])[];
                                             };
                                         };
-                                        totalPlusTwo: {
+                                        totalHighlight: {
                                             $size: {
                                                 $ifNull: (string | never[])[];
                                             };
@@ -570,6 +537,24 @@ declare const projectsLookup: {
                 as: string;
             };
         } | {
+            $lookup: {
+                from: string;
+                let: {
+                    boards: string;
+                };
+                pipeline: {
+                    $match: {
+                        $expr: {
+                            $in: (string | {
+                                $ifNull: (string | never[])[];
+                            })[];
+                        };
+                        status: string;
+                    };
+                }[];
+                as: string;
+            };
+        } | {
             $addFields: {
                 boards: string;
                 inProgressBoards: string;
@@ -595,6 +580,21 @@ declare const projectsLookup: {
                         $ifNull: (string | never[])[];
                     };
                 };
+            };
+        } | {
+            $lookup: {
+                from: string;
+                let: {
+                    userId: string;
+                };
+                pipeline: {
+                    $match: {
+                        $expr: {
+                            $eq: string[];
+                        };
+                    };
+                }[];
+                as: string;
             };
         } | {
             $match: {
@@ -731,26 +731,10 @@ declare const projectAddFields: {
                 $ifNull: (string | never[])[];
             };
         };
-        totalBoards: {
-            $size: {
-                $ifNull: (string | never[])[];
-            };
-        };
-        totalInProgressBoards: {
-            $size: {
-                $ifNull: (string | never[])[];
-            };
-        };
-        totalNewBoards: {
-            $size: {
-                $ifNull: (string | never[])[];
-            };
-        };
-        totalCompletedBoards: {
-            $size: {
-                $ifNull: (string | never[])[];
-            };
-        };
+        totalBoards: string;
+        totalInProgressBoards: string;
+        totalNewBoards: string;
+        totalCompletedBoards: string;
     };
 };
 declare const projectAddTotalFields: {

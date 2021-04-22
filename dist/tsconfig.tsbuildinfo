@@ -547,8 +547,8 @@
         "affectsGlobalScope": false
       },
       "../util/constants.ts": {
-        "version": "1a9585eb5f79d849de3dd1e184338301400e388ea2cd3a5e4b172c0cd487c753",
-        "signature": "48fdb17a86d69432a5d2ac2462db47d23caf632a9c02da9f85372b75cb9bdff8",
+        "version": "2b8674f20806a615767a648e5356e80008cc08465e1db9122c7327b431585bb8",
+        "signature": "1ebe3bd0cbb6a4e94422a3d25a58b18fe75e526dc02897c52e7b07f12a66bdae",
         "affectsGlobalScope": false
       },
       "../models/section.ts": {
@@ -557,7 +557,7 @@
         "affectsGlobalScope": false
       },
       "../models/reaction.ts": {
-        "version": "3b508e59975c9049efd51c410cdc5c2cad68dad58478f51e37660e87fef6ecdb",
+        "version": "67aec126fd4498fd70128997b0545d680adf569935e06fbbf4f1f44b2260f968",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
@@ -567,8 +567,8 @@
         "affectsGlobalScope": false
       },
       "../util/reactionfilters.ts": {
-        "version": "253bf41105a0df1ae760d12fb925293860e92b61bae41b8b0bbd91f3e444dbe4",
-        "signature": "fe386017b2ae450fc1af4971726cfdfb7e55600728f930bf8e8506d87fec5e41",
+        "version": "5076bf99e2a198819f20f16c1dee47143359cb38254acf7c33d3faab134eb2f3",
+        "signature": "d619f2cfae257c6b562fc49bee10b242ea2c15c4e97b0e0b4477eb95bc140e9c",
         "affectsGlobalScope": false
       },
       "../models/note.ts": {
@@ -577,22 +577,22 @@
         "affectsGlobalScope": false
       },
       "../util/notefilters.ts": {
-        "version": "de8463a59fc9cb647592c50621925eb6ecd4b1b92c8dc9cd49236b36aef9f7fd",
-        "signature": "9a9d4a0f7264c318f136a673eafd7c88864f84df7ddaac9a03b34961525989bd",
+        "version": "db5e52e7d225102972fbcb0febe1d635bf95d8000974c872faf873e226e84ef9",
+        "signature": "d4240e473070faba410797cac8acb67046ea7a1296daac467bdfc5d1009cacdb",
         "affectsGlobalScope": false
       },
       "../util/sectionfilters.ts": {
-        "version": "d04669ebcccf42aa7f2166dd0107b9c3154f418106ec48989c30425f7942b6e6",
-        "signature": "2a1fe5a98a06b6607f852a09b117676dd4e58b699781234a9eb1f71754580087",
+        "version": "94e7f908b194553565213ca96bc38cab40b92b56f8a58140388c49b47ce1ab9f",
+        "signature": "dfeabe0e761a08361d636117868972fd493bed47b8c41d8c3149642906ab0b62",
         "affectsGlobalScope": false
       },
       "../util/teamfilters.ts": {
-        "version": "4ef7ef61d983455bfeec5e6ff43aa11d4a8504228073fb3e410967a110a14493",
-        "signature": "e37c30ad25b624026cb308c7b795070deed7dec9ef26871c316a347eb1f18cef",
+        "version": "ccd52243d104a6d0ccee3c48083414e48f16698d33ae5fcabc4f5e0863d35987",
+        "signature": "97d81b8b801591f05ef68c3a7731427064c853d18ee9f9888e4e40952cd83820",
         "affectsGlobalScope": false
       },
       "../models/board.ts": {
-        "version": "78398aed1904a26f0cfe7151792c963a78b42ccc22d3abd6af219f25316b983c",
+        "version": "df94f124b5d9115a55778a0059f3eec5d8790127faf0a2e9a1787b5f0b803b78",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
@@ -602,8 +602,8 @@
         "affectsGlobalScope": false
       },
       "../util/boardfilters.ts": {
-        "version": "776dc60ca58671793294fb255db9d166b9c14c884a6fe9a1c93fe3d1476537e2",
-        "signature": "ffad0347228fd38fdc964beef02d5143332a75ca9ecb34fd5e76706bc993b509",
+        "version": "e97217320d87d4a31d93af11943515ddd94047bc0464c4bc2aadbc83edf17a49",
+        "signature": "fb193a71b9e22671b87a1771b2321fed1ab99c16532df5e98d8c73ad22a1dcfc",
         "affectsGlobalScope": false
       },
       "../types/user.ts": {
@@ -617,13 +617,13 @@
         "affectsGlobalScope": false
       },
       "../models/user.ts": {
-        "version": "3efadbf891e1d3861218237533c7b023e0c196f2fe0b223e7ce3e54d1aa8423b",
+        "version": "b14012757c0bd44109779d574a53b4537d825e95db45fd4cedb56b34162a6043",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
       "../util/projectfilters.ts": {
-        "version": "ff6cf3a0793a561448ef9aaf8e593c8fc2744dfecbef64dbfb9782b678888592",
-        "signature": "29dfbad2d7f9289b8a1043bbd3418b9651c0c3cc64befa6cd7bdb00456847be2",
+        "version": "93d37545d9efb801ad9adff71829b2d9dfd015e14f3b5d195d7e511a57ec6758",
+        "signature": "26e25b3a3b95c2f4e8c5d35d67d92ffae6049008c0fa158556be1f52a6a34450",
         "affectsGlobalScope": false
       },
       "../models/token.ts": {
@@ -682,12 +682,12 @@
         "affectsGlobalScope": false
       },
       "../controllers/user/index.ts": {
-        "version": "049d077aed85b680b107f07aaa1cd852d5426cb1b5110c93770c55bccafc4577",
-        "signature": "cea50d72a023921c4aef39f4c0b474028be9d88276cb4a7e58a2686d2250caf2",
+        "version": "5b31f199793a46e0a1410cf8130eef526216a77cce384eaefa580252c8879d7a",
+        "signature": "a89293f93016e05987447dd6a8330d0b252049760feccaa930f51e0b312fbccc",
         "affectsGlobalScope": false
       },
       "../controllers/project/index.ts": {
-        "version": "616b0e1242402fd8bd49bef478a9b20d18570369c7ee3427deb0a432aa5692c0",
+        "version": "30edb196b26d091d45e69e8a482070629562c64c88f0e6c0b5eb86d1f2b8745f",
         "signature": "aca3dbabdb945a1155860c99c1456507a9da3f4923f12d62385e7e8b3dbd8cd8",
         "affectsGlobalScope": false
       },
@@ -706,38 +706,48 @@
         "signature": "78d1fd4698c3dc2e612431c6ac5369406d01512667921cf820dbf140efae0b68",
         "affectsGlobalScope": false
       },
-      "../models/sectionactivity.ts": {
-        "version": "2ae00ecbe611c285f71e9941fb2e4899d8c3fb9095d349b71b9e0f0c9a4e2d09",
+      "../models/activity.ts": {
+        "version": "21cf23fa002e37662f0c2b3a729b3fec045ee102affec06c98b39b066fc91366",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
-      "../models/noteactivity.ts": {
-        "version": "b273aa11108c360603c76d17c5a2cdaf82475266329062ed87569d3dff0aac45",
+      "../controllers/activity/index.ts": {
+        "version": "6c00178ebbbf4767e515d9170a57cebb584d89bbeb18e06ead54220ba26ef9d3",
+        "signature": "fb479cacfc6b8ee9892f966321737d9cd382659b7d8e6fa71b294bc5c833fb4a",
+        "affectsGlobalScope": false
+      },
+      "../models/invite.ts": {
+        "version": "223c27331393388853b3324b590e09a9db65ce86dd9e355986df9ce5482c1bcd",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../controllers/invite/index.ts": {
+        "version": "6faf057c1df95a3cdcf9b02f54b64ed9713c3cb8cef2efc051aad627e1a123ed",
+        "signature": "c26caa861ea808c6d5abec3c355bcd3c354d7b401ced006a10fccd7b033be195",
         "affectsGlobalScope": false
       },
       "../controllers/reaction/index.ts": {
-        "version": "c9c72d79fa7102cbe7e25200c6cfed30e25b61b7dfc772e1e1c02d0234dcf238",
+        "version": "0e3a9a5c46ac3270c3d626b55c889409f6bbc7d5e02b487a1418694fb2d8c164",
         "signature": "7e1ad30c039b6ae19afee7a9cc527c00c5cb7c940a688e5741fc7a74ef17fb2b",
         "affectsGlobalScope": false
       },
       "../controllers/note/index.ts": {
-        "version": "e9ae6e58aa8b17f21506b3ea2da4729073a451df88b743e486fdde123bb2373d",
-        "signature": "5f121c4345476900db985b8ed6fc76d97a7d4c483e6b51b0c70036b19bad86e5",
+        "version": "d86c1f12e64b1421a9e79148a6e81eac337b9a92e3ee89c76f3befe47eb18d03",
+        "signature": "8dfc36ef1232b83989b22fc01d754dd1c92ac36c6cb062993b1b54cb32d3029d",
         "affectsGlobalScope": false
       },
       "../controllers/section/index.ts": {
-        "version": "9a416b1f8cba5e43321f61cc75011d0f6bf7e99eb8d26907dca15eb2d6db9554",
-        "signature": "6765c41bf57933eb65df7eae068570d0104196c4ce9ee2906fe45a2ecbff3196",
+        "version": "cab9b54bc31733981b890cf83df60db3d2bfa6bacd67b0651a88785cf71012cb",
+        "signature": "b068a1951e98a77d1c9852fa90a45e0117600484efe3624b28dab80b2981dfd7",
         "affectsGlobalScope": false
       },
       "../controllers/board/index.ts": {
-        "version": "2e3a110837dac8cb8eb6bc2ecc8d9e7c45779645368d2befca1c87b5a778819c",
-        "signature": "babbaa6a8eb6c9eccefa392b4242fb07aafc66c288bbe0f9cb22e387772fd95f",
+        "version": "82f9263d4ddbc0905dfbf3c2a593c14a21629f72ee9fa14679239acbf26151c4",
+        "signature": "d5622377729d2106fddedbcb2b4dd82dccc4406f42989f77461cf4644373ce42",
         "affectsGlobalScope": false
       },
       "../controllers/member/index.ts": {
-        "version": "a5fc129ffe979744cfce93b4aaf96011d44be0ee7104c41fcd0348f19ba32e00",
+        "version": "c49c1d81bbb69c5889489c280425b4b67368f8c56494c4bcf83903500929c5ef",
         "signature": "0fb457c24fbe429fd33e76e2c11d7c5f087c221d57e961080d61627215fb7113",
         "affectsGlobalScope": false
       },
@@ -752,18 +762,23 @@
         "affectsGlobalScope": false
       },
       "../controllers/auth/index.ts": {
-        "version": "eaef6a8c25ed3092199544dbc62d255086c9407da36e80de1e0f062fcbea00e9",
+        "version": "f1b2aef0c0bfbd1d4da07f68615b0caacefdcaf540585fd9191895c195731c38",
         "signature": "65d5e72f3a483437b722eebe9b7184b1dd5da4681ae2d17079db5f5817890999",
         "affectsGlobalScope": false
       },
       "../models/feedback.ts": {
-        "version": "973f69faaeb2a1a9ae6bd5d201d8306b5482deff0dfb1edd75b3cd38b3ace6dc",
+        "version": "7e5180dc648492b3b2e0da512b91746b9814b86f5fb3e8afab108ca0391f2a00",
         "signature": "46a0b34e1264c4d25ca6646ff0e6cfaa7275ea1ae5a6bc23d4dfd84edf2f2b2e",
         "affectsGlobalScope": false
       },
+      "../util/userfilters.ts": {
+        "version": "be5c9e2eaa10f681b05d166e4b82cc238b296e71fabb1702f68e57261ce07d72",
+        "signature": "fab2f10b7ae4e5f2500885216ad07dbca65f493a808cce8ef452aedbd0b20c6e",
+        "affectsGlobalScope": false
+      },
       "../controllers/feedback/index.ts": {
-        "version": "66b2ec6c37802691521355ed4efa0714c8bfc8745a04ee017daf8d0c842b7610",
-        "signature": "051d42aa6561a634677f2ed7a9accfee2300f09e9ec7aaa9c4ae625c4ecc38e2",
+        "version": "1bd212970ae14bf10e491eb7a9cad9f44b0240bdf92f7e1eff924d2224119f4a",
+        "signature": "54dc0817a7e400442c3477c46e4065729b6b429148ae0a653bf0e2bc71e81fac",
         "affectsGlobalScope": false
       },
       "../models/securityquestion.ts": {
@@ -786,8 +801,33 @@
         "signature": "b075a8f7e2724c60487fcde0b1133d366479b0c7982781265dec74041e42cb33",
         "affectsGlobalScope": false
       },
+      "../models/actionitem.ts": {
+        "version": "be265b862c9ddd2ef228587cb97270c9a19084317faf279d15dcde3d323d1442",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../models/action.ts": {
+        "version": "ae3097500ee94b57e16d38aac53906e47b2c8a5cbef2da7149a38c8064d52346",
+        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
+        "affectsGlobalScope": false
+      },
+      "../util/actionitemfilters.ts": {
+        "version": "4dd00d2ebfac3a9c7668b236e3773f6ab03d3fedb6ec6e4da566f4d30120c8e1",
+        "signature": "5c7d25fdaec2c8c035634d9d7139be960db8cde5b5cc9af3f69c1de2c5894715",
+        "affectsGlobalScope": false
+      },
+      "../controllers/actionitem/index.ts": {
+        "version": "87555c4556eafd06b81e4469446d68e1d5c74230fe9737188ee133115911322a",
+        "signature": "b62b8b23a5f4cd751eab896fff3821caf91bf5979afad9976a1621141dca7966",
+        "affectsGlobalScope": false
+      },
+      "../controllers/action/index.ts": {
+        "version": "596e34d61b5b5ab81e601261be2c9873ff3684e6a873dbac865a0e4bd0ce62a4",
+        "signature": "76ff42ff21bdc312df756c886a1211652c5177448d2b07c7774ebe07aedfa1a2",
+        "affectsGlobalScope": false
+      },
       "../router/index.ts": {
-        "version": "1088ccb735c3da3979f5cf1aa3a5dc051c44d49d4eb77292b7e457677ef3172b",
+        "version": "d06b5da4cd6351c3c02e48166360c89379400bcf08b09d0ed1306dc6dc7925d6",
         "signature": "bb9f40b07ab2b881b3de2f5b1a7bb5886a9d031e447e0b70552f7d4da625c55f",
         "affectsGlobalScope": false
       },
@@ -797,17 +837,17 @@
         "affectsGlobalScope": false
       },
       "../socket/board/index.ts": {
-        "version": "ff6487a458137c8e2866cae1ea286df93a767e69436306783f3cb58463f7eec6",
+        "version": "f9c2d57506f81c9036f84c29d96cf93957e7136747d0e8836e904017d762eb6a",
         "signature": "3fe1a7fd968aa79a78c3ca6478269e686530ccd797261dabcb6a1a2b368be42e",
         "affectsGlobalScope": false
       },
       "../socket/member/index.ts": {
-        "version": "d77ba980a78e0c173493a4a2c0342049ef0357448bc44a8427e0c63d84fc55f5",
+        "version": "852d638bc390e876042d5931220528d8cdfc61683558864ba31b21fdb22cec09",
         "signature": "e098b6368c8f7ae52d4636a89fa02330fac34474cf56f191f216e21095ba5e38",
         "affectsGlobalScope": false
       },
       "../socket/note/index.ts": {
-        "version": "ed527c5fecb97e5b70519a7a64939cc4f93a6ef10e3762ec01778fdee97c153e",
+        "version": "2c986d9c35ff6b154a00d192127255b0f0d41b2b7fe39a1972b857aeffa6189e",
         "signature": "c7819bc5d43fe674e5c03ea4d44b924d36194a6d51c47a0c59ffb448a68a65fb",
         "affectsGlobalScope": false
       },
@@ -817,28 +857,33 @@
         "affectsGlobalScope": false
       },
       "../socket/reaction/index.ts": {
-        "version": "9293a75e7125fc18e6d6dd0b4280fbb4eecbfd9f77414cd4947e9c5c9bd47f99",
+        "version": "b767f9f110df44babcf1b475c43ad63ea4af8831a616fcbe4586632c9b2ff8f2",
         "signature": "4f3c3b751b0500caf3b144c2d465866e2a57ad90deb88b17059ee5567264c97c",
         "affectsGlobalScope": false
       },
       "../socket/section/index.ts": {
-        "version": "33b1f3195300e24e0a3fbe5ab098edc0d4049c6bc60964c90c8ce3de3926e612",
+        "version": "2c57bd5752248c4cec7c856f7cfa73e44163a8dea78610b156bead893dba9cd7",
         "signature": "40f365a22a9da12571a6a868b89f08390400bd6220bfe222a171503710ea9cdd",
         "affectsGlobalScope": false
       },
+      "../socket/action/index.ts": {
+        "version": "a82ed782aeee1d4f55074b62b83bffeb87016195d63189b07b187443153ec449",
+        "signature": "c3d671ab4754de7d2cb31e4929ffbdc769ef89e0616b55b4c42b71430e61e36e",
+        "affectsGlobalScope": false
+      },
+      "../socket/actionitem/index.ts": {
+        "version": "b3e8ff9fe1f100e4c340cb85192b99eb80854898c717097e7ee2c30092f93667",
+        "signature": "3973c248d9b4a33c6f117b29edb4de8bea2d58b92f9c5fb52f3cd0a9ed259046",
+        "affectsGlobalScope": false
+      },
       "../socket/index.ts": {
-        "version": "74d839f501a5b0c3fd583163f27139ed4e38552dd7d4bb6cc7942347304ce604",
+        "version": "2fe20dba78e42494e1354a27d0963177bac9e7de8c86ae063ece265e47ed3f55",
         "signature": "5df492892acc6fca2d5fc5ff5adf4380d8a3575e35009b0fe169d57cc13ca91e",
         "affectsGlobalScope": false
       },
       "../index.ts": {
         "version": "2330e7a54f936f7c193c17d5db35ad7086bbd0523f135bb084df318842d3390d",
         "signature": "6ade2d861f2855c190f694a65648e0b309f0e73d061640395caa416eb1147185",
-        "affectsGlobalScope": false
-      },
-      "../models/boardactivity.ts": {
-        "version": "2d8b3526ac90120dac8778004a13fe3f108dadd4ca780984631aa847f7dbb27f",
-        "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
       "../public/index.ts": {
@@ -885,6 +930,11 @@
         "version": "e780e35bbfef4e100d93434aa0c1f6ed1b3c3759fc53db5a8957b4fb77272028",
         "signature": "e780e35bbfef4e100d93434aa0c1f6ed1b3c3759fc53db5a8957b4fb77272028",
         "affectsGlobalScope": false
+      },
+      "../util/actionfilters.ts": {
+        "version": "1d9dde45a1f28f286b04551d2fcbbb7e71616d79e023200452689bbc990e4773",
+        "signature": "5601427e917a424b0aaf27dd8e99b62cea3ec7690d4f2a22df0fa65e4c37d1d2",
+        "affectsGlobalScope": false
       }
     },
     "options": {
@@ -926,10 +976,31 @@
       "allowSyntheticDefaultImports": true,
       "experimentalDecorators": true,
       "emitDecoratorMetadata": true,
-      "watch": true,
       "configFilePath": "../tsconfig.json"
     },
     "referencedMap": {
+      "../controllers/action/index.ts": [
+        "../controllers/actionitem/index.ts",
+        "../models/action.ts",
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../util/actionitemfilters.ts",
+        "../util/constants.ts"
+      ],
+      "../controllers/actionitem/index.ts": [
+        "../controllers/action/index.ts",
+        "../models/actionitem.ts",
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../util/actionitemfilters.ts"
+      ],
+      "../controllers/activity/index.ts": [
+        "../models/activity.ts",
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../util/index.ts",
+        "../util/projectfilters.ts"
+      ],
       "../controllers/auth/index.ts": [
         "../controllers/user/index.ts",
         "../index.ts",
@@ -947,6 +1018,8 @@
         "../util/index.ts"
       ],
       "../controllers/board/index.ts": [
+        "../controllers/activity/index.ts",
+        "../controllers/invite/index.ts",
         "../controllers/member/index.ts",
         "../controllers/project/index.ts",
         "../controllers/section/index.ts",
@@ -964,7 +1037,16 @@
       ],
       "../controllers/feedback/index.ts": [
         "../models/feedback.ts",
-        "../node_modules/@types/express/index.d.ts"
+        "../node_modules/@types/express/index.d.ts",
+        "../util/index.ts",
+        "../util/userfilters.ts"
+      ],
+      "../controllers/invite/index.ts": [
+        "../models/invite.ts",
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts",
+        "../util/index.ts",
+        "../util/teamfilters.ts"
       ],
       "../controllers/member/index.ts": [
         "../controllers/board/index.ts",
@@ -978,15 +1060,17 @@
         "../util/teammemberfilters.ts"
       ],
       "../controllers/note/index.ts": [
+        "../controllers/activity/index.ts",
         "../controllers/member/index.ts",
         "../controllers/reaction/index.ts",
         "../controllers/section/index.ts",
         "../models/note.ts",
-        "../models/noteactivity.ts",
+        "../models/section.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
         "../util/notefilters.ts",
-        "../util/reactionfilters.ts"
+        "../util/reactionfilters.ts",
+        "../util/sectionfilters.ts"
       ],
       "../controllers/project/index.ts": [
         "../controllers/board/index.ts",
@@ -1000,6 +1084,7 @@
         "../util/projectfilters.ts"
       ],
       "../controllers/reaction/index.ts": [
+        "../controllers/activity/index.ts",
         "../controllers/member/index.ts",
         "../controllers/note/index.ts",
         "../models/board.ts",
@@ -1015,9 +1100,9 @@
         "../util/sectionfilters.ts"
       ],
       "../controllers/section/index.ts": [
+        "../controllers/activity/index.ts",
         "../controllers/note/index.ts",
         "../models/section.ts",
-        "../models/sectionactivity.ts",
         "../node_modules/@types/express/index.d.ts",
         "../node_modules/mongoose/index.d.ts",
         "../util/constants.ts",
@@ -1074,19 +1159,25 @@
         "../server.ts",
         "../socket/index.ts"
       ],
+      "../models/action.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/actionitem.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/activity.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
       "../models/board.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
-      "../models/boardactivity.ts": [
+      "../models/invite.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/member.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/note.ts": [
-        "../node_modules/mongoose/index.d.ts"
-      ],
-      "../models/noteactivity.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/project.ts": [
@@ -1096,9 +1187,6 @@
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/section.ts": [
-        "../node_modules/mongoose/index.d.ts"
-      ],
-      "../models/sectionactivity.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/securityquestion.ts": [
@@ -1499,9 +1587,13 @@
         "../node_modules/ssf/types/index.d.ts"
       ],
       "../router/index.ts": [
+        "../controllers/action/index.ts",
+        "../controllers/actionitem/index.ts",
+        "../controllers/activity/index.ts",
         "../controllers/auth/index.ts",
         "../controllers/board/index.ts",
         "../controllers/feedback/index.ts",
+        "../controllers/invite/index.ts",
         "../controllers/member/index.ts",
         "../controllers/note/index.ts",
         "../controllers/project/index.ts",
@@ -1532,14 +1624,24 @@
       "../services/index.ts": [
         "../services/email/index.ts"
       ],
+      "../socket/action/index.ts": [
+        "../controllers/action/index.ts",
+        "../node_modules/socket.io/dist/index.d.ts",
+        "../util/index.ts"
+      ],
+      "../socket/actionitem/index.ts": [
+        "../controllers/actionitem/index.ts",
+        "../node_modules/socket.io/dist/index.d.ts"
+      ],
       "../socket/board/index.ts": [
         "../controllers/board/index.ts",
         "../node_modules/socket.io/dist/index.d.ts",
         "../util/index.ts"
       ],
       "../socket/index.ts": [
-        "../controllers/section/index.ts",
         "../node_modules/socket.io/dist/index.d.ts",
+        "../socket/action/index.ts",
+        "../socket/actionitem/index.ts",
         "../socket/board/index.ts",
         "../socket/member/index.ts",
         "../socket/note/index.ts",
@@ -1549,10 +1651,12 @@
       ],
       "../socket/member/index.ts": [
         "../controllers/member/index.ts",
-        "../node_modules/socket.io/dist/index.d.ts"
+        "../node_modules/socket.io/dist/index.d.ts",
+        "../util/index.ts"
       ],
       "../socket/note/index.ts": [
         "../controllers/note/index.ts",
+        "../controllers/section/index.ts",
         "../node_modules/socket.io/dist/index.d.ts"
       ],
       "../socket/project/index.ts": [
@@ -1597,6 +1701,15 @@
       "../types/user.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
+      "../util/actionfilters.ts": [
+        "../models/action.ts",
+        "../util/actionitemfilters.ts"
+      ],
+      "../util/actionitemfilters.ts": [
+        "../models/action.ts",
+        "../models/actionitem.ts",
+        "../models/member.ts"
+      ],
       "../util/boardfilters.ts": [
         "../models/board.ts",
         "../models/project.ts",
@@ -1639,9 +1752,22 @@
         "../models/member.ts",
         "../models/team.ts",
         "../models/teammember.ts"
+      ],
+      "../util/userfilters.ts": [
+        "../models/user.ts"
       ]
     },
     "exportedModulesMap": {
+      "../controllers/action/index.ts": [
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../controllers/actionitem/index.ts": [
+        "../node_modules/@types/express/index.d.ts"
+      ],
+      "../controllers/activity/index.ts": [
+        "../node_modules/@types/express/index.d.ts"
+      ],
       "../controllers/auth/index.ts": [
         "../node_modules/@types/express/index.d.ts"
       ],
@@ -1650,6 +1776,10 @@
       ],
       "../controllers/feedback/index.ts": [
         "../node_modules/@types/express/index.d.ts"
+      ],
+      "../controllers/invite/index.ts": [
+        "../node_modules/@types/express/index.d.ts",
+        "../node_modules/mongoose/index.d.ts"
       ],
       "../controllers/member/index.ts": [
         "../node_modules/@types/express/index.d.ts",
@@ -1680,19 +1810,25 @@
       "../controllers/user/index.ts": [
         "../node_modules/@types/express/index.d.ts"
       ],
+      "../models/action.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/actionitem.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
+      "../models/activity.ts": [
+        "../node_modules/mongoose/index.d.ts"
+      ],
       "../models/board.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
-      "../models/boardactivity.ts": [
+      "../models/invite.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/member.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/note.ts": [
-        "../node_modules/mongoose/index.d.ts"
-      ],
-      "../models/noteactivity.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/project.ts": [
@@ -1702,9 +1838,6 @@
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/section.ts": [
-        "../node_modules/mongoose/index.d.ts"
-      ],
-      "../models/sectionactivity.ts": [
         "../node_modules/mongoose/index.d.ts"
       ],
       "../models/securityquestion.ts": [
@@ -2110,6 +2243,12 @@
       "../services/index.ts": [
         "../services/email/index.ts"
       ],
+      "../socket/action/index.ts": [
+        "../node_modules/socket.io/dist/index.d.ts"
+      ],
+      "../socket/actionitem/index.ts": [
+        "../node_modules/socket.io/dist/index.d.ts"
+      ],
       "../socket/board/index.ts": [
         "../node_modules/socket.io/dist/index.d.ts"
       ],
@@ -2163,9 +2302,13 @@
       ]
     },
     "semanticDiagnosticsPerFile": [
+      "../controllers/action/index.ts",
+      "../controllers/actionitem/index.ts",
+      "../controllers/activity/index.ts",
       "../controllers/auth/index.ts",
       "../controllers/board/index.ts",
       "../controllers/feedback/index.ts",
+      "../controllers/invite/index.ts",
       "../controllers/member/index.ts",
       "../controllers/note/index.ts",
       "../controllers/project/index.ts",
@@ -2176,16 +2319,17 @@
       "../controllers/team/index.ts",
       "../controllers/user/index.ts",
       "../index.ts",
+      "../models/action.ts",
+      "../models/actionitem.ts",
+      "../models/activity.ts",
       "../models/board.ts",
-      "../models/boardactivity.ts",
       "../models/feedback.ts",
+      "../models/invite.ts",
       "../models/member.ts",
       "../models/note.ts",
-      "../models/noteactivity.ts",
       "../models/project.ts",
       "../models/reaction.ts",
       "../models/section.ts",
-      "../models/sectionactivity.ts",
       "../models/securityquestion.ts",
       "../models/securityquestionanswer.ts",
       "../models/team.ts",
@@ -2315,6 +2459,8 @@
       "../server.ts",
       "../services/email/index.ts",
       "../services/index.ts",
+      "../socket/action/index.ts",
+      "../socket/actionitem/index.ts",
       "../socket/board/index.ts",
       "../socket/index.ts",
       "../socket/member/index.ts",
@@ -2329,6 +2475,8 @@
       "../types/note.ts",
       "../types/section.ts",
       "../types/user.ts",
+      "../util/actionfilters.ts",
+      "../util/actionitemfilters.ts",
       "../util/boardfilters.ts",
       "../util/constants.ts",
       "../util/index.ts",
@@ -2339,7 +2487,8 @@
       "../util/reactionfilters.ts",
       "../util/sectionfilters.ts",
       "../util/teamfilters.ts",
-      "../util/teammemberfilters.ts"
+      "../util/teammemberfilters.ts",
+      "../util/userfilters.ts"
     ]
   },
   "version": "3.9.7"

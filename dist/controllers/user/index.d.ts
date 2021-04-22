@@ -13,5 +13,6 @@ export declare function addDepartmentToUser(departmentId: string, userId: string
 export declare function addTeamToUser(teamId: string, userId: string): Promise<any>;
 export declare function addMemberToUser(memberId: string, userId: string): Promise<any>;
 export declare function addProjectToUser(projectId: string, userId: string): Promise<any>;
-export declare function updateUser(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>;
+export declare function updateEmail(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>;
 export declare function updatePassword(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>;
+export declare function updateName(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>;

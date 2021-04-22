@@ -31,8 +31,9 @@ import {
   getUserDetails,
   getUserSummary,
   getUsers,
+  updateEmail,
+  updateName,
   updatePassword,
-  updateUser,
 } from "../controllers/user";
 import {
   deleteBoard,
@@ -61,6 +62,10 @@ import {
 } from "../controllers/reaction";
 import { logout, refreshToken } from "../controllers/auth";
 
+import { getActionByBoardId } from "../controllers/action";
+import { getActionItemsByActionId } from "../controllers/actionItem";
+import { getActivities } from "../controllers/activity";
+import { getInvitedMembers } from "../controllers/invite";
 import { getNotesBySectionId } from "../controllers/note";
 import { getSectionsByBoardId } from "../controllers/section";
 
@@ -77,7 +82,11 @@ export default function(app: Application) {
     memberRoutes = express.Router(),
     reactionRoutes = express.Router(),
     securityQuestionRoutes = express.Router(),
-    feedbackRoutes = express.Router();
+    actionRoutes = express.Router(),
+    actionItemRoutes = express.Router(),
+    feedbackRoutes = express.Router(),
+    inviteRoutes = express.Router(),
+    activityRoutes = express.Router();
 
   //= ========================
   // Authentication Routes
@@ -127,7 +136,10 @@ export default function(app: Application) {
   userRoutes.get("/:id", authenticateJWT, getUserDetails);
 
   // Update user route
-  userRoutes.put("/", authenticateJWT, updateUser);
+  userRoutes.put("/email", authenticateJWT, updateEmail);
+
+  // Update user route
+  userRoutes.put("/name", authenticateJWT, updateName);
 
   // Update password route
   userRoutes.put("/update-password", authenticateJWT, updatePassword);
@@ -244,6 +256,26 @@ export default function(app: Application) {
   noteRoutes.get("/:sectionId", getNotesBySectionId);
 
   //= ========================
+  // Action Routes
+  //= ========================
+
+  // Action routes
+  apiRoutes.use("/action", actionRoutes);
+
+  // Action details route
+  actionRoutes.get("/:boardId", getActionByBoardId);
+
+  //= ========================
+  // Action item Routes
+  //= ========================
+
+  // Set action item routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/action-item", actionItemRoutes);
+
+  // Action item details route
+  actionItemRoutes.get("/:actionId", getActionItemsByActionId);
+
+  //= ========================
   // Reaction Routes
   //= ========================
 
@@ -278,6 +310,26 @@ export default function(app: Application) {
 
   // Get Feedbacks
   feedbackRoutes.get("/", getFeedbacks);
+
+  //= ========================
+  // Activity Routes
+  //= ========================
+
+  // Set user routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/activity", activityRoutes);
+
+  // Get Activities
+  activityRoutes.get("/", getActivities);
+
+  //= ========================
+  // Invite Routes
+  //= ========================
+
+  // Set invite routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/invite", inviteRoutes);
+
+  // Get Inivted members
+  inviteRoutes.get("/", authenticateJWT, getInvitedMembers);
 
   //= ========================
   // Security Questions Routes

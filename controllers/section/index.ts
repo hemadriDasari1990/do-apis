@@ -1,10 +1,21 @@
+import {
+  RESOURCE_ALREADY_EXISTS,
+  SECTION_COUNT_EXCEEDS,
+} from "../../util/constants";
 import { Request, Response } from "express";
-import { noteAddFields, notesLookup } from "../../util/noteFilters";
+import {
+  findNotesBySectionAndDelete,
+  getNoteDetails,
+  updateNoteSectionId,
+} from "../note";
+import {
+  noteAddFields,
+  notesLookup,
+  sectionNoteAddFields,
+} from "../../util/noteFilters";
 
-import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Section from "../../models/section";
-import SectionActivity from "../../models/sectionActivity";
-import { findNotesBySectionAndDelete } from "../note";
+import { createActivity } from "../activity";
 import mongoose from "mongoose";
 
 export async function saveSection(input: any) {
@@ -23,11 +34,19 @@ export async function updateSection(payload: {
   [Key: string]: any;
 }): Promise<any> {
   try {
+    const sectionCount: number = await Section.find({
+      boardId: payload?.boardId,
+    }).count();
+    if (sectionCount > 10) {
+      return {
+        errorId: SECTION_COUNT_EXCEEDS,
+        message: `Max no of sections allowed are only 10`,
+      };
+    }
     const query = { _id: mongoose.Types.ObjectId(payload?.sectionId) },
       update = {
         $set: {
           title: payload?.title,
-          description: payload?.description,
           boardId: payload?.boardId,
         },
       },
@@ -42,7 +61,30 @@ export async function updateSection(payload: {
       };
     }
     const updated: any = await Section.findOneAndUpdate(query, update, options);
-    await createSectionActivity(updated._id, "update", payload?.user?._id);
+    if (payload?.sectionId) {
+      await createActivity({
+        userId: payload?.user?._id,
+        boardId: payload?.boardId,
+        title: `section`,
+        primaryAction: "from",
+        primaryTitle: payload?.previousTitle,
+        secondaryAction: "to",
+        secondaryTitle: updated?.title,
+        type: "section",
+        action: "update",
+      });
+    } else {
+      await createActivity({
+        userId: payload?.user?._id,
+        boardId: payload?.boardId,
+        title: `${updated?.title}`,
+        primaryAction: "as",
+        primaryTitle: "section",
+        type: "section",
+        action: "create",
+      });
+    }
+
     return updated;
   } catch (err) {
     return err;
@@ -57,24 +99,6 @@ export async function getSection(query: { [Key: string]: any }): Promise<any> {
       noteAddFields,
     ]);
     return sections ? sections[0] : null;
-  } catch (err) {
-    throw err || err.message;
-  }
-}
-
-export async function createSectionActivity(
-  sectionId: string,
-  action: string,
-  userId?: string
-): Promise<any> {
-  try {
-    const activity = await new SectionActivity({
-      userId: userId,
-      sectionId: sectionId,
-      type: "section",
-      action: action,
-    });
-    await activity.save();
   } catch (err) {
     throw err || err.message;
   }
@@ -96,12 +120,28 @@ export async function addAndRemoveNoteFromSection(data: {
   [Key: string]: any;
 }): Promise<any> {
   try {
-    await addNoteToSection(data.noteId, data.destinationSectionId);
-    const updated = await removeNoteFromSection(
+    const destinationSectionUpdated: any = await addNoteToSection(
+      data.noteId,
+      data.destinationSectionId
+    );
+    const sourceSectionUpdated: any = await removeNoteFromSection(
       data.noteId,
       data.sourceSectionId
     );
-    return updated;
+    await updateNoteSectionId(data.noteId, data.destinationSectionId);
+    const noteDetails = await getNoteDetails(data.noteId);
+    await createActivity({
+      userId: data?.userId,
+      boardId: data?.boardId,
+      title: `${noteDetails?.description}`,
+      primaryAction: "from",
+      primaryTitle: `${sourceSectionUpdated?.title}`,
+      secondaryAction: "to",
+      secondaryTitle: `${destinationSectionUpdated?.title}`,
+      type: "note",
+      action: "move",
+    });
+    return noteDetails;
   } catch (err) {
     throw err || err.message;
   }
@@ -113,7 +153,7 @@ async function getSections(boardId: string): Promise<any> {
     const sections = await Section.aggregate([
       { $match: query },
       notesLookup,
-      noteAddFields,
+      sectionNoteAddFields,
     ]);
     // socket.emit("sections-list", sections);
     return sections;
@@ -124,14 +164,21 @@ async function getSections(boardId: string): Promise<any> {
 
 export async function deleteSection(
   sectionId: string,
-  userId: string
+  userId: string,
+  boardId: string
 ): Promise<any> {
   try {
     const deleted: any = deleteSectionAndNotes(sectionId);
     if (!deleted) {
       return deleted;
     }
-    await createSectionActivity(deleted._id, "delete", userId);
+    await createActivity({
+      userId: userId,
+      boardId: boardId,
+      title: "section",
+      type: "section",
+      action: "delete",
+    });
     return { deleted: true, _id: sectionId };
   } catch (err) {
     return {
@@ -163,8 +210,8 @@ export async function removeNoteFromSection(
     }
     const updated = await Section.findByIdAndUpdate(
       sectionId,
-      { $pull: { notes: noteId } }
-      // { new: true, useFindAndModify: false }
+      { $pull: { notes: noteId } },
+      { new: true, useFindAndModify: false }
     );
     return updated;
   } catch (err) {

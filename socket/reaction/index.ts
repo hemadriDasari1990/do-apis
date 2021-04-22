@@ -11,6 +11,6 @@ export default function reaction(io: socketio.Server, socket: Socket) {
       //   ...decodeToken(query?.token),
     });
 
-    io.emit(`add-reaction-response-${payload?.noteId}`, reactionUpdated);
+    io.emit(`add-reaction-response-${payload?.sectionId}`, reactionUpdated);
   });
 }

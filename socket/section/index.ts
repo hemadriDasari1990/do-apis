@@ -12,6 +12,7 @@ export default function section(io: socketio.Server, socket: Socket) {
         user: decodeToken(query?.token),
       });
       io.emit(`update-section-response`, updated);
+      io.emit("plus-total-section-response", updated);
     } catch (err) {
       return err;
     }
@@ -23,7 +24,6 @@ export default function section(io: socketio.Server, socket: Socket) {
       verifyToken(query?.token, io);
       const created = await updateSection({
         ...payload,
-        //   ...decodeToken(query?.token),
       });
       io.emit(`create-section-response`, created);
     } catch (err) {
@@ -31,13 +31,18 @@ export default function section(io: socketio.Server, socket: Socket) {
     }
   });
 
-  socket.on("delete-section", async (sectionId: string) => {
+  socket.on("delete-section", async (payload: { [Key: string]: any }) => {
     try {
       const query: any = socket.handshake.query;
       verifyToken(query?.token, io);
       const user: any = decodeToken(query?.token);
-      const deleted = await deleteSection(sectionId, user?._id);
+      const deleted = await deleteSection(
+        payload.id,
+        user?._id,
+        payload.boardId
+      );
       io.emit(`delete-section-response`, deleted);
+      io.emit("minus-total-section-response", deleted);
     } catch (err) {
       return err;
     }
