@@ -8,5 +8,4 @@ export default interface UserInstance extends Document {
   isActive: boolean;
   emailVerified: boolean;
   token: string;
-  departments?: Array<{ [Key: string]: any }>;
 }

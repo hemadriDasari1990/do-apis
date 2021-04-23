@@ -572,7 +572,7 @@
         "affectsGlobalScope": false
       },
       "../models/note.ts": {
-        "version": "f85103629958a3ae449a522d25efdc106a458e7a4b458850e59b65b4e10ea92f",
+        "version": "9e6e71cbf46c85d9bc00871f576930548484a14d442ce4d76e2ee460c209a624",
         "signature": "43f5eadb58b1e456373b92492b189776ba135be4eac124ea4c8cead53ac3d2bf",
         "affectsGlobalScope": false
       },
@@ -607,8 +607,8 @@
         "affectsGlobalScope": false
       },
       "../types/user.ts": {
-        "version": "b1a3877ff9c458da22dbe352a0127f8eb4c5907ea1ce27740b48e7d182578c66",
-        "signature": "60198ef18749ca1d5dd992186b3b826e786f2076f45f58eb7fe18cf5249f9320",
+        "version": "f88c1c2cdeedb9d6a07f6397a171a74756b8d66bc9b8c4bd57f2dcd48d0194cf",
+        "signature": "2fba682d0a771de07414aa05cc558681aad62f08987b67745655e93c4dfdd0d4",
         "affectsGlobalScope": false
       },
       "../node_modules/@types/bcrypt/index.d.ts": {
@@ -682,7 +682,7 @@
         "affectsGlobalScope": false
       },
       "../controllers/user/index.ts": {
-        "version": "5b31f199793a46e0a1410cf8130eef526216a77cce384eaefa580252c8879d7a",
+        "version": "4714a8e1c421d045e552d064cae6cb22a8afa8bbbcacd51838d0b051ef78207b",
         "signature": "a89293f93016e05987447dd6a8330d0b252049760feccaa930f51e0b312fbccc",
         "affectsGlobalScope": false
       },
@@ -732,7 +732,7 @@
         "affectsGlobalScope": false
       },
       "../controllers/note/index.ts": {
-        "version": "d86c1f12e64b1421a9e79148a6e81eac337b9a92e3ee89c76f3befe47eb18d03",
+        "version": "64a126f1c1d055b8d77085581c4466bb89d55c09bc626427129c636b3c2b52c9",
         "signature": "8dfc36ef1232b83989b22fc01d754dd1c92ac36c6cb062993b1b54cb32d3029d",
         "affectsGlobalScope": false
       },

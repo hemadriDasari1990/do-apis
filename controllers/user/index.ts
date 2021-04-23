@@ -89,7 +89,6 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       newOrg,
     });
   } catch (err) {
-    console.log("errr", err);
     return res.status(500).json(err || err.message);
   }
 }

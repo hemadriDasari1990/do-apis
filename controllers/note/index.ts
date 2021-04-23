@@ -40,8 +40,8 @@ export async function updateNote(payload: {
           createdById: creator ? creator?._id : payload.createdById || null,
           updatedById: updator ? updator?._id : payload.updatedById || null,
           isAnnonymous: payload.isAnnonymous || false,
-          position: payload?.position,
         },
+        $inc: { position: 1 }, // auto increment position when creating new note
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated: any = await Note.findOneAndUpdate(query, update, options);

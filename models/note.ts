@@ -36,6 +36,7 @@ const NoteSchema = new Schema(
     },
     position: {
       type: Number,
+      default: 0,
     },
     reactions: [{ type: Schema.Types.ObjectId, ref: "Reaction" }],
     createdBy: { type: Schema.Types.ObjectId, ref: "Member" },
@@ -46,6 +47,6 @@ const NoteSchema = new Schema(
   }
 );
 
-// NoteSchema.index({ sectionId: 1, position: 1 }, { unique: true });
+NoteSchema.index({ sectionId: 1, position: 1 }, { unique: true });
 
 export default mongoose.model("Note", NoteSchema);
