@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 
-import Invite from "../../models/Invite";
+import Invite from "../../models/invite";
 import { getPagination } from "../../util";
 import mongoose from "mongoose";
 import { teamLookup } from "../../util/teamFilters";
