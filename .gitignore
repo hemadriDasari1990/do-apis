@@ -16,3 +16,9 @@ package-lock.json
 # Optional eslint cache
 .eslintcache
 
+dist
+
+/**/*/dist
+
+/**/*/node_modules
+
