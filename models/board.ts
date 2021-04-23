@@ -10,11 +10,13 @@ const BoardSchema = new Schema(
       ref: "Project",
       default: null,
       index: true,
+      required: true,
     },
     title: {
       type: String,
       trim: true,
       minlength: 1,
+      required: true,
     },
     description: {
       type: String,

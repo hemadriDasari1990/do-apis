@@ -51,7 +51,10 @@ export async function checkIfNewBoardExists(projectId: string): Promise<any> {
       return;
     }
     const board = await getBoard({
-      $and: [{ status: "new" }, { projectId: projectId }],
+      $and: [
+        { $or: [{ status: "new" }, { status: "inprogress" }] },
+        { projectId: projectId },
+      ],
     });
     return board;
   } catch (err) {
@@ -92,7 +95,7 @@ export async function updateBoard(
       if (boardExists?._id) {
         return res.status(409).json({
           errorId: RESOURCE_ALREADY_EXISTS,
-          message: `Sorry you can't create another one as there is already one i.e., ${boardExists?.title} in new state.`,
+          message: `Sorry you can't create another one as there is already one i.e., ${boardExists?.title} in ${boardExists?.status} state.`,
         });
       }
     }
@@ -129,16 +132,19 @@ export async function updateBoard(
           await addSectionToBoard(section?._id, updated._id);
         }, Promise.resolve());
     }
-    if (req.body.isDefaultBoard && !req.body.noOfSections) {
-      (await defaultSections?.length) &&
-        defaultSections.reduce(async (promise, defaultSectionTitle) => {
-          await promise;
-          const section = await saveSection({
-            boardId: updated._id,
-            title: defaultSectionTitle,
-          });
-          await addSectionToBoard(section?._id, updated._id);
-        }, Promise.resolve());
+    if (
+      req.body.isDefaultBoard &&
+      !req.body.noOfSections &&
+      defaultSections?.length
+    ) {
+      await defaultSections.reduce(async (promise, defaultSectionTitle) => {
+        await promise;
+        const section = await saveSection({
+          boardId: updated._id,
+          title: defaultSectionTitle,
+        });
+        await addSectionToBoard(section?._id, updated._id);
+      }, Promise.resolve());
     }
     if (req.body.teams?.length) {
       await addTeamsToBoad(req.body.teams, updated?._id);
