@@ -1,7 +1,7 @@
 import Member from "../models/member";
 import { teamMemberTeamsLookup } from "./teamMemberFilters";
 
-const memberLookup = {
+const reactedByLookup = {
   $lookup: {
     from: Member.collection.name,
     let: { reactedBy: "$reactedBy" },
@@ -14,6 +14,21 @@ const memberLookup = {
       teamMemberTeamsLookup,
     ],
     as: "reactedBy",
+  },
+};
+
+const memberLookup = {
+  $lookup: {
+    from: Member.collection.name,
+    let: { memberId: "$memberId" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", "$$memberId"] },
+        },
+      },
+    ],
+    as: "member",
   },
 };
 
@@ -84,6 +99,7 @@ export {
   membersLookup,
   inActiveMemberLookup,
   activeMemberLookup,
-  memberLookup,
+  reactedByLookup,
   memberAddFields,
+  memberLookup,
 };

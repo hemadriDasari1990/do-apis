@@ -8,9 +8,9 @@ import Section from "../../models/section";
 import { createActivity } from "../activity";
 import { getMember } from "../member";
 import { getPagination } from "../../util";
-import { memberLookup } from "../../util/memberFilters";
 import mongoose from "mongoose";
 import { notesLookup } from "../../util/noteFilters";
+import { reactedByLookup } from "../../util/memberFilters";
 import { reactionLookup } from "../../util/reactionFilters";
 import { sectionsLookup } from "../../util/sectionFilters";
 
@@ -179,7 +179,7 @@ export async function getReactions(req: Request, res: Response): Promise<any> {
           { $sort: { _id: -1 } },
           { $skip: offset },
           { $limit: limit },
-          memberLookup,
+          reactedByLookup,
           {
             $unwind: {
               path: "$reactedBy",
@@ -201,7 +201,7 @@ export async function getReaction(query: { [Key: string]: any }): Promise<any> {
   try {
     const reaction = await Reaction.aggregate([
       { $match: query },
-      memberLookup,
+      reactedByLookup,
       {
         $unwind: {
           path: "$reactedBy",

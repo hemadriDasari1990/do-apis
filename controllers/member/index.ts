@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { getPagination, getUser } from "../../util";
 import {
   teamMemberTeamsAddFields,
   teamMemberTeamsLookup,
@@ -6,10 +7,12 @@ import {
 
 import EmailService from "../../services/email";
 import Member from "../../models/member";
+import Token from "../../models/token";
+import { USER_NOT_FOUND } from "../../util/constants";
 import { addMemberToUser } from "../user";
 import config from "config";
+import crypto from "crypto";
 import { getBoard } from "../board";
-import { getPagination } from "../../util";
 import mongoose from "mongoose";
 
 export async function updateMember(
@@ -18,6 +21,13 @@ export async function updateMember(
   next: NextFunction
 ): Promise<any> {
   try {
+    const user = getUser(req.headers.authorization as string);
+    if (!user?._id) {
+      return res.status(500).json({
+        errorId: USER_NOT_FOUND,
+        message: "Invalid user",
+      });
+    }
     const query = {
         _id: mongoose.Types.ObjectId(req.body.memberId),
       },
@@ -25,8 +35,9 @@ export async function updateMember(
         $set: {
           name: req.body.name,
           email: req.body.email,
-          userId: req.body.userId,
+          userId: user._id,
           status: req.body.status || "active",
+          avatarId: req.body.avatarId,
         },
       },
       options = {
@@ -41,6 +52,10 @@ export async function updateMember(
       return next(updated);
     }
     await addMemberToUser(updated?._id, req.body.userId);
+    /* Send email notification to confirm when creating new member */
+    if (!req.body.memberId) {
+      await sendInviteToNewMember(user, updated);
+    }
     return res.status(200).send(updated);
   } catch (err) {
     return res.status(500).send(err || err.message);
@@ -264,14 +279,48 @@ export async function sendInviteToMember(
         url: config.get("url"),
         invite_link: `${config.get("url")}/board/${board?._id}?email=${
           receiver?.email
-        }&name=${receiver?.name}`,
+        }`,
         name: receiver?.name,
         boardName: board?.title,
         projectName: board?.project?.title,
         senderName: sender?.name,
       },
       receiver.email,
-      `You have been invited to join retrospective board ${board?.title}`
+      `You are invited to join a retrospective board ${board?.title}`
+    );
+    return sent;
+  } catch (err) {
+    throw err | err.message;
+  }
+}
+
+/* Send invite to new member when created */
+export async function sendInviteToNewMember(
+  sender: { [Key: string]: any },
+  receiver: { [Key: string]: any }
+) {
+  try {
+    if (!sender || !receiver) {
+      return;
+    }
+    const emailService = await new EmailService();
+
+    const token = new Token({
+      memberId: receiver._id,
+      token: crypto.randomBytes(16).toString("hex"),
+    });
+    const newToken: any = await token.save();
+    //@TODO - Send Email Activation Link
+    const sent = await emailService.sendEmail(
+      "/templates/join-invitation.ejs",
+      {
+        url: config.get("url"),
+        confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
+        name: receiver?.name,
+        senderName: sender?.name,
+      },
+      receiver?.email,
+      "Cofirm your email"
     );
     return sent;
   } catch (err) {

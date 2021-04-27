@@ -7,19 +7,20 @@ import {
   TOKEN_EXPIRED,
   TOKEN_MISSING,
   UNAUTHORIZED,
+  USER_NOT_FOUND,
   VERIFIED,
 } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 
 import EmailService from "../../services/email";
-import Member from "../../models/member";
 import Token from "../../models/token";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import config from "config";
 import crypto from "crypto";
+import { getMember } from "../member";
 import { getToken } from "../../util";
-import { addMemberToUser, getUserByEmail } from "../user";
+import { getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { socket } from "../../index";
@@ -201,24 +202,25 @@ export async function forgotPassword(
         .json({ errorId: REQUIRED, message: "Email is required" });
     }
     const emailService = await new EmailService();
-    const user: any = await User.findOne({
-      email: req.body.email,
+    const member: any = await getMember({
+      email: req.body.email?.trim(),
     });
-    if (!user) {
+
+    if (!member) {
       return res.status(409).json({
-        errorId: NOT_FOUND,
+        errorId: USER_NOT_FOUND,
         message: "Email does not exist! Please create account",
       });
     }
 
     const token: any = new Token({
-      userId: user._id,
+      memberId: member._id,
       token: crypto.randomBytes(16).toString("hex"),
       createdAt: Date.now(),
     });
     await token.save();
     await Token.find({
-      userId: user._id,
+      memberId: member._id,
       token: { $ne: token?.token },
     })
       .remove()
@@ -229,7 +231,7 @@ export async function forgotPassword(
       {
         url: config.get("url"),
         confirm_link: `${config.get("url")}/reset-password/${token?.token}`,
-        name: user.name,
+        name: member.name,
       },
       req.body.email,
       "Resetting your letsdoretro password"
@@ -270,12 +272,12 @@ export async function validateForgotPassword(
         message: "Password reset token is invalid or has expired",
       });
     }
-    const user: any = await User.findOne({
-      _id: token.userId,
+    const member: any = await getMember({
+      _id: token.memberId,
     });
-    if (user) {
+    if (member) {
       return res.status(200).json({
-        user: { _id: user._id },
+        user: { _id: member?.userId },
         message: "Token verified successfully. Please set new password",
       });
     }
@@ -311,22 +313,27 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
           "We are unable to find a valid token. Your token my have expired.",
       });
     }
-    const user: any = await User.findOne({
-      _id: token.userId,
+    const member: any = await getMember({
+      _id: token.memberId,
     });
-    if (!user) {
+    if (!member) {
       return res.status(500).send({
-        errorId: NOT_FOUND,
+        errorId: USER_NOT_FOUND,
         message: "We are unable to find a user for this token.",
       });
     }
-    if (user?.isVerified && user.email === user.newEmail) {
+    if (member?.isVerified) {
       return res.status(500).send({
         errorId: ALREADY_VERIFIED,
         message: "This account has already been verified.",
       });
     }
-    const currentEmail = user.email;
+    member.isVerified = true;
+    await member.save();
+
+    const user: any = await User.findOne({
+      _id: member.userId,
+    });
     // Verify and save the user
     user.isVerified = true;
     user.isActive = true;
@@ -338,23 +345,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
         message: "Error while verifying the account",
       });
     }
-    const memberQuery = { email: currentEmail, userId: userUpdated?._id },
-      updateMember = {
-        $set: {
-          name: userUpdated.name,
-          email: userUpdated.email,
-          userId: userUpdated?._id,
-          isVerified: userUpdated.isVerified,
-          isAuthor: true,
-        },
-      },
-      memberOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
-    const updated: any = await Member.findOneAndUpdate(
-      memberQuery,
-      updateMember,
-      memberOptions
-    );
-    await addMemberToUser(updated?._id, userUpdated?._id);
+
     await emailService.sendEmail(
       "/templates/welcome.ejs",
       {
@@ -365,9 +356,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
       user.email,
       "Welcome to letsdoretro.com"
     );
-    return res
-      .status(200)
-      .json({ message: "The account has been verified. Please login!" });
+    return res.status(200).json({ message: "The account has been verified" });
   } catch (err) {
     return res
       .status(500)
@@ -391,37 +380,38 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
         .json({ errorId: NOT_FOUND, message: "Email address is required" });
     }
     const emailService = await new EmailService();
-    const user: any = await User.findOne({
-      email: req.body.email,
+    const member: any = await getMember({
+      email: req.body.email?.trim(),
     });
-    if (!user) {
+    if (!member) {
       return res.status(500).json({
-        errorId: NOT_FOUND,
+        errorId: USER_NOT_FOUND,
         message: "We are unable to find a user with that email.",
       });
     }
-    if (user.isVerified)
+    if (member.isVerified)
       return res.status(500).json({
         errorId: ALREADY_VERIFIED,
         message: "This account has already been verified. Please log in.",
       });
-    const token = new Token({
-      userId: user._id,
+    const token: any = new Token({
+      memberId: member._id,
       token: crypto.randomBytes(16).toString("hex"),
     });
     const newToken: any = await token.save();
+
     await emailService.sendEmail(
       "/templates/account-confirmation.ejs",
       {
         url: config.get("url"),
         confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
-        name: user.name,
+        name: member.name,
       },
       req.body.email,
       "Please confirm your email"
     );
     return res.status(200).json({
-      message: "A verification email has been sent to " + user.email + ".",
+      message: "A verification email has been sent to " + member.email + ".",
     });
   } catch (err) {
     return res

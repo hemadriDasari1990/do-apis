@@ -31,6 +31,7 @@ import {
   getUserDetails,
   getUserSummary,
   getUsers,
+  updateAvatar,
   updateEmail,
   updateName,
   updatePassword,
@@ -66,6 +67,7 @@ import { getActionByBoardId } from "../controllers/action";
 import { getActionItemsByActionId } from "../controllers/actionItem";
 import { getActivities } from "../controllers/activity";
 import { getInvitedMembers } from "../controllers/invite";
+import { getJoinedMembers } from "../controllers/join";
 import { getNotesBySectionId } from "../controllers/note";
 import { getSectionsByBoardId } from "../controllers/section";
 
@@ -86,6 +88,7 @@ export default function(app: Application) {
     actionItemRoutes = express.Router(),
     feedbackRoutes = express.Router(),
     inviteRoutes = express.Router(),
+    joinRoutes = express.Router(),
     activityRoutes = express.Router();
 
   //= ========================
@@ -155,6 +158,9 @@ export default function(app: Application) {
 
   // User summary
   userRoutes.get("/:id/summary", authenticateJWT, getUserSummary);
+
+  // Update user Avatar
+  userRoutes.put("/update-avatar", authenticateJWT, updateAvatar);
 
   //= ========================
   // Team Routes
@@ -330,6 +336,16 @@ export default function(app: Application) {
 
   // Get Inivted members
   inviteRoutes.get("/", authenticateJWT, getInvitedMembers);
+
+  //= ========================
+  // Join Routes
+  //= ========================
+
+  // Set invite routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/join", joinRoutes);
+
+  // Get Joined members
+  joinRoutes.get("/", authenticateJWT, getJoinedMembers);
 
   //= ========================
   // Security Questions Routes

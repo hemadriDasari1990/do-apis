@@ -20,16 +20,16 @@ import { teamAddFields, teamsLookup } from "../../util/teamFilters";
 
 import Board from "../../models/board";
 import EmailService from "../../services/email";
+import Member from "../../models/member";
 import Project from "../../models/project";
 import Token from "../../models/token";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import config from "config";
 import crypto from "crypto";
+import { getMember } from "../member";
 import { getUser } from "../../util";
 import mongoose from "mongoose";
-
-// import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
   try {
@@ -64,11 +64,27 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       password: req.body.password,
       isAgreed: req.body.isAgreed,
     });
-    const newOrg = await newUser.save();
-    newOrg.password = undefined;
-
+    const userCreated = await newUser.save();
+    userCreated.password = undefined;
+    /* Create member */
+    const memberQuery = { email: req.body.email, userId: userCreated?._id },
+      updateMember = {
+        $set: {
+          name: userCreated.name,
+          email: userCreated.email,
+          userId: userCreated?._id,
+          isAuthor: true,
+        },
+      },
+      memberOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const updatedMember: any = await Member.findOneAndUpdate(
+      memberQuery,
+      updateMember,
+      memberOptions
+    );
+    await addMemberToUser(updatedMember?._id, userCreated?._id);
     const token = new Token({
-      userId: newUser._id,
+      memberId: updatedMember._id,
       token: crypto.randomBytes(16).toString("hex"),
     });
     const newToken: any = await token.save();
@@ -86,44 +102,10 @@ export async function createUser(req: Request, res: Response): Promise<any> {
     return res.status(200).json({
       message:
         "An email verification link has been sent. Please check your inbox",
-      newOrg,
+      userCreated,
     });
   } catch (err) {
-    return res.status(500).json(err || err.message);
-  }
-}
-
-export async function confirmEmail(req: Request, res: Response): Promise<any> {
-  try {
-    const token: any = await Token.findOne({ token: req.params.token });
-    if (!token) {
-      return res.status(400).send({
-        message:
-          "Your verification link may have expired. Please click on resend for verify your Email.",
-      });
-    }
-    const user: any = await User.findOne({
-      _id: mongoose.Types.ObjectId(token.userId),
-      email: req.params.email,
-    });
-    if (!user) {
-      return res.status(401).send({
-        message: `We are unable to find a user account associated with ${req.params.email} for this verification. Please SignUp!`,
-      });
-    }
-    if (user.isVerified) {
-      return res
-        .status(200)
-        .send("User has been already verified. Please Login");
-    }
-    user.isVerified = true;
-    await user.save();
-    //@TODO - Send successfully verified Email
-    return res
-      .status(200)
-      .send("Your account has been successfully verified. Please login now");
-  } catch (err) {
-    return res.status(500).json(err || err.message);
+    throw err || err.message;
   }
 }
 
@@ -132,21 +114,21 @@ export async function resendActivationLink(
   res: Response
 ): Promise<any> {
   try {
-    const user: any = await User.findOne({
-      email: req.params.email,
+    const member: any = await getMember({
+      email: req.body.email?.trim(),
     });
-    if (!user) {
+    if (!member) {
       return res.status(401).send({
         message: `We are unable to find an user account associated with ${req.body.email}. Make sure your Email is correct!`,
       });
     }
-    if (user.isVerified) {
+    if (member.isVerified) {
       return res
         .status(200)
         .send("User has been already verified. Please Login");
     }
     const token = new Token({
-      userId: user._id,
+      userId: member._id,
       token: crypto.randomBytes(16).toString("hex"),
     });
     await token.save();
@@ -181,6 +163,76 @@ export async function getUserDetails(
     return res.status(401).json({ code: UNAUTHORIZED });
   } catch (err) {
     return res.status(500).send(err || err.message);
+  }
+}
+
+export async function updateAvatar(req: Request, res: Response): Promise<any> {
+  try {
+    const user = getUser(req.headers.authorization as string);
+    if (user?._id) {
+      const userQuery = {
+          _id: mongoose.Types.ObjectId(user?._id),
+        },
+        userUpdate = {
+          $set: {
+            avatarId: req.body.avatarId,
+          },
+        },
+        options = {
+          new: true,
+        };
+      await User.findOneAndUpdate(userQuery, userUpdate, options);
+      const query = {
+          userId: mongoose.Types.ObjectId(user?._id),
+        },
+        update = {
+          $set: {
+            avatarId: req.body.avatarId,
+          },
+        },
+        memberOptions = {
+          new: true,
+        };
+      const updated: any = await Member.findOneAndUpdate(
+        query,
+        update,
+        memberOptions
+      );
+      return res.status(200).send(updated);
+    }
+    const updated: any = await updateMemberAvatar(
+      req.body.email,
+      req.body.userId,
+      req.body.avatarId
+    );
+    return res.status(200).send(updated);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function updateMemberAvatar(
+  email: string,
+  userId: string,
+  avatarId: number
+): Promise<any> {
+  try {
+    const query = {
+        email: email?.trim(),
+        userId: mongoose.Types.ObjectId(userId),
+      },
+      update = {
+        $set: {
+          avatarId: avatarId,
+        },
+      },
+      options = {
+        new: true,
+      };
+    const updated: any = await Member.findOneAndUpdate(query, update, options);
+    return updated;
+  } catch (err) {
+    throw `Error while updating avatar ${err || err.message}`;
   }
 }
 

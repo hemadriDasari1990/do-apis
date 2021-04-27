@@ -1,5 +1,5 @@
 import Reaction from "../models/reaction";
-import { memberLookup } from "./memberFilters";
+import { reactedByLookup } from "./memberFilters";
 
 const reactionLookup = {
   $lookup: {
@@ -14,7 +14,7 @@ const reactionLookup = {
       {
         $sort: { _id: -1 },
       },
-      memberLookup,
+      reactedByLookup,
       {
         $unwind: {
           path: "$reactedBy",
@@ -37,7 +37,7 @@ const reactionPlusOneLookup = {
           type: "plusOne",
         },
       },
-      memberLookup,
+      reactedByLookup,
       {
         $unwind: {
           path: "$reactedBy",
@@ -60,7 +60,7 @@ const reactionHighlightLookup = {
           type: "highlight",
         },
       },
-      memberLookup,
+      reactedByLookup,
       {
         $unwind: {
           path: "$reactedBy",
@@ -83,7 +83,7 @@ const reactionDeserveLookup = {
           type: "deserve",
         },
       },
-      memberLookup,
+      reactedByLookup,
       {
         $unwind: {
           path: "$reactedBy",
@@ -106,7 +106,7 @@ const reactionMinusOneLookup = {
           type: "minusOne",
         },
       },
-      memberLookup,
+      reactedByLookup,
       {
         $unwind: {
           path: "$reactedBy",
@@ -129,7 +129,7 @@ const reactionLoveLookup = {
           type: "love",
         },
       },
-      memberLookup,
+      reactedByLookup,
       {
         $unwind: {
           path: "$reactedBy",

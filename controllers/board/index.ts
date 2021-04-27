@@ -233,12 +233,33 @@ export async function getBoardDetailsLocal(boardId: string): Promise<any> {
           preserveNullAndEmptyArrays: true,
         },
       },
-      teamsLookup,
-      inActiveTeamsLookup,
-      activeTeamsLookup,
-      teamAddFields,
+      // teamsLookup,
+      // inActiveTeamsLookup,
+      // activeTeamsLookup,
+      // teamAddFields,
       sectionsLookup,
       sectionAddFields,
+    ]);
+    return boards ? boards[0] : null;
+  } catch (err) {
+    throw err || err.message;
+  }
+}
+
+export async function getBoardDetailsWithProject(
+  boardId: string
+): Promise<any> {
+  try {
+    const query = { _id: mongoose.Types.ObjectId(boardId) };
+    const boards = await Board.aggregate([
+      { $match: query },
+      projectLookup,
+      {
+        $unwind: {
+          path: "$project",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ]);
     return boards ? boards[0] : null;
   } catch (err) {

@@ -161,10 +161,14 @@ const projectAddFields = {
     totalPublicProjects: {
       $size: { $ifNull: ["$publicProjects", []] },
     },
-    totalBoards: "$projects.totalBoards",
-    totalInProgressBoards: "$projects.totalInProgressBoards",
-    totalNewBoards: "$projects.totalNewBoards",
-    totalCompletedBoards: "$projects.totalCompletedBoards",
+    totalBoards: { $size: { $ifNull: ["$projects.totalBoards", []] } },
+    totalInProgressBoards: {
+      $size: { $ifNull: ["$projects.totalInProgressBoards", []] },
+    },
+    totalNewBoards: { $size: { $ifNull: ["$projects.totalNewBoards", []] } },
+    totalCompletedBoards: {
+      $size: { $ifNull: ["$projects.totalCompletedBoards", []] },
+    },
   },
 };
 
@@ -178,6 +182,14 @@ const projectAddTotalFields = {
     },
     totalPublicProjects: {
       $size: { $ifNull: ["$publicProjects", []] },
+    },
+    totalBoards: { $size: { $ifNull: ["$projects.totalBoards", []] } },
+    totalInProgressBoards: {
+      $size: { $ifNull: ["$projects.totalInProgressBoards", []] },
+    },
+    totalNewBoards: { $size: { $ifNull: ["$projects.totalNewBoards", []] } },
+    totalCompletedBoards: {
+      $size: { $ifNull: ["$projects.totalCompletedBoards", []] },
     },
   },
 };

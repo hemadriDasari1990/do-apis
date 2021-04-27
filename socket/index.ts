@@ -1,6 +1,9 @@
 import socketio, { Socket } from "socket.io";
 
+import action from "./action";
+import actionItem from "./actionItem";
 import board from "./board";
+import join from "./join";
 import member from "./member";
 // import config from "config";
 // import jwt from "jsonwebtoken";
@@ -8,8 +11,6 @@ import note from "./note";
 import project from "./project";
 import reaction from "./reaction";
 import section from "./section";
-import action from "./action";
-import actionItem from "./actionItem";
 
 export default function socketEvents(io: socketio.Server) {
   // io.sockets.use(function(socket: any, next: any) {
@@ -68,6 +69,9 @@ export default function socketEvents(io: socketio.Server) {
 
     /* Member socket events */
     member(io, socket);
+
+    /* Join socket events */
+    join(io, socket);
   });
   io.sockets.on("disconnect", () => {
     console.log("client disconnected");

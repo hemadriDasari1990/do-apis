@@ -39,6 +39,9 @@ const MemberSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    avatarId: {
+      type: Number,
+    },
     teams: [
       {
         type: Schema.Types.ObjectId,

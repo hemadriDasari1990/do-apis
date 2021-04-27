@@ -88,6 +88,12 @@ const BoardSchema = new Schema(
         ref: "Team",
       },
     ],
+    joinedMembers: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Join",
+      },
+    ],
   },
   {
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.

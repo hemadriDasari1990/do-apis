@@ -3,6 +3,8 @@ import bcrypt from "bcrypt";
 import config from "config";
 import mongoose from "mongoose";
 
+delete mongoose.connection.models["User"];
+
 const Schema = mongoose.Schema;
 const UserSchema = new Schema(
   {
@@ -55,6 +57,9 @@ const UserSchema = new Schema(
       enum: ["commercial", "individual"],
       default: "individual",
       index: true,
+    },
+    avatarId: {
+      type: Number,
     },
     projects: [
       {
