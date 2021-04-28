@@ -60,10 +60,11 @@ export async function joinMemberToBoard(payload: {
         boardId: payload?.boardId,
       });
     }
-
     /* Do nothing if member is already joined */
     if (joinedMember?._id) {
-      return { guestName: joinedMember.guestName };
+      joinedMember.newMember = false;
+      joinedMember.avatarId = payload?.avatarId;
+      return joinedMember;
     }
 
     const join = new Join({
