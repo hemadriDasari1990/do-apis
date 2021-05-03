@@ -2,8 +2,6 @@ import {
   ALREADY_VERIFIED,
   INCORRECT_PASSWORD,
   INTERNAL_SERVER_ERROR,
-  NOT_FOUND,
-  REQUIRED,
   TOKEN_EXPIRED,
   TOKEN_MISSING,
   UNAUTHORIZED,
@@ -11,6 +9,7 @@ import {
   VERIFIED,
 } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
+import { getToken, getUser } from "../../util";
 
 import EmailService from "../../services/email";
 import Token from "../../models/token";
@@ -19,7 +18,6 @@ import bcrypt from "bcrypt";
 import config from "config";
 import crypto from "crypto";
 import { getMember } from "../member";
-import { getToken } from "../../util";
 import { getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -48,13 +46,17 @@ export async function authenticateJWT(
     });
   }
   const user: any = await User.findOne({ token: token });
+  /* Unauthorize the request if user not found */
+  if (!user) {
+    return res.status(401).json({ status: "error", code: UNAUTHORIZED });
+  }
   let secret: any;
   if (user?.token) {
     secret = config.get("refreshTokenSecret");
   } else {
     secret = config.get("accessTokenSecret");
   }
-  jwt.verify(token, secret, (err: any, user: any) => {
+  await jwt.verify(token, secret, (err: any, user: any) => {
     if (err) {
       return res.status(401).json({ status: "error", code: UNAUTHORIZED });
     }
@@ -78,40 +80,52 @@ export async function login(req: Request, res: Response): Promise<any> {
     const email: string = req.body.email;
     const password: string = req.body.password;
     const user: { [Key: string]: any } = await getUserByEmail(email);
+
+    /* Check if user is registered */
     if (!user) {
       return res.status(422).json({
         message: "Email is not registered with us. Please create an account",
       });
     }
+    /* Check if user account is verified */
     if (!user?.isVerified) {
       return res.status(422).json({
         message:
           "Your account is not verified yet. Please check your inbox and confirm your email",
       });
     }
-    // Check password
+    // Check if password is valid
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
+    if (!isPasswordValid) {
       return res
         .status(422)
         .json({ errorId: INCORRECT_PASSWORD, message: "Incorrect Password" });
+    }
+
     const payload = {
       _id: user._id,
       name: user.name,
-      description: user.description,
       email: user.email,
       accountType: user.accountType,
     };
 
-    // Sign token
-    const token = await generateToken(payload);
+    // Generate token
+    const token = await generateToken(
+      payload,
+      config.get("accessTokenSecret"),
+      "1hr"
+    );
     if (!token) {
       return res.status(500).json({ message: "Error while logging in" });
     }
+
+    /* Refresh token */
     const refreshToken = await refreshAccessToken(payload);
     if (!refreshToken) {
       return res.status(500).json({ message: "Error while logging in" });
     }
+
+    /* Update the token */
     await User.findByIdAndUpdate(user._id, {
       token: refreshToken,
     });
@@ -174,7 +188,8 @@ export async function refreshToken(req: Request, res: Response): Promise<any> {
  */
 export async function logout(req: Request, res: Response): Promise<any> {
   try {
-    await User.findByIdAndUpdate(req.body.userId, {
+    const user = getUser(req.headers.authorization as string);
+    await User.findByIdAndUpdate(user?._id, {
       token: null,
     });
     return res.status(200).json({ success: "User logged out!" });
@@ -196,11 +211,6 @@ export async function forgotPassword(
   res: Response
 ): Promise<any> {
   try {
-    if (!req.body.email) {
-      return res
-        .status(500)
-        .json({ errorId: REQUIRED, message: "Email is required" });
-    }
     const emailService = await new EmailService();
     const member: any = await getMember({
       email: req.body.email?.trim(),
@@ -258,11 +268,6 @@ export async function validateForgotPassword(
   res: Response
 ): Promise<any> {
   try {
-    if (!req.body.token) {
-      return res
-        .status(500)
-        .json({ errorId: REQUIRED, message: "Token is required" });
-    }
     const token: any = await Token.findOne({
       token: req.body.token,
     });
@@ -296,12 +301,8 @@ export async function validateForgotPassword(
  */
 export async function verifyAccount(req: Request, res: Response): Promise<any> {
   try {
-    if (!req.body.token) {
-      return res
-        .status(500)
-        .json({ errorId: NOT_FOUND, message: "Token is required" });
-    }
     const emailService = await new EmailService();
+    /* Check if token exists */
     const token: any = await Token.findOne({
       token: req.body.token,
     });
@@ -311,6 +312,17 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
         errorId: TOKEN_EXPIRED,
         message:
           "We are unable to find a valid token. Your token my have expired.",
+      });
+    }
+    /* Verify JWT Token */
+    const decodedUser: any = await jwt.verify(
+      token?.token,
+      config.get("accessTokenSecret")
+    );
+    if (!decodedUser?.email || !decodedUser) {
+      return res.status(401).json({
+        errorId: TOKEN_EXPIRED,
+        message: "Sorry the token is expired",
       });
     }
     const member: any = await getMember({
@@ -374,11 +386,6 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
  */
 export async function resendToken(req: Request, res: Response): Promise<any> {
   try {
-    if (!req.body.email) {
-      return res
-        .status(500)
-        .json({ errorId: NOT_FOUND, message: "Email address is required" });
-    }
     const emailService = await new EmailService();
     const member: any = await getMember({
       email: req.body.email?.trim(),
@@ -499,17 +506,17 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
  * @param {Object} payload
  * @returns {String}
  */
-export async function generateToken(payload: {
-  [Key: string]: any;
-}): Promise<string> {
+export async function generateToken(
+  payload: {
+    [Key: string]: any;
+  },
+  secret: string,
+  expiry: string
+): Promise<string> {
   try {
-    const token: string = await jwt.sign(
-      payload,
-      config.get("accessTokenSecret"),
-      {
-        expiresIn: "1hr", // 1 hr
-      }
-    );
+    const token: string = await jwt.sign(payload, secret, {
+      expiresIn: expiry, // 1 hr
+    });
     return token;
   } catch (err) {
     throw err | err.message;

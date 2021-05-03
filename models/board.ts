@@ -12,7 +12,7 @@ const BoardSchema = new Schema(
       index: true,
       required: true,
     },
-    title: {
+    name: {
       type: String,
       trim: true,
       minlength: 1,
@@ -100,12 +100,12 @@ const BoardSchema = new Schema(
   }
 );
 
-BoardSchema.index({ projectId: 1, title: 1 }, { unique: true });
-BoardSchema.index({ projectId: 1, title: 1, sprint: 1 }, { unique: true });
+BoardSchema.index({ projectId: 1, name: 1 }, { unique: true });
+BoardSchema.index({ projectId: 1, name: 1, sprint: 1 }, { unique: true });
 // BoardSchema.index({ "$**": "text" }); // for full text search with $text operator
 BoardSchema.index(
-  { title: "text", sprint: "text" },
-  { weights: { title: 1, sprint: 2 } }
+  { name: "text", sprint: "text" },
+  { weights: { name: 1, sprint: 2 } }
 );
 
 export default mongoose.model("Board", BoardSchema);

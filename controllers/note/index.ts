@@ -10,10 +10,12 @@ import {
 } from "../../util/reactionFilters";
 
 import Note from "../../models/note";
+import { RESOURCE_NOT_FOUND } from "../../util/constants";
 import Section from "../../models/section";
 import { addNoteToSection } from "../section";
 import { createActivity } from "../activity";
 import { findReactionsByNoteAndDelete } from "../reaction";
+import { getBoardDetailsWithProject } from "../board";
 import { getMember } from "../member";
 import mongoose from "mongoose";
 import { sectionLookup } from "../../util/sectionFilters";
@@ -22,16 +24,37 @@ export async function updateNote(payload: {
   [Key: string]: any;
 }): Promise<any> {
   try {
+    const board = await getBoardDetailsWithProject(payload?.boardId);
+    if (!board) {
+      return {
+        errorId: RESOURCE_NOT_FOUND,
+        message: "Board isn't found",
+      };
+    }
+
+    // @TODO - Need a way to capture annonymous people avatar and name
     const creator = payload.createdById
       ? await getMember({
           userId: mongoose.Types.ObjectId(payload.createdById),
         })
+      : !payload.isAnnonymous && payload.email
+      ? await getMember({
+          email: payload.email?.trim(),
+          userId: board?.project?.userId,
+        })
       : null;
+
     const updator = payload.updatedById
       ? await getMember({
           userId: mongoose.Types.ObjectId(payload.updatedById),
         })
+      : !payload.isAnnonymous && payload.email
+      ? await getMember({
+          email: payload.email?.trim(),
+          userId: board?.project?.userId,
+        })
       : null;
+
     const query = { _id: mongoose.Types.ObjectId(payload.noteId) },
       update = {
         $set: {
@@ -58,7 +81,7 @@ export async function updateNote(payload: {
         primaryAction: "to",
         primaryTitle: `${payload.description}`,
         secondaryAction: "under",
-        secondaryTitle: sectionUpdated?.title,
+        secondaryTitle: sectionUpdated?.name,
         type: "note",
         action: "update",
       });
@@ -68,7 +91,7 @@ export async function updateNote(payload: {
         boardId: payload?.boardId,
         title: `${payload.description}`,
         primaryAction: "under",
-        primaryTitle: sectionUpdated?.title,
+        primaryTitle: sectionUpdated?.name,
         type: "note",
         action: "create",
       });
@@ -201,7 +224,7 @@ export async function deleteNote(payload: {
       boardId: payload?.boardId,
       title: `${payload?.description}`,
       primaryAction: "under",
-      primaryTitle: section?.title,
+      primaryTitle: section?.name,
       type: "note",
       action: "delete",
     });

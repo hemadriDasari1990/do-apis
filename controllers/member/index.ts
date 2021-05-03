@@ -1,3 +1,9 @@
+import {
+  JOIN_TOKEN_EXPIRY,
+  MAX_MEMBER_COUNT,
+  MAX_MEMBER_ERROR,
+  VERIFY_TOKEN_EXPIRY,
+} from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 import { getPagination, getUser } from "../../util";
 import {
@@ -8,10 +14,10 @@ import {
 import EmailService from "../../services/email";
 import Member from "../../models/member";
 import Token from "../../models/token";
-import { USER_NOT_FOUND } from "../../util/constants";
 import { addMemberToUser } from "../user";
+import { addOrRemoveMemberFromTeamInternal } from "../team";
 import config from "config";
-import crypto from "crypto";
+import { generateToken } from "../auth";
 import { getBoard } from "../board";
 import mongoose from "mongoose";
 
@@ -22,10 +28,13 @@ export async function updateMember(
 ): Promise<any> {
   try {
     const user = getUser(req.headers.authorization as string);
-    if (!user?._id) {
-      return res.status(500).json({
-        errorId: USER_NOT_FOUND,
-        message: "Invalid user",
+    const count = await Member.find({
+      userId: user?._id,
+    }).count();
+    if (count >= MAX_MEMBER_COUNT) {
+      return res.status(409).json({
+        errorId: MAX_MEMBER_ERROR,
+        message: `You have reached the limit of maximum members ${MAX_MEMBER_COUNT}. Please upgrade your plan.`,
       });
     }
     const query = {
@@ -50,6 +59,15 @@ export async function updateMember(
     const updated: any = await Member.findOneAndUpdate(query, update, options);
     if (!updated) {
       return next(updated);
+    }
+    if (req.body?.teams?.length) {
+      await req.body?.teams.reduce(
+        async (promise: any, team: { [Key: string]: any }) => {
+          await promise;
+          await addOrRemoveMemberFromTeamInternal(team?._id, updated?._id);
+        },
+        Promise.resolve()
+      );
     }
     await addMemberToUser(updated?._id, req.body.userId);
     /* Send email notification to confirm when creating new member */
@@ -273,20 +291,34 @@ export async function sendInviteToMember(
       return;
     }
     const emailService = await new EmailService();
+    // Generate jwt token
+    const jwtToken = await generateToken(
+      {
+        name: receiver.name,
+        email: receiver.email,
+      },
+      config.get("accessTokenSecret"),
+      JOIN_TOKEN_EXPIRY
+    );
+    const token = new Token({
+      memberId: receiver._id,
+      token: jwtToken,
+    });
+    const newToken: any = await token.save();
     const sent = await emailService.sendEmail(
       "/templates/invite.ejs",
       {
         url: config.get("url"),
-        invite_link: `${config.get("url")}/board/${board?._id}?email=${
-          receiver?.email
+        invite_link: `${config.get("url")}/board/${board?._id}/${
+          newToken?.token
         }`,
         name: receiver?.name,
-        boardName: board?.title,
-        projectName: board?.project?.title,
+        boardName: board?.name,
+        projectName: board?.project?.name,
         senderName: sender?.name,
       },
       receiver.email,
-      `You are invited to join a retrospective board ${board?.title}`
+      `You've been invited to join a retrospective session`
     );
     return sent;
   } catch (err) {
@@ -304,10 +336,18 @@ export async function sendInviteToNewMember(
       return;
     }
     const emailService = await new EmailService();
-
+    // Generate jwt token
+    const jwtToken = await generateToken(
+      {
+        name: receiver.name,
+        email: receiver.email,
+      },
+      config.get("accessTokenSecret"),
+      VERIFY_TOKEN_EXPIRY
+    );
     const token = new Token({
       memberId: receiver._id,
-      token: crypto.randomBytes(16).toString("hex"),
+      token: jwtToken,
     });
     const newToken: any = await token.save();
     //@TODO - Send Email Activation Link

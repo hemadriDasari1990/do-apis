@@ -1,3 +1,4 @@
+import { MAX_TEAM_COUNT, MAX_TEAM_ERROR, REQUIRED } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 import {
   addTeamMemberToMember,
@@ -6,19 +7,17 @@ import {
   removeTeamFromMember,
   sendInvitationsToMembers,
 } from "../member";
-import { decodeToken, getPagination, getToken } from "../../util";
+import { decodeToken, getPagination, getToken, getUser } from "../../util";
 import {
   teamMemberMembersAddFields,
   teamMemberMembersLookup,
 } from "../../util/teamMemberFilters";
 
 import Board from "../../models/board";
-import { REQUIRED } from "../../util/constants";
 // import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import Team from "../../models/team";
 import TeamMember from "../../models/teamMember";
 import { addTeamToUser } from "../user";
-import { getBoard } from "../board";
 import { getMemberIds } from "../../util/member";
 import mongoose from "mongoose";
 
@@ -28,22 +27,16 @@ export async function updateTeam(
   next: NextFunction
 ): Promise<any> {
   try {
-    // const update = {
-    //   name: req.body.name,
-    //   description: req.body.description,
-    //   userId: req.body.userId,
-    //   status: req.body.status || "active",
-    // };
-    // const options = { upsert: true, new: true, setDefaultsOnInsert: true };
-    // const team = await getTeam({
-    //   $and: [{ name: req.body.name }, { userId: req.body.userId }],
-    // });
-    // if (team) {
-    //   return res.status(409).json({
-    //     errorId: RESOURCE_ALREADY_EXISTS,
-    //     message: `Team with ${team?.name} already exist. Please choose different name`,
-    //   });
-    // }
+    const user = getUser(req.headers.authorization as string);
+    const count = await Team.find({
+      userId: user?._id,
+    }).count();
+    if (count >= MAX_TEAM_COUNT) {
+      return res.status(409).json({
+        errorId: MAX_TEAM_ERROR,
+        message: `You have reached the limit of maximum teams ${MAX_TEAM_COUNT}. Please upgrade your plan.`,
+      });
+    }
 
     const query = {
         _id: mongoose.Types.ObjectId(req.body.teamId),
@@ -51,8 +44,7 @@ export async function updateTeam(
       update = {
         $set: {
           name: req.body.name,
-          description: req.body.description,
-          userId: req.body.userId,
+          userId: user?._id,
           status: req.body.status || "active",
         },
       },
@@ -68,7 +60,7 @@ export async function updateTeam(
     if (!updated) {
       return next(updated);
     }
-    await addTeamToUser(updated?._id, req.body.userId);
+    await addTeamToUser(updated?._id, user._id);
     return res.status(200).send(updated);
   } catch (err) {
     return res.status(500).send(err || err.message);
@@ -244,49 +236,67 @@ export async function addOrRemoveMemberFromTeam(
   res: Response
 ): Promise<any> {
   try {
+    const updated = await addOrRemoveMemberFromTeamInternal(
+      req.body.teamId,
+      req.body.memberId
+    );
+    return res.status(200).json(updated);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function addOrRemoveMemberFromTeamInternal(
+  teamId: string,
+  memberId: string
+): Promise<any> {
+  try {
+    if (!teamId || !memberId) {
+      return;
+    }
     const query = {
-        teamId: mongoose.Types.ObjectId(req.body.teamId),
-        memberId: mongoose.Types.ObjectId(req.body.memberId),
+        teamId: mongoose.Types.ObjectId(teamId),
+        memberId: mongoose.Types.ObjectId(memberId),
       },
       update = {
         $set: {
-          teamId: req.body.teamId,
-          memberId: req.body.memberId,
+          teamId: teamId,
+          memberId: memberId,
         },
       },
       options = { upsert: true, new: true };
 
     const teamMember = await getTemMember(query);
     const member = await getMember({
-      _id: mongoose.Types.ObjectId(req.body.memberId),
+      _id: mongoose.Types.ObjectId(memberId),
     });
     const team = await getTeam({
-      _id: mongoose.Types.ObjectId(req.body.teamId),
+      _id: mongoose.Types.ObjectId(teamId),
     });
     if (teamMember) {
       await removeTeamMember(teamMember?._id);
       if (member && member.teams?.includes(teamMember?._id)) {
-        await removeTeamFromMember(req.body.memberId, teamMember?._id);
+        await removeTeamFromMember(memberId, teamMember?._id);
       }
       if (team && team.members?.includes(teamMember?._id)) {
-        await removeMemberFromTeam(teamMember?._id, req.body.teamId);
+        await removeMemberFromTeam(teamMember?._id, teamId);
       }
-      return res.status(200).json({ removed: true });
+      return { removed: true };
     }
 
     const teamMemberUpdated = await updateTeamMember(query, update, options);
     if (team && !team.members?.includes(teamMemberUpdated?._id)) {
-      await addTeamMemberToTeam(teamMemberUpdated?._id, req.body.teamId);
+      await addTeamMemberToTeam(teamMemberUpdated?._id, teamId);
     }
     if (member && !member.teams?.includes(teamMemberUpdated?._id)) {
-      await addTeamMemberToMember(teamMemberUpdated?._id, req.body.memberId);
+      await addTeamMemberToMember(teamMemberUpdated?._id, memberId);
     }
     const updatedTeamMember = await getTeamMember({
       _id: mongoose.Types.ObjectId(teamMemberUpdated?._id),
     });
-    return res.status(200).json(updatedTeamMember);
+    return updatedTeamMember;
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    throw err || err.message;
   }
 }
 
@@ -332,33 +342,48 @@ export async function sendInvitationToTeams(req: Request, res: Response) {
     const authHeader: string = req.headers.authorization as string;
     const token = getToken(authHeader);
     const sender: any = decodeToken(token);
-    await teamIds.reduce(async (promise: any, teamId: string) => {
-      await promise;
-      const team: any = await getTeam({
-        _id: mongoose.Types.ObjectId(teamId),
-      });
-      const memberIds = await getMemberIds(team?.members);
-      await sendInvitationsToMembers(memberIds, sender, req.body.boardId);
-    }, Promise.resolve());
-    const board: any = await getBoard({
-      _id: mongoose.Types.ObjectId(req.body.boardId),
-    });
-    const update = {
-      $set: {
-        inviteSent: true,
-        inviteCount: board?.inviteCount + 1,
-      },
-    };
-    const updatedBoard = await Board.findByIdAndUpdate(
-      req.body.boardId,
-      update,
-      { new: true }
+    const updatedBoard = await sendInvitation(
+      teamIds,
+      sender,
+      req.body.boardId
     );
     return res.status(200).json({
       board: updatedBoard,
       inviteSent: true,
       message: `Invitations has been sent to ${teamIds?.length} teams`,
     });
+  } catch (err) {
+    throw new Error("Error while sending invite to teams");
+  }
+}
+
+export async function sendInvitation(
+  teamIds: Array<string>,
+  sender: { [Key: string]: any },
+  boardId: string
+) {
+  try {
+    if (!teamIds || !teamIds?.length || !sender || !boardId) {
+      return;
+    }
+    await teamIds.reduce(async (promise: any, teamId: string) => {
+      await promise;
+      const team: any = await getTeam({
+        _id: mongoose.Types.ObjectId(teamId),
+      });
+      const memberIds = await getMemberIds(team?.members);
+      await sendInvitationsToMembers(memberIds, sender, boardId);
+    }, Promise.resolve());
+    const update = {
+      $set: {
+        inviteSent: true,
+      },
+      $inc: { inviteCount: 1 },
+    };
+    const updatedBoard = await Board.findByIdAndUpdate(boardId, update, {
+      new: true,
+    });
+    return updatedBoard;
   } catch (err) {
     throw new Error("Error while sending invite to teams");
   }

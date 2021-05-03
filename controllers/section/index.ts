@@ -46,18 +46,18 @@ export async function updateSection(payload: {
     const query = { _id: mongoose.Types.ObjectId(payload?.sectionId) },
       update = {
         $set: {
-          title: payload?.title,
+          name: payload?.name,
           boardId: payload?.boardId,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const section = await getSection({
-      $and: [{ title: payload?.title?.trim() }, { boardId: payload?.boardId }],
+      $and: [{ name: payload?.name?.trim() }, { boardId: payload?.boardId }],
     });
     if (section) {
       return {
         errorId: RESOURCE_ALREADY_EXISTS,
-        message: `Section with ${section?.title} already exist. Please choose different name`,
+        message: `Section with ${section?.name} already exist. Please choose different name`,
       };
     }
     const updated: any = await Section.findOneAndUpdate(query, update, options);
@@ -69,7 +69,7 @@ export async function updateSection(payload: {
         primaryAction: "from",
         primaryTitle: payload?.previousTitle,
         secondaryAction: "to",
-        secondaryTitle: updated?.title,
+        secondaryTitle: updated?.name,
         type: "section",
         action: "update",
       });
@@ -77,7 +77,7 @@ export async function updateSection(payload: {
       await createActivity({
         userId: payload?.user?._id,
         boardId: payload?.boardId,
-        title: `${updated?.title}`,
+        title: `${updated?.name}`,
         primaryAction: "as",
         primaryTitle: "section",
         type: "section",
@@ -135,9 +135,9 @@ export async function addAndRemoveNoteFromSection(data: {
       boardId: data?.boardId,
       title: `${noteDetails?.description}`,
       primaryAction: "from",
-      primaryTitle: `${sourceSectionUpdated?.title}`,
+      primaryTitle: `${sourceSectionUpdated?.name}`,
       secondaryAction: "to",
-      secondaryTitle: `${destinationSectionUpdated?.title}`,
+      secondaryTitle: `${destinationSectionUpdated?.name}`,
       type: "note",
       action: "move",
     });

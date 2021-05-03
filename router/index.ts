@@ -6,6 +6,13 @@ import {
   updateTeam,
 } from "../controllers/team";
 import {
+  addOrRemoveMemberFromTeamValidator,
+  deleteTeamValidator,
+  getTeamsByUserValidator,
+  sendInvitationToTeamsValidator,
+  updateTeamValidator,
+} from "../controllers/team/validator";
+import {
   authenticateJWT,
   forgotPassword,
   login,
@@ -44,17 +51,52 @@ import {
   updateBoard,
 } from "../controllers/board";
 import {
+  deleteBoardValidator,
+  downloadBoardReportValidator,
+  getBoardDetailsValidator,
+  getBoardsByUserValidator,
+  updateBoardValidator,
+} from "../controllers/board/validator";
+import {
   deleteMember,
   getMemberDetails,
   getMembersByUser,
   updateMember,
 } from "../controllers/member";
 import {
+  deleteMemberValidator,
+  getMemberDetailsValidator,
+  getMembersByUserValidator,
+  updateMemberValidator,
+} from "../controllers/member/validator";
+import {
   deleteProject,
   getProjects,
   updateProject,
 } from "../controllers/project";
+import {
+  deleteProjectValidator,
+  getProjectsValidator,
+  updateProjectValidator,
+} from "../controllers/project/validator";
+import {
+  deleteUserValidator,
+  signupValidator,
+  updateAvatarValidator,
+  updateEmailValidator,
+  updateNameValidator,
+  updatePasswordValidator,
+} from "../controllers/user/validator";
 import express, { Application } from "express";
+import {
+  forgotPasswordValidator,
+  loginValidator,
+  refreshTokenValidator,
+  resendTokenValidator,
+  resetPasswordValidator,
+  validateForgotPasswordValidator,
+  verifyAccountValidator,
+} from "../controllers/auth/validator";
 import {
   getReactionSummaryByBoard,
   getReactionSummaryByNote,
@@ -99,28 +141,32 @@ export default function(app: Application) {
   apiRoutes.use("/auth", authRoutes);
 
   // Login
-  authRoutes.post("/login", login);
+  authRoutes.post("/login", loginValidator, login);
 
   // Logout
   authRoutes.post("/logout", logout);
 
   // refresh token
-  authRoutes.post("/refresh-token", refreshToken);
+  authRoutes.post("/refresh-token", refreshTokenValidator, refreshToken);
 
   // verify account
-  authRoutes.post("/verify-token", verifyAccount);
+  authRoutes.post("/verify-token", verifyAccountValidator, verifyAccount);
 
   // resend verification token
-  authRoutes.post("/resend-token", resendToken);
+  authRoutes.post("/resend-token", resendTokenValidator, resendToken);
 
   // forgot password
-  authRoutes.post("/forgot-password", forgotPassword);
+  authRoutes.post("/forgot-password", forgotPasswordValidator, forgotPassword);
 
   // validate forgot password token
-  authRoutes.post("/validate-forgot-password", validateForgotPassword);
+  authRoutes.post(
+    "/validate-forgot-password",
+    validateForgotPasswordValidator,
+    validateForgotPassword
+  );
 
   // reset password
-  authRoutes.post("/reset-password", resetPassword);
+  authRoutes.post("/reset-password", resetPasswordValidator, resetPassword);
 
   //= ========================
   // User Routes
@@ -139,28 +185,43 @@ export default function(app: Application) {
   userRoutes.get("/:id", authenticateJWT, getUserDetails);
 
   // Update user route
-  userRoutes.put("/email", authenticateJWT, updateEmail);
+  userRoutes.put("/email", authenticateJWT, updateEmailValidator, updateEmail);
 
   // Update user route
-  userRoutes.put("/name", authenticateJWT, updateName);
+  userRoutes.put("/name", authenticateJWT, updateNameValidator, updateName);
 
   // Update password route
-  userRoutes.put("/update-password", authenticateJWT, updatePassword);
+  userRoutes.put(
+    "/update-password",
+    authenticateJWT,
+    updatePasswordValidator,
+    updatePassword
+  );
 
   // Get Boards by user
-  userRoutes.get("/:id/boards", authenticateJWT, getBoardsByUser);
+  userRoutes.get(
+    "/:id/boards",
+    authenticateJWT,
+    getBoardsByUserValidator,
+    getBoardsByUser
+  );
 
   // Update or Create User
-  userRoutes.post("/", createUser);
+  userRoutes.post("/", signupValidator, createUser);
 
   // User delete route
-  userRoutes.delete("/:id", authenticateJWT, deleteUser);
+  userRoutes.delete("/:id", authenticateJWT, deleteUserValidator, deleteUser);
 
   // User summary
   userRoutes.get("/:id/summary", authenticateJWT, getUserSummary);
 
   // Update user Avatar
-  userRoutes.put("/update-avatar", authenticateJWT, updateAvatar);
+  userRoutes.put(
+    "/update-avatar",
+    authenticateJWT,
+    updateAvatarValidator,
+    updateAvatar
+  );
 
   //= ========================
   // Team Routes
@@ -170,19 +231,29 @@ export default function(app: Application) {
   apiRoutes.use("/team", teamRoutes);
 
   // Team details route
-  teamRoutes.get("/", authenticateJWT, getTeamsByUser);
+  teamRoutes.get("/", authenticateJWT, getTeamsByUserValidator, getTeamsByUser);
 
   // Create or Update Team
-  teamRoutes.put("/", authenticateJWT, updateTeam);
+  teamRoutes.put("/", authenticateJWT, updateTeamValidator, updateTeam);
 
   // Create or Update Team
-  teamRoutes.put("/:id/member", authenticateJWT, addOrRemoveMemberFromTeam);
+  teamRoutes.put(
+    "/:id/member",
+    authenticateJWT,
+    addOrRemoveMemberFromTeamValidator,
+    addOrRemoveMemberFromTeam
+  );
 
   // Send invitations to team members
-  teamRoutes.post("/invitation", authenticateJWT, sendInvitationToTeams);
+  teamRoutes.post(
+    "/invitation",
+    authenticateJWT,
+    sendInvitationToTeamsValidator,
+    sendInvitationToTeams
+  );
 
   // Team delete route
-  teamRoutes.delete("/:id", authenticateJWT, deleteTeam);
+  teamRoutes.delete("/:id", authenticateJWT, deleteTeamValidator, deleteTeam);
 
   //= ========================
   // Member Routes
@@ -192,16 +263,31 @@ export default function(app: Application) {
   apiRoutes.use("/member", memberRoutes);
 
   // Get all members
-  memberRoutes.get("/", authenticateJWT, getMembersByUser);
+  memberRoutes.get(
+    "/",
+    authenticateJWT,
+    getMembersByUserValidator,
+    getMembersByUser
+  );
 
   // Member details route
-  memberRoutes.get("/:id", authenticateJWT, getMemberDetails);
+  memberRoutes.get(
+    "/:id",
+    authenticateJWT,
+    getMemberDetailsValidator,
+    getMemberDetails
+  );
 
   // Create or Update Member
-  memberRoutes.put("/", authenticateJWT, updateMember);
+  memberRoutes.put("/", authenticateJWT, updateMemberValidator, updateMember);
 
   // Member delete route
-  memberRoutes.delete("/:id", authenticateJWT, deleteMember);
+  memberRoutes.delete(
+    "/:id",
+    authenticateJWT,
+    deleteMemberValidator,
+    deleteMember
+  );
 
   //= ========================
   // Project Routes
@@ -211,13 +297,23 @@ export default function(app: Application) {
   apiRoutes.use("/project", projectRoutes);
 
   // Project details route
-  projectRoutes.get("/", authenticateJWT, getProjects);
+  projectRoutes.get("/", authenticateJWT, getProjectsValidator, getProjects);
 
   // Create or Update Project
-  projectRoutes.put("/", authenticateJWT, updateProject);
+  projectRoutes.put(
+    "/",
+    authenticateJWT,
+    updateProjectValidator,
+    updateProject
+  );
 
   // Project delete route
-  projectRoutes.delete("/:id", authenticateJWT, deleteProject);
+  projectRoutes.delete(
+    "/:id",
+    authenticateJWT,
+    deleteProjectValidator,
+    deleteProject
+  );
 
   //= ========================
   // Board Routes
@@ -230,16 +326,26 @@ export default function(app: Application) {
   boardRoutes.get("/", getBoards);
 
   // Board details route
-  boardRoutes.get("/:id", getBoardDetails);
+  boardRoutes.get("/:id", getBoardDetailsValidator, getBoardDetails);
 
   // Update or Create board
-  boardRoutes.put("/", authenticateJWT, updateBoard);
+  boardRoutes.put("/", authenticateJWT, updateBoardValidator, updateBoard);
 
   // Board delete route
-  boardRoutes.delete("/:id", authenticateJWT, deleteBoard);
+  boardRoutes.delete(
+    "/:id",
+    authenticateJWT,
+    deleteBoardValidator,
+    deleteBoard
+  );
 
   // download board report
-  boardRoutes.get("/:id/download-report", authenticateJWT, downloadBoardReport);
+  boardRoutes.get(
+    "/:id/download-report",
+    authenticateJWT,
+    downloadBoardReportValidator,
+    downloadBoardReport
+  );
 
   //= ========================
   // Section Routes

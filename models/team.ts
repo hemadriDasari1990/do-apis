@@ -17,12 +17,6 @@ const TeamSchema = new Schema(
       minlength: 1,
       required: true,
     },
-    description: {
-      type: String,
-      trim: true,
-      minlength: 10,
-      required: true,
-    },
     status: {
       type: String,
       required: true,

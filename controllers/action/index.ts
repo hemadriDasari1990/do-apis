@@ -28,18 +28,18 @@ export async function updateAction(payload: {
     const query = { _id: mongoose.Types.ObjectId(payload?.actionId) },
       update = {
         $set: {
-          title: payload?.title,
+          name: payload?.name,
           boardId: payload?.boardId,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const action = await getAction({
-      $and: [{ title: payload?.title?.trim() }, { boardId: payload?.boardId }],
+      $and: [{ name: payload?.name?.trim() }, { boardId: payload?.boardId }],
     });
     if (action) {
       return {
         errorId: RESOURCE_ALREADY_EXISTS,
-        message: `Action with ${action?.title} already exist. Please choose different name`,
+        message: `Action with ${action?.name} already exist. Please choose different name`,
       };
     }
     const updated: any = await Action.findOneAndUpdate(query, update, options);

@@ -11,7 +11,7 @@ const ProjectSchema = new Schema(
       required: true,
       index: true,
     },
-    title: {
+    name: {
       type: String,
       trim: true,
       minlength: 1,
@@ -51,6 +51,6 @@ const ProjectSchema = new Schema(
   }
 );
 
-ProjectSchema.index({ userId: 1, title: 1 }, { unique: true });
-ProjectSchema.index({ title: "text" });
+ProjectSchema.index({ userId: 1, name: 1 }, { unique: true });
+ProjectSchema.index({ name: "text" });
 export default mongoose.model("Project", ProjectSchema);

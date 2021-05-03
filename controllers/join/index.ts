@@ -1,10 +1,13 @@
+import { RESOURCE_NOT_FOUND, TOKEN_EXPIRED } from "../../util/constants";
 import { Request, Response } from "express";
 
 import Join from "../../models/join";
-import { RESOURCE_NOT_FOUND } from "../../util/constants";
+import Token from "../../models/token";
+import config from "config";
 import { getBoardDetailsWithProject } from "../board";
 import { getMember } from "../member";
 import { getPagination } from "../../util";
+import jwt from "jsonwebtoken";
 import { memberLookup } from "../../util/memberFilters";
 import mongoose from "mongoose";
 import { updateMemberAvatar } from "../user";
@@ -25,10 +28,32 @@ export async function joinMemberToBoard(payload: {
 }): Promise<any> {
   try {
     if (
-      (!payload?.email && !payload?.guestName?.trim()?.length) ||
+      (!payload?.token && !payload?.guestName?.trim()?.length) ||
       !payload?.boardId
     ) {
       return;
+    }
+    /* Check if token exists */
+    const token: any = await Token.findOne({
+      token: payload?.token?.trim(),
+    });
+    if (!token) {
+      return {
+        errorId: TOKEN_EXPIRED,
+        message:
+          "We are unable to find a valid token. Your token my have expired.",
+      };
+    }
+    /* Verify JWT Token */
+    const decodedUser: any = await jwt.verify(
+      token?.token,
+      config.get("accessTokenSecret")
+    );
+    if (!decodedUser?.email || !decodedUser) {
+      return {
+        errorId: TOKEN_EXPIRED,
+        message: "The token is expired",
+      };
     }
     const board = await getBoardDetailsWithProject(payload?.boardId);
     if (!board) {
@@ -38,17 +63,17 @@ export async function joinMemberToBoard(payload: {
       };
     }
     let member = null;
-    let joinedMember = null;
-    if (payload?.email) {
+    let joinedMember: any;
+    if (decodedUser?.email) {
       member = await getMember({
-        email: payload?.email?.trim(),
+        email: decodedUser?.email,
         userId: board?.project?.userId,
       });
 
       /* Update member avatar */
       if (member && payload?.avatarId) {
         await updateMemberAvatar(
-          member?.email?.trim(),
+          member?.email,
           board?.project?.userId,
           payload?.avatarId
         );
@@ -62,7 +87,6 @@ export async function joinMemberToBoard(payload: {
     }
     /* Do nothing if member is already joined */
     if (joinedMember?._id) {
-      joinedMember.newMember = false;
       joinedMember.avatarId = payload?.avatarId;
       return joinedMember;
     }
@@ -73,9 +97,8 @@ export async function joinMemberToBoard(payload: {
       guestName: member ? member?.name : payload.guestName,
       avatarId: payload?.avatarId,
     });
-    const joined = await join.save();
-
-    return { ...joined, guestName: member ? member?.name : payload.guestName };
+    joinedMember = await join.save();
+    return joinedMember;
   } catch (err) {
     throw `Error while joining member to board ${err || err.message}`;
   }

@@ -5,7 +5,7 @@ delete mongoose.connection.models["SecurityQuestion"];
 const Schema = mongoose.Schema;
 const SecurityQuestionSchema = new Schema(
   {
-    title: {
+    name: {
       type: String,
       trim: true,
       index: true,
@@ -19,6 +19,6 @@ const SecurityQuestionSchema = new Schema(
   }
 );
 
-SecurityQuestionSchema.index({ title: 1 }, { unique: true });
+SecurityQuestionSchema.index({ name: 1 }, { unique: true });
 
 export default mongoose.model("SecurityQuestion", SecurityQuestionSchema);

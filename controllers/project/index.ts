@@ -1,15 +1,19 @@
+import {
+  MAX_PROJECTS_COUNT,
+  MAX_PROJECTS_ERROR,
+  RESOURCE_ALREADY_EXISTS,
+} from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 import {
   boardAddFields,
-  inProgressBoardsLookup,
-  completedBoardsLookup,
-  newBoardsLookup,
   boardsLookup,
+  completedBoardsLookup,
+  inProgressBoardsLookup,
+  newBoardsLookup,
 } from "../../util/boardFilters";
 import { getPagination, getUser } from "../../util";
 
 import Project from "../../models/project";
-import { RESOURCE_ALREADY_EXISTS } from "../../util/constants";
 import { addProjectToUser } from "../user";
 import { findBoardsByProjectAndDelete } from "../board";
 import mongoose from "mongoose";
@@ -22,10 +26,19 @@ export async function updateProject(
 ): Promise<any> {
   try {
     const user = getUser(req.headers.authorization as string);
+    const count = await Project.find({
+      userId: user?._id,
+    }).count();
+    if (count >= MAX_PROJECTS_COUNT) {
+      return res.status(409).json({
+        errorId: MAX_PROJECTS_ERROR,
+        message: `You have reached the limit of maximum projects ${MAX_PROJECTS_COUNT}. Please upgrade your plan.`,
+      });
+    }
     const query = { _id: mongoose.Types.ObjectId(req.body.projectId) },
       update = {
         $set: {
-          title: req.body.title,
+          name: req.body.name,
           description: req.body.description,
           userId: user?._id,
           status: req.body.status || "active",
@@ -35,17 +48,13 @@ export async function updateProject(
       options = { upsert: true, new: true, setDefaultsOnInsert: true }; // new true will return modified document instead of original one
 
     const project = await getProject({
-      $and: [
-        { title: req.body.title?.trim() },
-        { description: req.body.description?.trim() },
-        { userId: user?._id },
-      ],
+      $and: [{ name: req.body.name?.trim() }, { userId: user?._id }],
     });
 
     if (project) {
       return res.status(409).json({
         errorId: RESOURCE_ALREADY_EXISTS,
-        message: `Project with ${project?.title} already exist. Please choose different name`,
+        message: `Project with ${project?.name} already exist. Please choose different name`,
       });
     }
     const updated = await Project.findOneAndUpdate(query, update, options);
@@ -72,7 +81,7 @@ export async function getProjects(req: Request, res: Response): Promise<any> {
     if (req.query.queryString?.length) {
       aggregators.push({
         $match: {
-          $or: [{ title: { $regex: req.query.queryString, $options: "i" } }],
+          $or: [{ name: { $regex: req.query.queryString, $options: "i" } }],
         },
       });
     }
@@ -124,7 +133,7 @@ export async function createProject(payload: {
       return;
     }
     const project = new Project({
-      title: payload.title,
+      name: payload.name,
       description: payload.description,
       userId: payload?.userId,
     });

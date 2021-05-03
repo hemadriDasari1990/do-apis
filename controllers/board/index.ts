@@ -1,8 +1,13 @@
-import { NextFunction, Request, Response } from "express";
 import {
+  INTERNAL_SERVER_ERROR,
+  MAX_BOARDS_COUNT,
+  MAX_BOARDS_ERROR,
+  MAX_PROJECTS_COUNT,
+  MAX_PROJECTS_ERROR,
   RESOURCE_ALREADY_EXISTS,
   SECTION_COUNT_EXCEEDS,
 } from "../../util/constants";
+import { NextFunction, Request, Response } from "express";
 import {
   activeTeamsLookup,
   inActiveTeamsLookup,
@@ -15,6 +20,7 @@ import { getPagination, getUser } from "../../util";
 import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 import Board from "../../models/board";
+import Project from "../../models/project";
 import XLSX from "xlsx";
 import { addMemberToUser } from "../user";
 import { createActivity } from "../activity";
@@ -25,6 +31,7 @@ import fs from "fs";
 import mongoose from "mongoose";
 import { projectLookup } from "../../util/projectFilters";
 import { saveSection } from "../section";
+import { sendInvitation } from "../team";
 
 export async function addSectionToBoard(
   sectionId: string,
@@ -62,11 +69,7 @@ export async function checkIfNewBoardExists(projectId: string): Promise<any> {
   }
 }
 
-export async function updateBoard(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function updateBoard(req: Request, res: Response): Promise<any> {
   try {
     if (!req.body.isDefaultBoard && req.body.noOfSections > 10) {
       return res.status(500).json({
@@ -74,28 +77,56 @@ export async function updateBoard(
         message: `Max no of sections allowed are only 10`,
       });
     }
+
     const user = getUser(req.headers.authorization as string);
+
+    /* Check if user has reached projects limit on user level */
+    if (!req.body.projectId) {
+      const count = await Project.find({
+        userId: user?._id,
+      }).count();
+      if (count >= MAX_PROJECTS_COUNT) {
+        return res.status(409).json({
+          errorId: MAX_PROJECTS_ERROR,
+          message: `You have reached the limit of maximum projects ${MAX_PROJECTS_COUNT}. Please upgrade your plan.`,
+        });
+      }
+    }
+
+    /* Check if user has reached boards limit on project level */
+    if (req.body.projectId) {
+      const count = await Board.find({
+        projectId: req.body.projectId,
+      }).count();
+      if (count >= MAX_BOARDS_COUNT) {
+        return res.status(409).json({
+          errorId: MAX_BOARDS_ERROR,
+          message: `You have reached the limit of maximum boards ${MAX_BOARDS_COUNT}. Please upgrade your plan.`,
+        });
+      }
+    }
+
     const boardDetails = await getBoard({
       $and: [
-        { title: req.body.title?.trim() },
+        { name: req.body.name?.trim() },
         { description: req.body.description?.trim() },
-        { projectId: req.body.projectId },
+        { projectId: mongoose.Types.ObjectId(req.body.projectId) },
       ],
     });
     if (boardDetails) {
       return res.status(409).json({
         errorId: RESOURCE_ALREADY_EXISTS,
-        message: `Board with ${boardDetails?.title} already exist. Please choose different name`,
+        message: `Board with ${boardDetails?.name} already exist. Please contact administrator`,
       });
     }
 
-    /* Check if board exists with status new */
+    /* Check if board exists with status new when creating a new board */
     if (!req.body.boardId) {
       const boardExists = await checkIfNewBoardExists(req.body.projectId);
       if (boardExists?._id) {
         return res.status(409).json({
           errorId: RESOURCE_ALREADY_EXISTS,
-          message: `Sorry you can't create another one as there is already one i.e., ${boardExists?.title} in ${boardExists?.status} state.`,
+          message: `You can't create another board when your previous ${boardExists?.name} is in ${boardExists?.status} state.`,
         });
       }
     }
@@ -104,10 +135,12 @@ export async function updateBoard(
       projectId: req.body.projectId,
     }).count();
 
-    const query = { _id: mongoose.Types.ObjectId(req.body.boardId) },
+    const query = mongoose.Types.ObjectId.isValid(req.body.boardId)
+        ? { _id: mongoose.Types.ObjectId(req.body.boardId) }
+        : { _id: { $exists: false } }, // Create new record if id is not matching
       update = {
         $set: {
-          ...(!req.body.boardId ? { title: "Retro " + (boardsCount + 1) } : {}),
+          ...(!req.body.boardId ? { name: "Board " + (boardsCount + 1) } : {}),
           description: req.body.description,
           projectId: req.body.projectId,
           status: req.body.status,
@@ -118,7 +151,10 @@ export async function updateBoard(
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated: any = await Board.findOneAndUpdate(query, update, options);
     if (!updated) {
-      return next(updated);
+      return res.status(409).json({
+        errorId: INTERNAL_SERVER_ERROR,
+        message: `Error while creating the board`,
+      });
     }
     if (!req.body.isDefaultBoard && req.body.noOfSections) {
       await Array(parseInt(req.body.noOfSections))
@@ -127,7 +163,7 @@ export async function updateBoard(
           await promise;
           const section = await saveSection({
             boardId: updated._id,
-            title: "Section Title",
+            name: "Section Title",
           });
           await addSectionToBoard(section?._id, updated._id);
         }, Promise.resolve());
@@ -141,13 +177,13 @@ export async function updateBoard(
         await promise;
         const section = await saveSection({
           boardId: updated._id,
-          title: defaultSectionTitle,
+          name: defaultSectionTitle,
         });
         await addSectionToBoard(section?._id, updated._id);
       }, Promise.resolve());
     }
-    if (req.body.teams?.length) {
-      await addTeamsToBoad(req.body.teams, updated?._id);
+    if (req.body.teams?.length && updated?._id) {
+      await addTeamsToBoad(req.body.teams, updated);
       await createInvitedTeams(req.body.teams, updated?._id);
     }
     /* Add existing project to board */
@@ -158,7 +194,7 @@ export async function updateBoard(
     /* Create new project and map board to project */
     if (!req.body.projectId && req.body.projectTitle && user) {
       const newProject = await createProject({
-        title: req.body.projectTitle,
+        name: req.body.projectTitle,
         description: req.body.projectDescription,
         userId: user?._id,
       });
@@ -167,10 +203,11 @@ export async function updateBoard(
       });
       await addBoardToProject(updated?._id, newProject?._id);
     }
+    await sendInvitation(req.body.teams, user, updated?._id);
     await createActivity({
       userId: user?._id,
       boardId: updated?._id,
-      title: `${updated?.title}`,
+      title: `${updated?.name}`,
       primaryAction: "board",
       type: "board",
       action: req.body.boardId ? "update" : "create",
@@ -233,10 +270,10 @@ export async function getBoardDetailsLocal(boardId: string): Promise<any> {
           preserveNullAndEmptyArrays: true,
         },
       },
-      // teamsLookup,
-      // inActiveTeamsLookup,
-      // activeTeamsLookup,
-      // teamAddFields,
+      teamsLookup,
+      inActiveTeamsLookup,
+      activeTeamsLookup,
+      teamAddFields,
       sectionsLookup,
       sectionAddFields,
     ]);
@@ -279,7 +316,7 @@ export async function getBoardDetails(
     await createActivity({
       userId: user?._id,
       boardId: board?._id,
-      title: `${board?.title}`,
+      title: `${board?.name}`,
       type: "board",
       action: "view",
     });
@@ -304,7 +341,7 @@ export async function getBoards(req: Request, res: Response): Promise<any> {
       aggregators.push({
         $match: {
           $or: [
-            { title: { $regex: req.query.queryString, $options: "i" } },
+            { name: { $regex: req.query.queryString, $options: "i" } },
             { sprint: { $regex: req.query.queryString, $options: "i" } },
           ],
         },
@@ -415,19 +452,21 @@ async function getBoardsByProject(projectId: string): Promise<any> {
 
 export async function addTeamsToBoad(
   teams: Array<string>,
-  boardId: string
+  board: { [Key: string]: any }
 ): Promise<any> {
   try {
-    if (!teams || !Array.isArray(teams) || !teams?.length || !boardId) {
+    if (!teams || !Array.isArray(teams) || !teams?.length || !board?._id) {
       return;
     }
     await teams.reduce(async (promise, team: string) => {
       await promise;
-      await Board.findByIdAndUpdate(
-        boardId,
-        { $push: { teams: team } },
-        { new: true, useFindAndModify: false }
-      );
+      if (!board?.teams?.includes(team)) {
+        await Board.findByIdAndUpdate(
+          board?._id,
+          { $push: { teams: team } },
+          { new: true, useFindAndModify: false }
+        );
+      }
     }, Promise.resolve());
   } catch (err) {
     throw `Error while adding team to board ${err || err.message}`;
@@ -449,7 +488,7 @@ export async function changeVisibility(payload: {
     await createActivity({
       userId: payload?.user?._id,
       boardId: updated?._id,
-      title: `${updated?.title}`,
+      title: `${updated?.name}`,
       primaryAction: "visibility to",
       primaryTitle: payload?.isPrivate ? "private" : "public",
       type: "visibility",
@@ -501,18 +540,18 @@ export async function downloadBoardReport(
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(data?.sections);
       XLSX.utils.book_append_sheet(wb, ws, "report");
-      XLSX.writeFile(wb, `${data?.title}.xlsx`, {
+      XLSX.writeFile(wb, `${data?.name}.xlsx`, {
         bookType: "xlsx",
         type: "binary",
       });
-      const stream = fs.createReadStream(`${data?.title}.xlsx`);
+      const stream = fs.createReadStream(`${data?.name}.xlsx`);
       res.setHeader(
         "Content-Type",
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       );
       res.setHeader(
         "Content-Disposition",
-        `attachment; filename=${data?.title}.xlsx`
+        `attachment; filename=${data?.name}.xlsx`
       );
       stream.pipe(res);
     } else {

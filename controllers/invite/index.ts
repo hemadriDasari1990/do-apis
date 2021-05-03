@@ -50,21 +50,28 @@ export async function getInvitedMembers(
 
 export async function createInvitedTeams(
   teams: Array<string>,
-  boardId: mongoose.Schema.Types.ObjectId
+  board: { [Key: string]: any }
 ): Promise<any> {
   try {
-    if (!teams || !Array.isArray(teams) || !teams?.length || !boardId) {
+    if (!teams || !Array.isArray(teams) || !teams?.length || !board?._id) {
       return;
     }
     await teams.reduce(async (promise, id: string) => {
       await promise;
-      const invite = new Invite({
-        boardId: boardId,
-        teamId: id,
-      });
-      await invite.save();
+      const query = {
+          boardId: mongoose.Types.ObjectId(board?._id),
+          teamId: mongoose.Types.ObjectId(id),
+        },
+        update = {
+          $set: {
+            boardId: board?._id,
+            teamId: id,
+          },
+        },
+        options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      await Invite.findOneAndUpdate(query, update, options);
     }, Promise.resolve());
   } catch (err) {
-    throw `Error while adding team to board ${err || err.message}`;
+    throw `Error while mapping invited teams to board ${err || err.message}`;
   }
 }

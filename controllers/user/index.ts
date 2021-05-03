@@ -6,6 +6,7 @@ import {
   UNAUTHORIZED,
   USER_ALREADY_EXIST,
   USER_NOT_FOUND,
+  VERIFY_TOKEN_EXPIRY,
 } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 import {
@@ -27,6 +28,7 @@ import User from "../../models/user";
 import bcrypt from "bcrypt";
 import config from "config";
 import crypto from "crypto";
+import { generateToken } from "../auth";
 import { getMember } from "../member";
 import { getUser } from "../../util";
 import mongoose from "mongoose";
@@ -83,9 +85,21 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       memberOptions
     );
     await addMemberToUser(updatedMember?._id, userCreated?._id);
+    // Generate jwt token
+    const jwtToken = await generateToken(
+      {
+        name: userCreated.name,
+        email: userCreated.email,
+      },
+      config.get("accessTokenSecret"),
+      VERIFY_TOKEN_EXPIRY
+    );
+    if (!jwtToken) {
+      return res.status(500).json({ message: "Error while generating tokens" });
+    }
     const token = new Token({
       memberId: updatedMember._id,
-      token: crypto.randomBytes(16).toString("hex"),
+      token: jwtToken,
     });
     const newToken: any = await token.save();
     //@TODO - Send Email Activation Link
@@ -200,12 +214,12 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
       );
       return res.status(200).send(updated);
     }
-    const updated: any = await updateMemberAvatar(
-      req.body.email,
-      req.body.userId,
-      req.body.avatarId
-    );
-    return res.status(200).send(updated);
+    // const updated: any = await updateMemberAvatar(
+    //   req.body.email,
+    //   user?._id,
+    //   req.body.avatarId
+    // );
+    // return res.status(200).send(updated);
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
@@ -269,8 +283,6 @@ export async function getUsers(req: Request, res: Response): Promise<any> {
     console.log(req);
     const users = await User.find({}).select({
       name: 1,
-      isVerified: 1,
-      description: 1,
       _id: 0,
     });
     return res.status(200).json({
@@ -436,13 +448,6 @@ export async function addProjectToUser(
 
 export async function updateEmail(req: Request, res: Response) {
   try {
-    if (
-      !req.body.email?.trim()?.length ||
-      !req.body.password?.trim()?.length ||
-      !req.body.currentEmail?.trim()?.length
-    ) {
-      return;
-    }
     const user = await getUser(req.headers.authorization as string);
 
     const userFromDb: any = await User.findOne({
@@ -514,21 +519,6 @@ export async function updateEmail(req: Request, res: Response) {
 
 export async function updatePassword(req: Request, res: Response) {
   try {
-    if (
-      !req.body.newPassword?.trim()?.length ||
-      !req.body.currentPassword?.trim()?.length ||
-      !req.body.newConfirmPassword?.trim()?.length
-    ) {
-      return;
-    }
-
-    if (req.body.newPassword?.trim() !== req.body.newConfirmPassword?.trim()) {
-      return res.status(422).json({
-        errorId: PASSWORDS_ARE_NOT_SAME,
-        errorMessage:
-          "New password and re entered one are not same. Please check",
-      });
-    }
     const user = await getUser(req.headers.authorization as string);
 
     const userFromDb: any = await User.findOne({

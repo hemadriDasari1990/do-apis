@@ -10,7 +10,7 @@ const SectionSchema = new Schema(
       required: true,
       index: true,
     },
-    title: {
+    name: {
       type: String,
       trim: true,
       minlength: 1,
