@@ -4,6 +4,7 @@ import {
   getTeamsByUser,
   sendInvitationToTeams,
   updateTeam,
+  getTeamsByMember,
 } from "../controllers/team";
 import {
   addOrRemoveMemberFromTeamValidator,
@@ -11,6 +12,7 @@ import {
   getTeamsByUserValidator,
   sendInvitationToTeamsValidator,
   updateTeamValidator,
+  getTeamsByMemberValidator,
 } from "../controllers/team/validator";
 import {
   authenticateJWT,
@@ -22,6 +24,7 @@ import {
   verifyAccount,
 } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
+import { createFeedbackValidator } from "../controllers/feedback/validator";
 import {
   createSecurityQuestion,
   getSecurityQuestions,
@@ -61,6 +64,7 @@ import {
   deleteMember,
   getMemberDetails,
   getMembersByUser,
+  getMembersByTeam,
   updateMember,
 } from "../controllers/member";
 import {
@@ -68,6 +72,7 @@ import {
   getMemberDetailsValidator,
   getMembersByUserValidator,
   updateMemberValidator,
+  getMembersByTeamValidator,
 } from "../controllers/member/validator";
 import {
   deleteProject,
@@ -255,6 +260,14 @@ export default function(app: Application) {
   // Team delete route
   teamRoutes.delete("/:id", authenticateJWT, deleteTeamValidator, deleteTeam);
 
+  // Get teams by member
+  teamRoutes.get(
+    "/:memberId/teams",
+    authenticateJWT,
+    getTeamsByMemberValidator,
+    getTeamsByMember
+  );
+
   //= ========================
   // Member Routes
   //= ========================
@@ -262,12 +275,20 @@ export default function(app: Application) {
   // Set user routes as subgroup/middleware to apiRoutes
   apiRoutes.use("/member", memberRoutes);
 
-  // Get all members
+  // Get members by user
   memberRoutes.get(
     "/",
     authenticateJWT,
     getMembersByUserValidator,
     getMembersByUser
+  );
+
+  // Get members by team
+  memberRoutes.get(
+    "/team/members",
+    authenticateJWT,
+    getMembersByTeamValidator,
+    getMembersByTeam
   );
 
   // Member details route
@@ -418,7 +439,12 @@ export default function(app: Application) {
   apiRoutes.use("/feedback", feedbackRoutes);
 
   // Feedback creation route
-  feedbackRoutes.post("/", createFeedback);
+  feedbackRoutes.post(
+    "/",
+    authenticateJWT,
+    createFeedbackValidator,
+    createFeedback
+  );
 
   // Get Feedbacks
   feedbackRoutes.get("/", getFeedbacks);
@@ -451,7 +477,7 @@ export default function(app: Application) {
   apiRoutes.use("/join", joinRoutes);
 
   // Get Joined members
-  joinRoutes.get("/", authenticateJWT, getJoinedMembers);
+  joinRoutes.get("/", getJoinedMembers);
 
   //= ========================
   // Security Questions Routes

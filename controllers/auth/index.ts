@@ -21,7 +21,6 @@ import { getMember } from "../member";
 import { getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
-import { socket } from "../../index";
 
 /**
  * Validate the token
@@ -56,11 +55,11 @@ export async function authenticateJWT(
   } else {
     secret = config.get("accessTokenSecret");
   }
-  await jwt.verify(token, secret, (err: any, user: any) => {
+  await jwt.verify(token, secret, (err: any, jwtUser: any) => {
     if (err) {
       return res.status(401).json({ status: "error", code: UNAUTHORIZED });
     }
-    if (!user) {
+    if (!jwtUser) {
       return res.status(401).json({ status: "error", code: UNAUTHORIZED });
     }
     return next();
@@ -129,7 +128,6 @@ export async function login(req: Request, res: Response): Promise<any> {
     await User.findByIdAndUpdate(user._id, {
       token: refreshToken,
     });
-    await socket.emit(`login-success`);
     return res.status(200).json({
       success: true,
       token: token,
@@ -192,7 +190,7 @@ export async function logout(req: Request, res: Response): Promise<any> {
     await User.findByIdAndUpdate(user?._id, {
       token: null,
     });
-    return res.status(200).json({ success: "User logged out!" });
+    return res.status(200).json({ success: "Logout successfull" });
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
@@ -213,7 +211,7 @@ export async function forgotPassword(
   try {
     const emailService = await new EmailService();
     const member: any = await getMember({
-      email: req.body.email?.trim(),
+      email: req.body.email,
     });
 
     if (!member) {
@@ -274,7 +272,7 @@ export async function validateForgotPassword(
     if (!token) {
       return res.status(409).json({
         errorId: TOKEN_EXPIRED,
-        message: "Password reset token is invalid or has expired",
+        message: "Password reset token isn't found or has expired",
       });
     }
     const member: any = await getMember({
@@ -322,7 +320,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
     if (!decodedUser?.email || !decodedUser) {
       return res.status(401).json({
         errorId: TOKEN_EXPIRED,
-        message: "Sorry the token is expired",
+        message: "The token is expired",
       });
     }
     const member: any = await getMember({
@@ -388,7 +386,7 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
   try {
     const emailService = await new EmailService();
     const member: any = await getMember({
-      email: req.body.email?.trim(),
+      email: req.body.email,
     });
     if (!member) {
       return res.status(500).json({
@@ -396,11 +394,13 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
         message: "We are unable to find a user with that email.",
       });
     }
-    if (member.isVerified)
+    if (member.isVerified) {
       return res.status(500).json({
         errorId: ALREADY_VERIFIED,
         message: "This account has already been verified. Please log in.",
       });
+    }
+
     const token: any = new Token({
       memberId: member._id,
       token: crypto.randomBytes(16).toString("hex"),
@@ -437,19 +437,13 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
  */
 export async function resetPassword(req: Request, res: Response): Promise<any> {
   try {
-    if (!req.body.password) {
-      return res.status(500).json({ message: "Password is required" });
-    }
-    if (!req.body.confirmPassword) {
-      return res.status(500).json({ message: "Confirm Password is required" });
-    }
     const emailService = await new EmailService();
     const user: any = await User.findOne({
       _id: mongoose.Types.ObjectId(req.body.userId),
     });
     const isPasswordSame = await bcrypt.compare(
-      req.body.password.trim(),
-      user.password.trim()
+      req.body.password,
+      user.password
     );
     if (isPasswordSame) {
       return res.status(500).json({
@@ -457,7 +451,7 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
           "Your new password and old password can't be same. Please use different one",
       });
     }
-    const hash = await bcrypt.hash(
+    const hashPassword = await bcrypt.hash(
       req.body.password,
       Number(config.get("bcryptSalt"))
     );
@@ -466,7 +460,7 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
       },
       update = {
         $set: {
-          password: hash,
+          password: hashPassword,
         },
       },
       options = { useFindAndModify: true };

@@ -184,6 +184,23 @@ export const resetPasswordValidator = [
     .trim()
     .escape(),
   /* Check confirm password */
+  check("confirmPassword")
+    .notEmpty()
+    .withMessage("Confirm password is required")
+    .isString()
+    .withMessage("Confirm password must be string")
+    .isLength({ min: 8, max: 15 })
+    .withMessage("Confirm password Must Be at Least 8 Characters")
+    .matches("[0-9]")
+    .withMessage("Confirm password Must Contain a Number")
+    .matches("[A-Z]")
+    .withMessage("Confirm password Must Contain an Uppercase Letter")
+    .matches(/[!@#$%^&*(),.?":{}|<>]/)
+    .withMessage(
+      "your confirm password should have at least one sepcial character"
+    )
+    .trim()
+    .escape(),
   check("userId")
     .notEmpty()
     .withMessage("userId is required")

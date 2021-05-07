@@ -6,7 +6,12 @@ import { userLookup } from "../../util/userFilters";
 
 export async function getFeedbacks(req: Request, res: Response): Promise<any> {
   try {
-    const query = req.query.like ? { like: Boolean(req.query.like) } : {};
+    const query = {
+      rating: {
+        $gt: Number(req.query.rating),
+      },
+      isApproved: req.query.isApproved,
+    };
     const aggregators = [];
     aggregators.push({
       $facet: {
@@ -43,7 +48,7 @@ export async function createFeedback(
     const feedback = new Feedback({
       title: req.body?.title,
       description: req.body?.description,
-      like: req.body?.like,
+      rating: req.body?.rating,
       userId: user?._id,
     });
     const feedbackCreated = await feedback.save();

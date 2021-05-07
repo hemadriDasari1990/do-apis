@@ -33,50 +33,51 @@ export async function joinMemberToBoard(payload: {
     ) {
       return;
     }
-    /* Check if token exists */
-    const token: any = await Token.findOne({
-      token: payload?.token?.trim(),
-    });
-    if (!token) {
-      return {
-        errorId: TOKEN_EXPIRED,
-        message:
-          "We are unable to find a valid token. Your token my have expired.",
-      };
+
+    /* Validate invited users */
+    let token: any;
+    if (payload?.token) {
+      /* Check if token exists */
+      token = await Token.findOne({
+        token: payload?.token?.trim(),
+      });
+      if (!token) {
+        return {
+          errorId: TOKEN_EXPIRED,
+          message:
+            "We are unable to find a valid token. Your token my have expired.",
+        };
+      }
+      /* Verify JWT Token */
+      const decodedUser: any = await jwt.verify(
+        token?.token,
+        config.get("accessTokenSecret")
+      );
+      if (!decodedUser?.email || !decodedUser) {
+        return {
+          errorId: TOKEN_EXPIRED,
+          message: "The token is expired",
+        };
+      }
+      const board = await getBoardDetailsWithProject(payload?.boardId);
+      if (!board) {
+        return {
+          errorId: RESOURCE_NOT_FOUND,
+          message: "Board isn't found",
+        };
+      }
     }
-    /* Verify JWT Token */
-    const decodedUser: any = await jwt.verify(
-      token?.token,
-      config.get("accessTokenSecret")
-    );
-    if (!decodedUser?.email || !decodedUser) {
-      return {
-        errorId: TOKEN_EXPIRED,
-        message: "The token is expired",
-      };
-    }
-    const board = await getBoardDetailsWithProject(payload?.boardId);
-    if (!board) {
-      return {
-        errorId: RESOURCE_NOT_FOUND,
-        message: "Board isn't found",
-      };
-    }
+
     let member = null;
     let joinedMember: any;
-    if (decodedUser?.email) {
+    if (token?.memberId) {
       member = await getMember({
-        email: decodedUser?.email,
-        userId: board?.project?.userId,
+        _id: token?.memberId,
       });
 
       /* Update member avatar */
       if (member && payload?.avatarId) {
-        await updateMemberAvatar(
-          member?.email,
-          board?.project?.userId,
-          payload?.avatarId
-        );
+        await updateMemberAvatar(member?._id, payload?.avatarId);
       }
 
       /* Check if member joined */
@@ -84,11 +85,12 @@ export async function joinMemberToBoard(payload: {
         memberId: member?._id,
         boardId: payload?.boardId,
       });
-    }
-    /* Do nothing if member is already joined */
-    if (joinedMember?._id) {
-      joinedMember.avatarId = payload?.avatarId;
-      return joinedMember;
+
+      /* Do nothing if member is already joined */
+      if (joinedMember?._id) {
+        joinedMember.avatarId = payload?.avatarId;
+        return joinedMember;
+      }
     }
 
     const join = new Join({
@@ -101,6 +103,42 @@ export async function joinMemberToBoard(payload: {
     return joinedMember;
   } catch (err) {
     throw `Error while joining member to board ${err || err.message}`;
+  }
+}
+
+export async function checkIfMemberJoinedBoard(payload: {
+  [Key: string]: any;
+}): Promise<any> {
+  try {
+    if (!payload?.token) {
+      return;
+    }
+    /* Check if token exists */
+    const token: any = await Token.findOne({
+      token: payload?.token?.trim(),
+    });
+    if (!token) {
+      return;
+    }
+    /* Verify JWT Token */
+    const decodedMember: any = await jwt.verify(
+      token?.token,
+      config.get("accessTokenSecret")
+    );
+    if (!decodedMember?.email || !decodedMember) {
+      return {
+        errorId: TOKEN_EXPIRED,
+        message: "The token is expired",
+      };
+    }
+    /* Check if member joined */
+    const joinedMember = await getJoinedMember({
+      memberId: token?.memberId,
+      boardId: payload?.boardId,
+    });
+    return joinedMember;
+  } catch (err) {
+    throw `Error while checking if member already joined ${err || err.message}`;
   }
 }
 

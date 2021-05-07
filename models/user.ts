@@ -58,6 +58,13 @@ const UserSchema = new Schema(
       default: "individual",
       index: true,
     },
+    role: {
+      type: String,
+      required: true,
+      enum: ["user", "admin"],
+      default: "user",
+      index: true,
+    },
     avatarId: {
       type: Number,
     },

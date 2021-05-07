@@ -132,3 +132,25 @@ export const sendInvitationToTeamsValidator = [
     }
   },
 ];
+
+export const getTeamsByMemberValidator = [
+  param("memberId")
+    .exists()
+    .notEmpty()
+    .withMessage("Member id is required")
+    .isString()
+    .withMessage("Member id must be string")
+    .trim(),
+  (req: Request, res: Response, next: NextFunction) => {
+    const error = validationResult(req).formatWith(({ msg }) => msg);
+    const hasError = !error.isEmpty();
+    if (hasError) {
+      res.status(422).json({
+        errorId: VALIDATION_FAILED,
+        message: error.array().join(""),
+      });
+    } else {
+      next();
+    }
+  },
+];

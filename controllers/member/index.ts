@@ -20,6 +20,8 @@ import config from "config";
 import { generateToken } from "../auth";
 import { getBoard } from "../board";
 import mongoose from "mongoose";
+import { memberLookup } from "../../util/memberFilters";
+import TeamMember from "../../models/teamMember";
 
 export async function updateMember(
   req: Request,
@@ -150,6 +152,55 @@ export async function getMembersByUser(
   }
 }
 
+export async function getMembersByTeam(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const query = {
+      teamId: mongoose.Types.ObjectId(req.query.teamId as string),
+    };
+    const aggregators = [];
+    const { limit, offset } = getPagination(
+      parseInt(req.query.page as string),
+      parseInt(req.query.size as string)
+    );
+    if (req.query.queryString?.length) {
+      aggregators.push({
+        $match: {
+          $or: [
+            { name: { $regex: req.query.queryString, $options: "i" } },
+            { email: { $regex: req.query.queryString, $options: "i" } },
+          ],
+        },
+      });
+    }
+    aggregators.push({
+      $facet: {
+        data: [
+          { $match: query },
+          { $sort: { _id: -1 } },
+          { $skip: offset },
+          { $limit: limit },
+          memberLookup,
+          {
+            $unwind: {
+              path: "$member",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ],
+        total: [{ $match: query }, { $count: "count" }],
+      },
+    });
+
+    const members = await TeamMember.aggregate(aggregators);
+    return res.status(200).send(members ? members[0] : null);
+  } catch (err) {
+    throw new Error(err || err.message);
+  }
+}
+
 export async function getMember(query: { [Key: string]: any }): Promise<any> {
   try {
     const member = await Member.findOne(query);
@@ -159,14 +210,18 @@ export async function getMember(query: { [Key: string]: any }): Promise<any> {
   }
 }
 
-export async function searchMembers(queryString: string): Promise<any> {
+export async function searchMembers(payload: {
+  [Key: string]: any;
+}): Promise<any> {
   try {
     const members = await Member.aggregate([
       {
         $match: {
+          email: { $ne: payload?.email },
+          userId: { $ne: payload?.userId },
           $or: [
-            { name: { $regex: queryString, $options: "i" } },
-            { email: { $regex: queryString, $options: "i" } },
+            { name: { $regex: payload?.queryString, $options: "i" } },
+            { email: { $regex: payload?.queryString, $options: "i" } },
           ],
         },
       },
@@ -196,7 +251,7 @@ export async function deleteMember(
 
 export async function findMembersByTeamAndDelete(teamId: string): Promise<any> {
   try {
-    const membersList = await getMembersByTeam(teamId);
+    const membersList = await getMembersByTeamLocal(teamId);
     if (!membersList?.length) {
       return;
     }
@@ -213,7 +268,7 @@ export async function findMembersByTeamAndDelete(teamId: string): Promise<any> {
   }
 }
 
-async function getMembersByTeam(teamId: string): Promise<any> {
+async function getMembersByTeamLocal(teamId: string): Promise<any> {
   try {
     if (!teamId) {
       return;

@@ -226,14 +226,12 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
 }
 
 export async function updateMemberAvatar(
-  email: string,
-  userId: string,
+  memberId: string,
   avatarId: number
 ): Promise<any> {
   try {
     const query = {
-        email: email?.trim(),
-        userId: mongoose.Types.ObjectId(userId),
+        _id: mongoose.Types.ObjectId(memberId),
       },
       update = {
         $set: {

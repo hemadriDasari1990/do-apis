@@ -20,6 +20,7 @@ import TeamMember from "../../models/teamMember";
 import { addTeamToUser } from "../user";
 import { getMemberIds } from "../../util/member";
 import mongoose from "mongoose";
+import { teamLookup } from "../../util/teamFilters";
 
 export async function updateTeam(
   req: Request,
@@ -83,6 +84,55 @@ export async function updateTeam(
 //     return res.status(500).send(err || err.message);
 //   }
 // }
+
+export async function getTeamsByMember(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const query = {
+      memberId: mongoose.Types.ObjectId(req.params.memberId as string),
+    };
+    const aggregators = [];
+    const { limit, offset } = getPagination(
+      parseInt(req.query.page as string),
+      parseInt(req.query.size as string)
+    );
+    if (req.query.queryString?.length) {
+      aggregators.push({
+        $match: {
+          $or: [
+            { name: { $regex: req.query.queryString, $options: "i" } },
+            { email: { $regex: req.query.queryString, $options: "i" } },
+          ],
+        },
+      });
+    }
+    aggregators.push({
+      $facet: {
+        data: [
+          { $match: query },
+          { $sort: { _id: -1 } },
+          { $skip: offset },
+          { $limit: limit },
+          teamLookup,
+          {
+            $unwind: {
+              path: "$team",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ],
+        total: [{ $match: query }, { $count: "count" }],
+      },
+    });
+
+    const teams = await TeamMember.aggregate(aggregators);
+    return res.status(200).send(teams ? teams[0] : null);
+  } catch (err) {
+    throw new Error(err || err.message);
+  }
+}
 
 export async function getTeamsByUser(
   req: Request,

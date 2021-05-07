@@ -16,7 +16,11 @@ const FeedbackSchema = new Schema(
       type: String,
       required: true,
     },
-    like: {
+    rating: {
+      type: Number,
+      default: 0,
+    },
+    isApproved: {
       type: Boolean,
       default: false,
     },
