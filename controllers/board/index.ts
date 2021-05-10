@@ -535,11 +535,42 @@ export async function downloadBoardReport(
 ): Promise<any> {
   try {
     const data: any = await getBoardDetailsLocal(req.params.id);
-
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet([
+      {
+        "Board Name": data?.name,
+        "Project Name": data?.project?.name,
+        "No of Sections": data?.totalSections,
+        Visibility: data?.isPrivate ? "Private" : "Public",
+        "Invited Members": "",
+        "Joined Members": "",
+        "Session Started At": data?.startedAt || "",
+        "Session Ended At": data?.completedAt || "",
+        "Invite Sent": data?.inviteSent ? "yes" : "No",
+        "Invite Count": data?.inviteCount,
+      },
+    ]);
+    XLSX.utils.book_append_sheet(wb, ws, "Information");
     if (data && data?.sections?.length) {
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(data?.sections);
-      XLSX.utils.book_append_sheet(wb, ws, "report");
+      data?.sections.forEach((section: { [Key: string]: any }) => {
+        const notes = section?.notes?.map((note: { [Key: string]: any }) => {
+          return {
+            Note: note.description,
+            "+1": note.totalPlusOne,
+            "-1": note.totalMinusOne,
+            Love: note.totalLove,
+            Highlight: note.totalHighlight,
+            Deserve: note.totalDeserve,
+            "Total Reactions": note.totalReactions,
+            "Created By": note?.createdBy?.name || "Team Member",
+            "Updated By": note?.updatedBy?.name || "Team Member",
+            "Created At": note?.createdAt,
+          };
+        });
+        const ws = XLSX.utils.json_to_sheet(notes);
+        XLSX.utils.book_append_sheet(wb, ws, section?.name);
+      });
+
       XLSX.writeFile(wb, `${data?.name}.xlsx`, {
         bookType: "xlsx",
         type: "binary",
