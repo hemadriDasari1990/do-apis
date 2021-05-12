@@ -19,12 +19,14 @@ export async function createOrUpdateReaction(payload: {
 }): Promise<any> {
   try {
     /* Get the admin member */
-    const member: any = await getMember({
-      userId: payload.reactedBy,
-      isAuthor: true,
-      isVerified: true,
-    });
-    const query = payload.reactedBy
+    const member: any = !payload?.isAnnonymous
+      ? await getMember({
+          userId: payload.reactedBy,
+          isAuthor: true,
+          isVerified: true,
+        })
+      : null;
+    const query = payload?.reactedBy
         ? {
             $and: [
               { noteId: mongoose.Types.ObjectId(payload.noteId) },
@@ -36,7 +38,7 @@ export async function createOrUpdateReaction(payload: {
           },
       update = {
         $set: {
-          noteId: payload.noteId,
+          noteId: payload?.noteId,
           reactedBy: member?._id,
           type: payload?.type,
         },

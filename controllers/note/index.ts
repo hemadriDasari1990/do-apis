@@ -60,8 +60,14 @@ export async function updateNote(payload: {
         $set: {
           description: payload.description,
           sectionId: payload.sectionId,
-          createdById: creator ? creator?._id : payload.createdById || null,
-          updatedById: updator ? updator?._id : payload.updatedById || null,
+          createdById:
+            !board?.isAnnonymous && creator
+              ? creator?._id
+              : payload.createdById || null,
+          updatedById:
+            !board?.isAnnonymous && updator
+              ? updator?._id
+              : payload.updatedById || null,
           isAnnonymous: payload.isAnnonymous || false,
         },
         $inc: { position: 1 }, // auto increment position when creating new note
