@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { check, param, validationResult } from "express-validator";
+import { check, param, validationResult, body } from "express-validator";
 
 import { VALIDATION_FAILED } from "../../util/constants";
 
@@ -26,10 +26,16 @@ export const updateBoardValidator = [
   //   }
   //   return true;
   // }),
-  check("teams")
-    .not()
-    .isEmpty()
-    .withMessage("Team is required"),
+  check("isAnnonymous").custom((value) => {
+    if (value == false && !Array.isArray(body("teams"))) {
+      throw new Error("Team must be an array");
+    }
+    if (value == false && !body("teams")?.length) {
+      throw new Error("Team is required");
+    }
+
+    return true;
+  }),
   check("projectTitle")
     .trim()
     .escape(),

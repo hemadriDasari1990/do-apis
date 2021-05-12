@@ -66,6 +66,10 @@ const BoardSchema = new Schema(
       type: Number,
       default: 0,
     },
+    isAnnonymous: {
+      type: Boolean,
+      default: false,
+    },
     project: {
       type: Schema.Types.ObjectId,
       ref: "Project",

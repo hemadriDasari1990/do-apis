@@ -146,6 +146,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
           status: req.body.status,
           sprint: boardsCount + 1,
           isDefaultBoard: req.body.isDefaultBoard,
+          isAnnonymous: req.body.isAnnonymous,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
@@ -182,7 +183,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         await addSectionToBoard(section?._id, updated._id);
       }, Promise.resolve());
     }
-    if (req.body.teams?.length && updated?._id) {
+    if (!req.body.isAnnonymous && req.body.teams?.length && updated?._id) {
       await addTeamsToBoad(req.body.teams, updated);
       await createInvitedTeams(req.body.teams, updated?._id);
     }
@@ -548,6 +549,7 @@ export async function downloadBoardReport(
         "Session Ended At": data?.completedAt || "",
         "Invite Sent": data?.inviteSent ? "yes" : "No",
         "Invite Count": data?.inviteCount,
+        "Total Views": data?.views,
       },
     ]);
     XLSX.utils.book_append_sheet(wb, ws, "Information");
@@ -568,7 +570,7 @@ export async function downloadBoardReport(
           };
         });
         const ws = XLSX.utils.json_to_sheet(notes);
-        XLSX.utils.book_append_sheet(wb, ws, section?.name);
+        XLSX.utils.book_append_sheet(wb, ws, `${section?.name}`);
       });
 
       XLSX.writeFile(wb, `${data?.name}.xlsx`, {
