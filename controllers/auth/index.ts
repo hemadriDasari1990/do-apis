@@ -366,7 +366,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
       user.email,
       "Welcome to letsdoretro.com"
     );
-    return res.status(200).json({ message: "The account has been verified" });
+    return res.status(200).json({ message: "Your account has been verified" });
   } catch (err) {
     return res
       .status(500)

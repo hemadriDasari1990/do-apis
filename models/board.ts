@@ -48,7 +48,7 @@ const BoardSchema = new Schema(
     },
     isPrivate: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     isLocked: {
       type: Boolean,

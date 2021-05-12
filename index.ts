@@ -6,6 +6,10 @@ import cors from "cors";
 import { createServer } from "http";
 import socketEvents from "./socket";
 
+if (!process.env.PWD) {
+  process.env.PWD = process.cwd();
+}
+
 const app = new ApplicationServer().bootstrap();
 const server = createServer(app);
 server.listen(config.get("port"));
