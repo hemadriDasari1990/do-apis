@@ -1,8 +1,9 @@
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 
 import Feedback from "../../models/feedback";
 import { getUser } from "../../util";
 import { userLookup } from "../../util/userFilters";
+import { CREATION_FAILED } from "../../util/constants";
 
 export async function getFeedbacks(req: Request, res: Response): Promise<any> {
   try {
@@ -40,8 +41,7 @@ export async function getFeedbacks(req: Request, res: Response): Promise<any> {
 
 export async function createFeedback(
   req: Request,
-  res: Response,
-  next: NextFunction
+  res: Response
 ): Promise<any> {
   try {
     const user = getUser(req.headers.authorization as string);
@@ -53,10 +53,15 @@ export async function createFeedback(
     });
     const feedbackCreated = await feedback.save();
     if (!feedbackCreated) {
-      res.status(500).send(feedbackCreated);
-      return next(feedbackCreated);
+      res.status(500).send({
+        errorId: CREATION_FAILED,
+        message: "Error while sending feedback",
+      });
     }
-    return res.status(200).send(feedbackCreated);
+    return res.status(200).json({
+      success: true,
+      message: "Feedback has been sent successfully",
+    });
   } catch (err) {
     return res.status(500).send(err || err.message);
   }

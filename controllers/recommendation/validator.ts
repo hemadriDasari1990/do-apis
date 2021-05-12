@@ -3,19 +3,15 @@ import { check, validationResult } from "express-validator";
 
 import { VALIDATION_FAILED } from "../../util/constants";
 
-export const createFeedbackValidator = [
-  /* Check Title */
-  check("title")
-    .trim()
-    .escape(),
+export const createRecommendationValidator = [
   check("description")
     .trim()
     .escape(),
   check("rating")
     .isNumeric()
     .withMessage("rating should be a number")
-    .isLength({ min: 1, max: 5 })
-    .withMessage("Rating must be between 1 to 5"),
+    .isLength({ min: 1, max: 10 })
+    .withMessage("Rating must be between 1 to 10"),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);
     const hasError = !error.isEmpty();

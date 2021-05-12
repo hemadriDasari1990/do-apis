@@ -23,7 +23,6 @@ const RecommendationSchema = new Schema(
     memberId: {
       type: Schema.Types.ObjectId,
       ref: "Member",
-      required: true,
       index: true,
     },
     member: {

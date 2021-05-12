@@ -117,6 +117,8 @@ import { getInvitedMembers } from "../controllers/invite";
 import { getJoinedMembers } from "../controllers/join";
 import { getNotesBySectionId } from "../controllers/note";
 import { getSectionsByBoardId } from "../controllers/section";
+import { createRecommendation } from "../controllers/recommendation";
+import { createRecommendationValidator } from "../controllers/recommendation/validator";
 
 export default function(app: Application) {
   // Initializing route groups
@@ -136,6 +138,7 @@ export default function(app: Application) {
     feedbackRoutes = express.Router(),
     inviteRoutes = express.Router(),
     joinRoutes = express.Router(),
+    recommendationRoutes = express.Router(),
     activityRoutes = express.Router();
 
   //= ========================
@@ -478,6 +481,20 @@ export default function(app: Application) {
 
   // Get Joined members
   joinRoutes.get("/", getJoinedMembers);
+
+  //= ========================
+  // Recommendation Routes
+  //= ========================
+
+  // Set recommendation rotes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/recommendation", recommendationRoutes);
+
+  // Save recommendation
+  recommendationRoutes.post(
+    "/",
+    createRecommendationValidator,
+    createRecommendation
+  );
 
   //= ========================
   // Security Questions Routes
