@@ -68,6 +68,15 @@ const UserSchema = new Schema(
     avatarId: {
       type: Number,
     },
+    memberId: {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+      default: null,
+    },
+    member: {
+      type: Schema.Types.ObjectId,
+      ref: "Member",
+    },
     projects: [
       {
         type: Schema.Types.ObjectId,

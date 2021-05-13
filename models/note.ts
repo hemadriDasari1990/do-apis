@@ -12,13 +12,11 @@ const NoteSchema = new Schema(
     createdById: {
       type: Schema.Types.ObjectId,
       ref: "Member",
-      index: true,
       default: null,
     },
     updatedById: {
       type: Schema.Types.ObjectId,
       ref: "Member",
-      index: true,
       default: null,
     },
     description: {

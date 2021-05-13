@@ -132,7 +132,6 @@ export async function getNotesBySectionId(
           preserveNullAndEmptyArrays: true,
         },
       },
-
       reactionDeserveLookup,
       reactionPlusOneLookup,
       reactionHighlightLookup,
@@ -144,6 +143,26 @@ export async function getNotesBySectionId(
         $unwind: {
           path: "$section",
           preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          createdBy: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          description: 1,
+          isAnnonymous: 1,
+          position: 1,
+          read: 1,
+          sectionId: 1,
+          section: 1,
+          totalDeserve: 1,
+          totalHighlight: 1,
+          totalLove: 1,
+          totalMinusOne: 1,
+          totalPlusOne: 1,
+          totalReactions: 1,
+          _id: 1,
         },
       },
     ]);

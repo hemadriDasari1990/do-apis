@@ -17,7 +17,11 @@ import {
 import { addBoardToProject, createProject } from "../project";
 import { createMember, sendInviteToMember } from "../member";
 import { getPagination, getUser } from "../../util";
-import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
+import {
+  sectionAddFields,
+  sectionsLookup,
+  sectionsWithoutNoteLookup,
+} from "../../util/sectionFilters";
 
 import Board from "../../models/board";
 import Project from "../../models/project";
@@ -213,7 +217,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
       type: "board",
       action: req.body.boardId ? "update" : "create",
     });
-    const board = await getBoardDetailsLocal(updated?._id);
+    const board = await getBoardDetailsWithMembers(updated?._id);
     return res.status(200).send(board);
   } catch (err) {
     return res.status(500).send(err || err.message);
@@ -252,14 +256,14 @@ export async function startOrCompleteBoard(payload: {
       type: "board",
       action: payload.action === "start" ? "session-start" : "session-stop",
     });
-    const board = await getBoardDetailsLocal(updated?._id);
+    const board = await getBoardDetailsWithMembers(updated?._id);
     return board;
   } catch (err) {
     return err || err.message;
   }
 }
 
-export async function getBoardDetailsLocal(boardId: string): Promise<any> {
+export async function getBoardDetailsForReport(boardId: string): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(boardId) };
     const boards = await Board.aggregate([
@@ -277,6 +281,56 @@ export async function getBoardDetailsLocal(boardId: string): Promise<any> {
       teamAddFields,
       sectionsLookup,
       sectionAddFields,
+    ]);
+    return boards ? boards[0] : null;
+  } catch (err) {
+    throw err || err.message;
+  }
+}
+
+export async function getBoardDetailsWithMembers(
+  boardId: string
+): Promise<any> {
+  try {
+    const query = { _id: mongoose.Types.ObjectId(boardId) };
+    const boards = await Board.aggregate([
+      { $match: query },
+      teamsLookup,
+      teamAddFields,
+      sectionsWithoutNoteLookup,
+      sectionAddFields,
+      projectLookup,
+      {
+        $unwind: {
+          path: "$project",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $project: {
+          completedAt: 1,
+          createdAt: 1,
+          description: 1,
+          inviteCount: 1,
+          inviteSent: 1,
+          isAnnonymous: 1,
+          isDefaultBoard: 1,
+          isLocked: 1,
+          isPrivate: 1,
+          name: 1,
+          projectId: 1,
+          sprint: 1,
+          status: 1,
+          startedAt: 1,
+          teams: 1,
+          totalSections: 1,
+          updatedAt: 1,
+          totalTeams: 1,
+          views: 1,
+          _id: 1,
+          project: 1,
+        },
+      },
     ]);
     return boards ? boards[0] : null;
   } catch (err) {
@@ -311,7 +365,7 @@ export async function getBoardDetails(
 ): Promise<any> {
   try {
     const user = getUser(req.headers.authorization as string);
-    const board = await getBoardDetailsLocal(req.params.id);
+    const board = await getBoardDetailsWithMembers(req.params.id);
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const increment = { $inc: { views: 1 } };
     await createActivity({
@@ -356,8 +410,6 @@ export async function getBoards(req: Request, res: Response): Promise<any> {
           { $skip: offset },
           { $limit: limit },
           teamsLookup,
-          inActiveTeamsLookup,
-          activeTeamsLookup,
           teamAddFields,
           sectionsLookup,
           sectionAddFields,
@@ -518,9 +570,8 @@ export async function inviteMemberToBoard(payload: {
       await addMemberToUser(created?._id, payload?.user?._id);
     }
 
-    const board: any = await Board.findById(payload?.id);
     const sent = await sendInviteToMember(
-      board,
+      payload?.id,
       payload?.user,
       payload?.member
     );
@@ -535,7 +586,7 @@ export async function downloadBoardReport(
   res: Response
 ): Promise<any> {
   try {
-    const data: any = await getBoardDetailsLocal(req.params.id);
+    const data: any = await getBoardDetailsForReport(req.params.id);
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet([
       {

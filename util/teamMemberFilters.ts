@@ -44,8 +44,18 @@ const teamMemberTeamsLookup = {
       },
       memberLookUp,
       teamLookUp,
-      { $unwind: "$member" },
-      { $unwind: "$team" },
+      {
+        $unwind: {
+          path: "$member",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$team",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ],
     as: "teams",
   },
@@ -63,8 +73,18 @@ const teamMemberMembersLookup = {
       },
       memberLookUp,
       teamLookUp,
-      { $unwind: "$member" },
-      { $unwind: "$team" },
+      {
+        $unwind: {
+          path: "$member",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $unwind: {
+          path: "$team",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
     ],
     as: "members",
   },

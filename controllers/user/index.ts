@@ -16,7 +16,11 @@ import {
   projectAddTotalFields,
   projectsLookup,
 } from "../../util/projectFilters";
-import { memberAddFields, membersLookup } from "../../util/memberFilters";
+import {
+  memberAddFields,
+  membersLookup,
+  memberLookup,
+} from "../../util/memberFilters";
 import { teamAddFields, teamsLookup } from "../../util/teamFilters";
 
 import Board from "../../models/board";
@@ -68,6 +72,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
     });
     const userCreated = await newUser.save();
     userCreated.password = undefined;
+
     /* Create member */
     const memberQuery = { email: req.body.email, userId: userCreated?._id },
       updateMember = {
@@ -162,6 +167,13 @@ export async function getUserDetails(
       { $match: query },
       teamsLookup,
       teamAddFields,
+      memberLookup,
+      {
+        $unwind: {
+          path: "$member",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       membersLookup,
       memberAddFields,
       projectsLookup,
@@ -416,7 +428,12 @@ export async function addMemberToUser(
     }
     const user = await User.findByIdAndUpdate(
       userId,
-      { $push: { members: memberId } },
+      {
+        $push: { members: memberId },
+        $set: {
+          memberId: memberId,
+        },
+      },
       { new: true, useFindAndModify: false }
     );
     return user;

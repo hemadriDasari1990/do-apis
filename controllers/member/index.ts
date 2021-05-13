@@ -18,7 +18,6 @@ import { addMemberToUser } from "../user";
 import { addOrRemoveMemberFromTeamInternal } from "../team";
 import config from "config";
 import { generateToken } from "../auth";
-import { getBoard } from "../board";
 import mongoose from "mongoose";
 import { memberLookup } from "../../util/memberFilters";
 import TeamMember from "../../models/teamMember";
@@ -318,31 +317,25 @@ export async function sendInvitationsToMembers(
     if (!memberIds?.length || !sender || !boardId) {
       return;
     }
-    const board: any = await getBoard({
-      _id: mongoose.Types.ObjectId(boardId),
-    });
-    if (!board) {
-      return;
-    }
     return await memberIds.reduce(async (promise: any, memberId: string) => {
       await promise;
       const member = await getMember({
         _id: mongoose.Types.ObjectId(memberId),
       });
-      await sendInviteToMember(board, sender, member);
+      await sendInviteToMember(boardId, sender, member);
     }, Promise.resolve());
   } catch (err) {
-    return new Error("Cannot remove team from member");
+    return new Error("Error while sending invite to members");
   }
 }
 
 export async function sendInviteToMember(
-  board: { [Key: string]: any },
+  boardId: string,
   sender: { [Key: string]: any },
   receiver: { [Key: string]: any }
 ) {
   try {
-    if (!sender || !receiver || !board) {
+    if (!sender || !receiver || !boardId) {
       return;
     }
     const emailService = await new EmailService();
@@ -364,12 +357,8 @@ export async function sendInviteToMember(
       "/templates/invite.ejs",
       {
         url: config.get("url"),
-        invite_link: `${config.get("url")}/board/${board?._id}/${
-          newToken?.token
-        }`,
+        invite_link: `${config.get("url")}/board/${boardId}/${newToken?.token}`,
         name: receiver?.name,
-        boardName: board?.name,
-        projectName: board?.project?.name,
         senderName: sender?.name,
       },
       receiver.email,

@@ -106,6 +106,7 @@ export async function login(req: Request, res: Response): Promise<any> {
       name: user.name,
       email: user.email,
       accountType: user.accountType,
+      memberId: user?.memberId,
     };
 
     // Generate token
@@ -210,11 +211,11 @@ export async function forgotPassword(
 ): Promise<any> {
   try {
     const emailService = await new EmailService();
-    const member: any = await getMember({
+    const user: any = await User.findOne({
       email: req.body.email,
     });
 
-    if (!member) {
+    if (!user) {
       return res.status(409).json({
         errorId: USER_NOT_FOUND,
         message: "Email does not exist! Please create account",
@@ -222,13 +223,13 @@ export async function forgotPassword(
     }
 
     const token: any = new Token({
-      memberId: member._id,
+      memberId: user.memberId,
       token: crypto.randomBytes(16).toString("hex"),
       createdAt: Date.now(),
     });
     await token.save();
     await Token.find({
-      memberId: member._id,
+      memberId: user.memberId,
       token: { $ne: token?.token },
     })
       .remove()
@@ -239,7 +240,7 @@ export async function forgotPassword(
       {
         url: config.get("url"),
         confirm_link: `${config.get("url")}/reset-password/${token?.token}`,
-        name: member.name,
+        name: user.name,
       },
       req.body.email,
       "Resetting your letsdoretro password"
@@ -320,7 +321,7 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
     if (!decodedUser?.email || !decodedUser) {
       return res.status(401).json({
         errorId: TOKEN_EXPIRED,
-        message: "The token is expired",
+        message: "Token is expired",
       });
     }
     const member: any = await getMember({

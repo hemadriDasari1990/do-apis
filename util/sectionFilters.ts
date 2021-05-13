@@ -20,6 +20,24 @@ const sectionsLookup = {
   },
 };
 
+const sectionsWithoutNoteLookup = {
+  $lookup: {
+    from: Section.collection.name,
+    let: { sections: "$sections" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$sections", []] }] },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ],
+    as: "sections",
+  },
+};
+
 const sectionLookup = {
   $lookup: {
     from: Section.collection.name,
@@ -42,4 +60,9 @@ const sectionAddFields = {
   },
 };
 
-export { sectionsLookup, sectionAddFields, sectionLookup };
+export {
+  sectionsLookup,
+  sectionAddFields,
+  sectionLookup,
+  sectionsWithoutNoteLookup,
+};
