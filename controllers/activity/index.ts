@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 import Activity from "../../models/activity";
 import { getPagination } from "../../util";
 import mongoose from "mongoose";
-import { userLookup } from "../../util/projectFilters";
+import { memberLookup } from "../../util/memberFilters";
 
 export async function createActivity(payload: {
   [Key: string]: any;
@@ -40,10 +40,10 @@ export async function getActivities(req: Request, res: Response): Promise<any> {
           { $sort: { _id: -1 } },
           { $skip: offset },
           { $limit: limit },
-          userLookup,
+          memberLookup,
           {
             $unwind: {
-              path: "$user",
+              path: "$member",
               preserveNullAndEmptyArrays: true,
             },
           },

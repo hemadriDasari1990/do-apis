@@ -64,7 +64,7 @@ export async function updateSection(payload: {
     const updated: any = await Section.findOneAndUpdate(query, update, options);
     if (payload?.sectionId) {
       await createActivity({
-        userId: payload?.user?._id,
+        memberId: payload?.memberId,
         boardId: payload?.boardId,
         title: `section`,
         primaryAction: "from",
@@ -76,7 +76,7 @@ export async function updateSection(payload: {
       });
     } else {
       await createActivity({
-        userId: payload?.user?._id,
+        memberId: payload?.memberId,
         boardId: payload?.boardId,
         title: `${updated?.name}`,
         primaryAction: "as",
@@ -133,7 +133,7 @@ export async function addAndRemoveNoteFromSection(data: {
     await updateNoteSectionId(data.noteId, data.destinationSectionId);
     const noteDetails = await getNoteDetails(data.noteId);
     await createActivity({
-      userId: data?.userId,
+      memberId: data?.memberId,
       boardId: data?.boardId,
       title: `${noteDetails?.description}`,
       primaryAction: "from",
@@ -167,7 +167,7 @@ async function getSections(boardId: string): Promise<any> {
 
 export async function deleteSection(
   sectionId: string,
-  userId: string,
+  memberId: string,
   boardId: string
 ): Promise<any> {
   try {
@@ -176,7 +176,7 @@ export async function deleteSection(
       return deleted;
     }
     await createActivity({
-      userId: userId,
+      memberId,
       boardId: boardId,
       title: "section",
       type: "section",

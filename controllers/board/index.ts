@@ -215,7 +215,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     }
     await sendInvitation(req.body.teams, user, updated?._id);
     await createActivity({
-      userId: user?._id,
+      memberId: user?.memberId,
       boardId: updated?._id,
       title: `${updated?.name}`,
       primaryAction: "board",
@@ -255,7 +255,7 @@ export async function startOrCompleteBoard(payload: {
       return updated;
     }
     await createActivity({
-      userId: payload?.user?._id,
+      memberId: payload?.memberId,
       boardId: payload.id,
       title: "the session",
       type: "board",
@@ -374,7 +374,7 @@ export async function getBoardDetails(
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const increment = { $inc: { views: 1 } };
     await createActivity({
-      userId: user?._id,
+      memberId: user?.memberId,
       boardId: board?._id,
       title: `${board?.name}`,
       type: "board",
@@ -544,7 +544,7 @@ export async function changeVisibility(payload: {
       { new: true, useFindAndModify: false }
     );
     await createActivity({
-      userId: payload?.user?._id,
+      memberId: payload?.memberId,
       boardId: updated?._id,
       title: `${updated?.name}`,
       primaryAction: "visibility to",

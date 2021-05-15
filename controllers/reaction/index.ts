@@ -65,7 +65,7 @@ export async function createOrUpdateReaction(payload: {
       }
       await removeReactionById(reactionDetails?._id);
       await createActivity({
-        userId: payload.reactedBy,
+        memberId: payload.reactedBy,
         boardId: payload?.boardId,
         title: payload?.type,
         primaryAction: "to",
@@ -89,7 +89,7 @@ export async function createOrUpdateReaction(payload: {
     if (!note?.reactions?.includes(newReaction?._id)) {
       await addReactionToNote(newReaction._id, payload.noteId);
       await createActivity({
-        userId: payload.reactedBy,
+        memberId: payload.reactedBy,
         boardId: payload?.boardId,
         title: payload?.type,
         primaryAction: "to",

@@ -8,7 +8,7 @@ const ActivitySchema = new Schema(
     title: {
       type: String,
     },
-    userId: {
+    memberId: {
       type: Schema.Types.ObjectId,
       ref: "User",
       index: true,
@@ -68,9 +68,9 @@ const ActivitySchema = new Schema(
     secondaryTitle: {
       type: String,
     },
-    user: {
+    member: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "member",
     },
     board: {
       type: Schema.Types.ObjectId,

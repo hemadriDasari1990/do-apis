@@ -42,7 +42,7 @@ export default function section(io: socketio.Server, socket: Socket) {
       const user: any = decodeToken(query?.token);
       const deleted = await deleteSection(
         payload.id,
-        user?._id,
+        user?.memberId,
         payload.boardId
       );
       io.emit(`delete-section-response`, deleted);

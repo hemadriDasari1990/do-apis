@@ -16,7 +16,6 @@ import { addNoteToSection } from "../section";
 import { createActivity } from "../activity";
 import { findReactionsByNoteAndDelete } from "../reaction";
 import { getBoardDetailsWithProject } from "../board";
-import { getMember } from "../member";
 import mongoose from "mongoose";
 import { sectionLookup } from "../../util/sectionFilters";
 
@@ -32,42 +31,17 @@ export async function updateNote(payload: {
       };
     }
 
+    const createdById = !board?.isAnnonymous ? payload.createdById : null;
+    const updatedById = !board?.isAnnonymous ? payload.updatedById : null;
+
     // @TODO - Need a way to capture annonymous people avatar and name
-    const creator = payload.createdById
-      ? await getMember({
-          userId: mongoose.Types.ObjectId(payload.createdById),
-        })
-      : !payload.isAnnonymous && payload.email
-      ? await getMember({
-          email: payload.email?.trim(),
-          userId: board?.project?.userId,
-        })
-      : null;
-
-    const updator = payload.updatedById
-      ? await getMember({
-          userId: mongoose.Types.ObjectId(payload.updatedById),
-        })
-      : !payload.isAnnonymous && payload.email
-      ? await getMember({
-          email: payload.email?.trim(),
-          userId: board?.project?.userId,
-        })
-      : null;
-
     const query = { _id: mongoose.Types.ObjectId(payload.noteId) },
       update = {
         $set: {
           description: payload.description,
           sectionId: payload.sectionId,
-          createdById:
-            !board?.isAnnonymous && creator
-              ? creator?._id
-              : payload.createdById || null,
-          updatedById:
-            !board?.isAnnonymous && updator
-              ? updator?._id
-              : payload.updatedById || null,
+          createdById: createdById,
+          updatedById: updatedById,
           isAnnonymous: payload.isAnnonymous || false,
         },
         $inc: { position: 1 }, // auto increment position when creating new note
@@ -81,7 +55,7 @@ export async function updateNote(payload: {
 
     if (payload.noteId) {
       await createActivity({
-        userId: payload?.userId,
+        memberId: updatedById,
         boardId: payload?.boardId,
         title: `${payload.previousDescription}`,
         primaryAction: "to",
@@ -93,7 +67,7 @@ export async function updateNote(payload: {
       });
     } else {
       await createActivity({
-        userId: payload?.userId,
+        memberId: createdById,
         boardId: payload?.boardId,
         title: `${payload.description}`,
         primaryAction: "under",
@@ -178,6 +152,13 @@ export async function getNoteDetails(noteId: string): Promise<any> {
     const query = { _id: mongoose.Types.ObjectId(noteId) };
     const notes = await Note.aggregate([
       { $match: query },
+      sectionLookup,
+      {
+        $unwind: {
+          path: "$section",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       createdByLookUp,
       {
         $unwind: {
@@ -223,7 +204,7 @@ export async function markNoteRead(payload: {
     );
     await createActivity({
       boardId: payload?.boardId,
-      userId: payload?.userId,
+      memberId: payload?.memberId,
       title: ` ${noteUpdated?.description}`,
       primaryAction: "as",
       primaryTitle: payload.read ? "read" : "un read",
@@ -246,7 +227,7 @@ export async function deleteNote(payload: {
     }
     const section: any = await Section.findById(payload?.sectionId);
     await createActivity({
-      userId: payload?.userId,
+      memberId: payload?.memberId,
       boardId: payload?.boardId,
       title: `${payload?.description}`,
       primaryAction: "under",

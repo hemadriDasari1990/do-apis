@@ -95,6 +95,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       {
         name: userCreated.name,
         email: userCreated.email,
+        memberId: updatedMember._id,
       },
       config.get("accessTokenSecret"),
       VERIFY_TOKEN_EXPIRY

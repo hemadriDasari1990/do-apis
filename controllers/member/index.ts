@@ -75,7 +75,8 @@ export async function updateMember(
     if (!req.body.memberId) {
       await sendInviteToNewMember(user, updated);
     }
-    return res.status(200).send(updated);
+    const members: any = await getMemberDetailsLocal({ _id: updated?._id });
+    return res.status(200).send(members ? members[0] : null);
   } catch (err) {
     return res.status(500).send(err || err.message);
   }
@@ -96,13 +97,24 @@ export async function getMemberDetails(
 ): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
+    const members = await getMemberDetailsLocal(query);
+    return res.status(200).json(members);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
+export async function getMemberDetailsLocal(query: {
+  [Key: string]: any;
+}): Promise<any> {
+  try {
     const members = await Member.aggregate([
       { $match: query },
       teamMemberTeamsLookup,
     ]);
-    return res.status(200).json(members);
+    return members;
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    throw err || err.message;
   }
 }
 
