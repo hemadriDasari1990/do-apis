@@ -48,7 +48,7 @@ export async function updateSection(payload: {
         $set: {
           name: payload?.name,
           boardId: payload?.boardId,
-          ...(!payload?.sectionId ? { position: payload.position } : {}),
+          ...(!payload?.sectionId ? { position: sectionCount + 1 } : {}),
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
@@ -88,7 +88,8 @@ export async function updateSection(payload: {
 
     return updated;
   } catch (err) {
-    return err;
+    console.log("err", err);
+    throw err;
   }
 }
 
