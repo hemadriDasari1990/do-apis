@@ -15,6 +15,10 @@ const SectionSchema = new Schema(
       trim: true,
       minlength: 1,
     },
+    position: {
+      type: Number,
+      default: 0,
+    },
     notes: [{ type: Schema.Types.ObjectId, ref: "Note" }],
   },
   {

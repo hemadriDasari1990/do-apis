@@ -1,5 +1,9 @@
 import { decodeToken, verifyToken } from "../../util";
-import { deleteSection, updateSection } from "../../controllers/section";
+import {
+  deleteSection,
+  updateSection,
+  changeSectionPosition,
+} from "../../controllers/section";
 import socketio, { Socket } from "socket.io";
 
 export default function section(io: socketio.Server, socket: Socket) {
@@ -47,4 +51,20 @@ export default function section(io: socketio.Server, socket: Socket) {
       return err;
     }
   });
+
+  socket.on(
+    "update-section-position",
+    async (payload: { [Key: string]: any }) => {
+      try {
+        const query: any = socket.handshake.query;
+        verifyToken(query?.token, io);
+        await changeSectionPosition(
+          payload.sourceSection,
+          payload.destinationSection
+        );
+      } catch (err) {
+        return err;
+      }
+    }
+  );
 }

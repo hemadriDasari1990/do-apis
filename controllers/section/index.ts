@@ -48,6 +48,7 @@ export async function updateSection(payload: {
         $set: {
           name: payload?.name,
           boardId: payload?.boardId,
+          ...(!payload?.sectionId ? { position: payload.position } : {}),
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
@@ -152,6 +153,7 @@ async function getSections(boardId: string): Promise<any> {
     const query = { boardId: mongoose.Types.ObjectId(boardId) };
     const sections = await Section.aggregate([
       { $match: query },
+      { $sort: { position: 1 } },
       notesLookup,
       sectionNoteAddFields,
     ]);
@@ -256,5 +258,36 @@ export async function addNoteToSection(
     return updated;
   } catch (err) {
     throw `Error while adding note to section ${err || err.message}`;
+  }
+}
+
+export async function changeSectionPosition(
+  sourceSection: { [Key: string]: any },
+  destinationSection: { [Key: string]: any }
+): Promise<any> {
+  try {
+    if (
+      !sourceSection ||
+      !sourceSection?._id ||
+      !destinationSection ||
+      !destinationSection?._id
+    ) {
+      return;
+    }
+    await Section.findByIdAndUpdate(
+      sourceSection?._id,
+      { $set: { position: destinationSection?.position } },
+      { new: true, useFindAndModify: false }
+    );
+    await Section.findByIdAndUpdate(
+      destinationSection?._id,
+      { $set: { position: sourceSection?.position } },
+      { new: true, useFindAndModify: false }
+    );
+    return {
+      updated: true,
+    };
+  } catch (err) {
+    throw `Error while reordering section ${err || err.message}`;
   }
 }

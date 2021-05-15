@@ -164,11 +164,12 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     if (!req.body.isDefaultBoard && req.body.noOfSections) {
       await Array(parseInt(req.body.noOfSections))
         .fill(0)
-        .reduce(async (promise) => {
+        .reduce(async (promise, index: number) => {
           await promise;
           const section = await saveSection({
             boardId: updated._id,
             name: "Section Title",
+            position: index + 1,
           });
           await addSectionToBoard(section?._id, updated._id);
         }, Promise.resolve());
@@ -178,14 +179,18 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
       !req.body.noOfSections &&
       defaultSections?.length
     ) {
-      await defaultSections.reduce(async (promise, defaultSectionTitle) => {
-        await promise;
-        const section = await saveSection({
-          boardId: updated._id,
-          name: defaultSectionTitle,
-        });
-        await addSectionToBoard(section?._id, updated._id);
-      }, Promise.resolve());
+      await defaultSections.reduce(
+        async (promise, defaultSectionTitle: string, index: number) => {
+          await promise;
+          const section = await saveSection({
+            boardId: updated._id,
+            name: defaultSectionTitle,
+            position: index + 1,
+          });
+          await addSectionToBoard(section?._id, updated._id);
+        },
+        Promise.resolve()
+      );
     }
     if (!req.body.isAnnonymous && req.body.teams?.length && updated?._id) {
       await addTeamsToBoad(req.body.teams, updated);
