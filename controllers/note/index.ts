@@ -163,6 +163,7 @@ export async function getNotesBySectionId(
           totalPlusOne: 1,
           totalReactions: 1,
           _id: 1,
+          reactions: 1,
         },
       },
     ]);
