@@ -169,7 +169,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
           const section = await saveSection({
             boardId: updated._id,
             name: "Section Title",
-            position: index + 1,
+            position: index,
           });
           await addSectionToBoard(section?._id, updated._id);
         }, Promise.resolve());
@@ -185,7 +185,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
           const section = await saveSection({
             boardId: updated._id,
             name: defaultSectionTitle,
-            position: index + 1,
+            position: index,
           });
           await addSectionToBoard(section?._id, updated._id);
         },

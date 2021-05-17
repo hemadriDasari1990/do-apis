@@ -48,7 +48,7 @@ export async function updateSection(payload: {
         $set: {
           name: payload?.name,
           boardId: payload?.boardId,
-          ...(!payload?.sectionId ? { position: sectionCount + 1 } : {}),
+          ...(!payload?.sectionId ? { position: sectionCount || 0 } : {}),
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };

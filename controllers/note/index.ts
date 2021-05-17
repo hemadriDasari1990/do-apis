@@ -43,8 +43,8 @@ export async function updateNote(payload: {
           createdById: createdById,
           updatedById: updatedById,
           isAnnonymous: payload.isAnnonymous || false,
+          ...(!payload.noteId ? { position: payload.position } : {}),
         },
-        $inc: { position: 1 }, // auto increment position when creating new note
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated: any = await Note.findOneAndUpdate(query, update, options);
@@ -92,6 +92,7 @@ export async function getNotesBySectionId(
     const query = { sectionId: mongoose.Types.ObjectId(req.params.sectionId) };
     const notes = await Note.aggregate([
       { $match: query },
+      { $sort: { position: 1 } },
       createdByLookUp,
       {
         $unwind: {
@@ -334,25 +335,49 @@ export async function updateNotePosition(payload: {
     if (!payload) {
       return { updated: false };
     }
-    const sourceNote = await getNote({
-      _id: mongoose.Types.ObjectId(payload?.sourceId),
-    });
-    const destinationNote = await getNote({
-      _id: mongoose.Types.ObjectId(payload?.destinationId),
-    });
-    if (sourceNote && destinationNote) {
-      await Note.findByIdAndUpdate(sourceNote?._id, {
-        position: destinationNote?.position,
-      });
-    }
+    const sourceQuery = {
+        $and: [
+          { sectionId: mongoose.Types.ObjectId(payload?.sectionId) },
+          { position: payload?.sourceIndex },
+        ],
+      },
+      update = {
+        $set: {
+          position: payload?.destinationIndex,
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const destinationQuery = {
+        $and: [
+          { sectionId: mongoose.Types.ObjectId(payload?.sectionId) },
+          { position: payload?.destinationIndex },
+        ],
+      },
+      destinationUpdate = {
+        $set: {
+          position: payload?.sourceIndex,
+        },
+      },
+      destinationOptions = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      };
+    const sourceNote: any = await Note.findOneAndUpdate(
+      sourceQuery,
+      update,
+      options
+    );
+    const destinationNote: any = await Note.findOneAndUpdate(
+      destinationQuery,
+      destinationUpdate,
+      destinationOptions
+    );
 
-    if (sourceNote && destinationNote) {
-      await Note.findByIdAndUpdate(destinationNote?._id, {
-        position: sourceNote?.position,
-      });
-    }
     return {
       updated: true,
+      sourceIndex: sourceNote?.position,
+      destinationIndex: destinationNote?.position,
     };
   } catch (err) {
     return {

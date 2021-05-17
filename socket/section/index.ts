@@ -58,10 +58,15 @@ export default function section(io: socketio.Server, socket: Socket) {
       try {
         const query: any = socket.handshake.query;
         verifyToken(query?.token, io);
-        await changeSectionPosition(
+        const updated = await changeSectionPosition(
           payload.sourceSection,
           payload.destinationSection
         );
+        io.emit("update-section-position-response", {
+          ...updated,
+          destinationIndex: payload.destinationIndex,
+          sourceIndex: payload.sourceIndex,
+        });
       } catch (err) {
         return err;
       }

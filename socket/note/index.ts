@@ -55,7 +55,7 @@ export default function note(io: socketio.Server, socket: Socket) {
       ...payload,
       //   ...decodeToken(query?.token),
     });
-    io.emit(`update-note-position-response`, updated);
+    io.emit(`update-note-position-response-${payload?.sectionId}`, updated);
   });
 
   socket.on("move-note-to-section", async (payload: { [Key: string]: any }) => {
