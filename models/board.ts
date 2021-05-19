@@ -10,7 +10,6 @@ const BoardSchema = new Schema(
       ref: "Project",
       default: null,
       index: true,
-      required: true,
     },
     name: {
       type: String,
@@ -65,6 +64,10 @@ const BoardSchema = new Schema(
     views: {
       type: Number,
       default: 0,
+    },
+    isInstant: {
+      type: Boolean,
+      default: false,
     },
     isAnnonymous: {
       type: Boolean,

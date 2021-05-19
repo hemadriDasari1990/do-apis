@@ -59,6 +59,33 @@ export const updateBoardValidator = [
   },
 ];
 
+export const createInstantBordValidator = [
+  /* Check Name */
+  check("name")
+    .trim()
+    .escape(),
+  check("description")
+    .trim()
+    .escape(),
+  check("noOfSections")
+    .isNumeric()
+    .withMessage("No of sections should be a number")
+    .isLength({ min: 1, max: 10 })
+    .withMessage("No of sections must be between 1 and 10"),
+  (req: Request, res: Response, next: NextFunction) => {
+    const error = validationResult(req).formatWith(({ msg }) => msg);
+    const hasError = !error.isEmpty();
+    if (hasError) {
+      res.status(422).json({
+        errorId: VALIDATION_FAILED,
+        message: error.array().join(", \n"),
+      });
+    } else {
+      next();
+    }
+  },
+];
+
 export const getBoardDetailsValidator = [
   param("id")
     .exists()

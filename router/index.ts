@@ -52,6 +52,8 @@ import {
   getBoardDetails,
   getBoards,
   updateBoard,
+  createInstantBord,
+  downloadInstantBoardReport,
 } from "../controllers/board";
 import {
   deleteBoardValidator,
@@ -59,6 +61,7 @@ import {
   getBoardDetailsValidator,
   getBoardsByUserValidator,
   updateBoardValidator,
+  createInstantBordValidator,
 } from "../controllers/board/validator";
 import {
   deleteMember,
@@ -355,6 +358,9 @@ export default function(app: Application) {
   // Update or Create board
   boardRoutes.put("/", authenticateJWT, updateBoardValidator, updateBoard);
 
+  // Create instant board
+  boardRoutes.put("/instant", createInstantBordValidator, createInstantBord);
+
   // Board delete route
   boardRoutes.delete(
     "/:id",
@@ -369,6 +375,13 @@ export default function(app: Application) {
     authenticateJWT,
     downloadBoardReportValidator,
     downloadBoardReport
+  );
+
+  // download board report
+  boardRoutes.get(
+    "/:id/download-instant-report",
+    downloadBoardReportValidator,
+    downloadInstantBoardReport
   );
 
   //= ========================

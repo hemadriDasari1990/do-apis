@@ -268,6 +268,61 @@ export async function startOrCompleteBoard(payload: {
   }
 }
 
+export async function createInstantBord(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const query = { _id: { $exists: false } }, // Create new record if id is not matching
+      update = {
+        $set: {
+          name: req.body?.name,
+          description: req.body?.description,
+          status: "new",
+          sprint: 1,
+          isDefaultBoard: req.body?.isDefaultBoard,
+          isInstant: req.body?.isInstant,
+        },
+      },
+      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+    const updated: any = await Board.findOneAndUpdate(query, update, options);
+    if (!req.body?.isDefaultBoard && req.body?.noOfSections) {
+      await Array(parseInt(req.body?.noOfSections))
+        .fill(0)
+        .reduce(async (promise, index: number) => {
+          await promise;
+          const section = await saveSection({
+            boardId: updated._id,
+            name: "Section Title",
+            position: index,
+          });
+          await addSectionToBoard(section?._id, updated._id);
+        }, Promise.resolve());
+    }
+    if (
+      req.body?.isDefaultBoard &&
+      !req.body?.noOfSections &&
+      defaultSections?.length
+    ) {
+      await defaultSections.reduce(
+        async (promise, defaultSectionTitle: string, index: number) => {
+          await promise;
+          const section = await saveSection({
+            boardId: updated._id,
+            name: defaultSectionTitle,
+            position: index,
+          });
+          await addSectionToBoard(section?._id, updated._id);
+        },
+        Promise.resolve()
+      );
+    }
+    return res.status(200).send(updated);
+  } catch (err) {
+    return res.status(500).send(err || err.message);
+  }
+}
+
 export async function getBoardDetailsForReport(boardId: string): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(boardId) };
@@ -334,6 +389,7 @@ export async function getBoardDetailsWithMembers(
           views: 1,
           _id: 1,
           project: 1,
+          isInstant: 1,
         },
       },
     ]);
@@ -592,6 +648,39 @@ export async function downloadBoardReport(
 ): Promise<any> {
   try {
     const data: any = await getBoardDetailsForReport(req.params.id);
+    await downloadReport(res, data);
+  } catch (err) {
+    return res.status(500).json({
+      message: err,
+    });
+  }
+}
+
+export async function downloadInstantBoardReport(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const data: any = await getBoardDetailsForReport(req.params.id);
+    if (!data?.isInstant) {
+      return res.status(401).json({ message: "Unauthorized access" });
+    }
+    await downloadReport(res, data);
+  } catch (err) {
+    return res.status(500).json({
+      message: err,
+    });
+  }
+}
+
+export async function downloadReport(
+  res: Response,
+  data: { [Key: string]: any }
+): Promise<any> {
+  try {
+    if (!data) {
+      return;
+    }
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet([
       {
