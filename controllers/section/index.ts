@@ -17,6 +17,7 @@ import {
 import Section from "../../models/section";
 import { createActivity } from "../activity";
 import mongoose from "mongoose";
+import { addSectionToBoard } from "../board";
 
 export async function saveSection(input: any) {
   try {
@@ -55,13 +56,17 @@ export async function updateSection(payload: {
     const section = await getSection({
       $and: [{ name: payload?.name?.trim() }, { boardId: payload?.boardId }],
     });
-    if (section) {
+    if (section && !payload?.sectionId) {
       return {
         errorId: RESOURCE_ALREADY_EXISTS,
         message: `Section with ${section?.name} already exist. Please choose different name`,
       };
     }
     const updated: any = await Section.findOneAndUpdate(query, update, options);
+
+    if (!payload?.sectionId && updated?._id) {
+      await addSectionToBoard(updated?._id, updated?.boardId);
+    }
     if (payload?.sectionId) {
       await createActivity({
         memberId: payload?.memberId,
@@ -88,7 +93,6 @@ export async function updateSection(payload: {
 
     return updated;
   } catch (err) {
-    console.log("err", err);
     throw err;
   }
 }

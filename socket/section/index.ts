@@ -16,7 +16,6 @@ export default function section(io: socketio.Server, socket: Socket) {
         user: decodeToken(query?.token),
       });
       io.emit(`update-section-response`, updated);
-      io.emit("plus-total-section-response", updated);
     } catch (err) {
       return err;
     }
@@ -30,6 +29,7 @@ export default function section(io: socketio.Server, socket: Socket) {
         ...payload,
       });
       io.emit(`create-section-response`, created);
+      io.emit("plus-total-section-response", created);
     } catch (err) {
       return err;
     }
