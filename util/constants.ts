@@ -33,13 +33,3 @@ export const MAX_BOARDS_COUNT = 20;
 
 export const VERIFY_TOKEN_EXPIRY = "2d";
 export const JOIN_TOKEN_EXPIRY = "2d";
-
-export const defaultSections = [
-  "What went well",
-  "What could have been better",
-  "What to stop",
-  "What to start",
-  "New Learnings",
-  "Recognitions",
-  "Action items",
-];

@@ -26,9 +26,9 @@ const BoardSchema = new Schema(
       type: Number,
       default: 0,
     },
-    isDefaultBoard: {
-      type: Boolean,
-      default: false,
+    defaultSection: {
+      type: String,
+      trim: true,
     },
     status: {
       type: String,

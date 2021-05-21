@@ -29,7 +29,6 @@ import XLSX from "xlsx";
 import { addMemberToUser } from "../user";
 import { createActivity } from "../activity";
 import { createInvitedTeams } from "../invite";
-import { defaultSections } from "../../util/constants";
 import { findSectionsByBoardAndDelete } from "../section";
 import fs from "fs";
 import mongoose from "mongoose";
@@ -75,7 +74,7 @@ export async function checkIfNewBoardExists(projectId: string): Promise<any> {
 
 export async function updateBoard(req: Request, res: Response): Promise<any> {
   try {
-    if (!req.body.isDefaultBoard && req.body.noOfSections > 10) {
+    if (!req.body.defaultSection && req.body.noOfSections > 10) {
       return res.status(500).json({
         errorId: SECTION_COUNT_EXCEEDS,
         message: `Max no of sections allowed are only 10`,
@@ -149,7 +148,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
           projectId: req.body.projectId,
           status: req.body.status,
           sprint: boardsCount + 1,
-          isDefaultBoard: req.body.isDefaultBoard,
+          defaultSection: req.body.defaultSection,
           isAnnonymous: req.body.isAnnonymous,
         },
       },
@@ -161,7 +160,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         message: `Error while creating the board`,
       });
     }
-    if (!req.body.isDefaultBoard && req.body.noOfSections) {
+    if (!req.body.defaultSection && req.body.noOfSections) {
       await Array(parseInt(req.body.noOfSections))
         .fill(0)
         .reduce(async (promise, index: number) => {
@@ -175,22 +174,24 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         }, Promise.resolve());
     }
     if (
-      req.body.isDefaultBoard &&
+      req.body.defaultSection &&
       !req.body.noOfSections &&
-      defaultSections?.length
+      req.body.defaultSection?.length
     ) {
-      await defaultSections.reduce(
-        async (promise, defaultSectionTitle: string, index: number) => {
-          await promise;
-          const section = await saveSection({
-            boardId: updated._id,
-            name: defaultSectionTitle,
-            position: index,
-          });
-          await addSectionToBoard(section?._id, updated._id);
-        },
-        Promise.resolve()
-      );
+      await req.body.defaultSection
+        ?.split(",")
+        .reduce(
+          async (promise: any, defaultSectionTitle: string, index: number) => {
+            await promise;
+            const section = await saveSection({
+              boardId: updated._id,
+              name: defaultSectionTitle,
+              position: index,
+            });
+            await addSectionToBoard(section?._id, updated._id);
+          },
+          Promise.resolve()
+        );
     }
     if (!req.body.isAnnonymous && req.body.teams?.length && updated?._id) {
       await addTeamsToBoad(req.body.teams, updated);
@@ -280,13 +281,14 @@ export async function createInstantBord(
           description: req.body?.description,
           status: "new",
           sprint: 1,
-          isDefaultBoard: req.body?.isDefaultBoard,
+
+          defaultSection: req.body?.defaultSection,
           isInstant: req.body?.isInstant,
         },
       },
       options = { upsert: true, new: true, setDefaultsOnInsert: true };
     const updated: any = await Board.findOneAndUpdate(query, update, options);
-    if (!req.body?.isDefaultBoard && req.body?.noOfSections) {
+    if (!req.body?.defaultSection && req.body?.noOfSections) {
       await Array(parseInt(req.body?.noOfSections))
         .fill(0)
         .reduce(async (promise, index: number) => {
@@ -300,22 +302,24 @@ export async function createInstantBord(
         }, Promise.resolve());
     }
     if (
-      req.body?.isDefaultBoard &&
-      !req.body?.noOfSections &&
-      defaultSections?.length
+      req.body.defaultSection &&
+      !req.body.noOfSections &&
+      req.body.defaultSection?.length
     ) {
-      await defaultSections.reduce(
-        async (promise, defaultSectionTitle: string, index: number) => {
-          await promise;
-          const section = await saveSection({
-            boardId: updated._id,
-            name: defaultSectionTitle,
-            position: index,
-          });
-          await addSectionToBoard(section?._id, updated._id);
-        },
-        Promise.resolve()
-      );
+      await req.body.defaultSection
+        ?.split(",")
+        .reduce(
+          async (promise: any, defaultSectionTitle: string, index: number) => {
+            await promise;
+            const section = await saveSection({
+              boardId: updated._id,
+              name: defaultSectionTitle,
+              position: index,
+            });
+            await addSectionToBoard(section?._id, updated._id);
+          },
+          Promise.resolve()
+        );
     }
     return res.status(200).send(updated);
   } catch (err) {
@@ -374,7 +378,7 @@ export async function getBoardDetailsWithMembers(
           inviteCount: 1,
           inviteSent: 1,
           isAnnonymous: 1,
-          isDefaultBoard: 1,
+          defaultSection: 1,
           isLocked: 1,
           isPrivate: 1,
           name: 1,
@@ -591,6 +595,7 @@ export async function changeVisibility(payload: {
   [Key: string]: any;
 }): Promise<any> {
   try {
+    console.log("visibility", payload);
     if (!payload || !payload?.id) {
       return;
     }
@@ -600,7 +605,7 @@ export async function changeVisibility(payload: {
       { new: true, useFindAndModify: false }
     );
     await createActivity({
-      memberId: payload?.memberId,
+      memberId: payload?.user?.memberId,
       boardId: updated?._id,
       title: `${updated?.name}`,
       primaryAction: "visibility to",
@@ -690,8 +695,8 @@ export async function downloadReport(
         Visibility: data?.isPrivate ? "Private" : "Public",
         "Invited Members": "",
         "Joined Members": "",
-        "Session Started At": data?.startedAt || "",
-        "Session Ended At": data?.completedAt || "",
+        "Session Started On": data?.startedAt || "",
+        "Session Completed On": data?.completedAt || "",
         "Invite Sent": data?.inviteSent ? "yes" : "No",
         "Invite Count": data?.inviteCount,
         "Total Views": data?.views,

@@ -14,7 +14,9 @@
     "build": "tsc",
     "build:watch": "tsc -w",
     "lint:list": "eslint */**/*.js --fix",
-    "lint": "eslint */**/*.js --fix"
+    "lint": "eslint */**/*.js --fix",
+    "migrate:up": "migrate-mongo up",
+    "migrate:down": "migrate-mongo down"
   },
   "husky": {
     "hooks": {

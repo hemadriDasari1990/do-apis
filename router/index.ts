@@ -112,7 +112,7 @@ import {
   getReactions,
 } from "../controllers/reaction";
 import { logout, refreshToken } from "../controllers/auth";
-
+import { getDefaultSections } from "../controllers/defaultSection";
 import { getActionByBoardId } from "../controllers/action";
 import { getActionItemsByActionId } from "../controllers/actionItem";
 import { getActivities } from "../controllers/activity";
@@ -136,6 +136,7 @@ export default function(app: Application) {
     memberRoutes = express.Router(),
     reactionRoutes = express.Router(),
     securityQuestionRoutes = express.Router(),
+    defaultSectionRoutes = express.Router(),
     actionRoutes = express.Router(),
     actionItemRoutes = express.Router(),
     feedbackRoutes = express.Router(),
@@ -535,6 +536,17 @@ export default function(app: Application) {
     authenticateJWT,
     verifySecurityQuestionAnswer
   );
+
+  //= ========================
+  // Default Section Routes
+  //= ========================
+
+  // Set user routes as subgroup/middleware to apiRoutes
+  apiRoutes.use("/default-sections", defaultSectionRoutes);
+
+  // Get Default Sections
+  defaultSectionRoutes.get("/", getDefaultSections);
+
   // Set url for API group routes
   app.use("/", apiRoutes);
 }
