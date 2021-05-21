@@ -44,26 +44,23 @@ export async function authenticateJWT(
       code: UNAUTHORIZED,
     });
   }
-  const user: any = await User.findOne({ token: token });
+  const user: any = await User.findOne({ token: token?.trim() });
+
   /* Unauthorize the request if user not found */
   if (!user) {
     return res.status(401).json({ status: "error", code: UNAUTHORIZED });
   }
-  let secret: any;
-  if (user?.token) {
-    secret = config.get("refreshTokenSecret");
+  const secret: string = config.get("accessTokenSecret");
+  if (authHeader) {
+    await jwt.verify(token, secret, (err: any, jwtUser: any) => {
+      if (err || !jwtUser) {
+        return res.status(401).json({ status: "error", code: UNAUTHORIZED });
+      }
+      return next();
+    });
   } else {
-    secret = config.get("accessTokenSecret");
+    return res.status(401).json({ status: "error", code: UNAUTHORIZED });
   }
-  await jwt.verify(token, secret, (err: any, jwtUser: any) => {
-    if (err) {
-      return res.status(401).json({ status: "error", code: UNAUTHORIZED });
-    }
-    if (!jwtUser) {
-      return res.status(401).json({ status: "error", code: UNAUTHORIZED });
-    }
-    return next();
-  });
 }
 
 /**
@@ -126,9 +123,14 @@ export async function login(req: Request, res: Response): Promise<any> {
     }
 
     /* Update the token */
-    await User.findByIdAndUpdate(user._id, {
-      token: refreshToken,
-    });
+    await User.findOneAndUpdate(
+      { _id: mongoose.Types.ObjectId(user._id) },
+      {
+        $set: {
+          token: token,
+        },
+      }
+    );
     return res.status(200).json({
       success: true,
       token: token,
@@ -150,24 +152,48 @@ export async function login(req: Request, res: Response): Promise<any> {
  */
 export async function refreshToken(req: Request, res: Response): Promise<any> {
   try {
-    const user: any = await User.findOne({
-      token: req.body.refreshToken,
-    });
-    if (!user) {
-      return res.status(401).json({ error: "Token expired!" });
-    }
     //extract payload from refresh token and generate a new access token and send it
-    const payload: any = jwt.verify(
-      user?.token,
+    const decodedUser: any = jwt.verify(
+      req.body.refreshToken,
       config.get("refreshTokenSecret")
     );
-    // Sign token
-    const token = await refreshAccessToken(payload);
-    if (!token) {
+    if (!decodedUser || !decodedUser?.email) {
       return res
-        .status(500)
-        .json({ message: "Error while generating the token" });
+        .status(401)
+        .json({ token: null, message: "Invalid refresh token" });
     }
+
+    const user: any = await User.findOne({
+      email: decodedUser?.email,
+    });
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    const payload = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      accountType: user.accountType,
+      memberId: user?.memberId,
+    };
+
+    // Sign token
+    const token = await generateToken(
+      payload,
+      config.get("accessTokenSecret"),
+      86400
+    ); // 86400 i.e., expires in 24 hrs
+
+    /* Update the token */
+    await User.findOneAndUpdate(
+      { _id: mongoose.Types.ObjectId(user._id) },
+      {
+        $set: {
+          token: token,
+        },
+      }
+    );
     return res.status(200).json({
       success: true,
       token: token,
@@ -506,11 +532,11 @@ export async function generateToken(
     [Key: string]: any;
   },
   secret: string,
-  expiry: string
+  expiry: any
 ): Promise<string> {
   try {
     const token: string = await jwt.sign(payload, secret, {
-      expiresIn: expiry, // 1 hr
+      expiresIn: expiry,
     });
     return token;
   } catch (err) {
@@ -533,7 +559,7 @@ export async function refreshAccessToken(payload: {
       payload,
       config.get("refreshTokenSecret"),
       {
-        expiresIn: 86400, // expires in 24 hours
+        expiresIn: 86400, // 86400 i.e., expires in 24 hrs
       }
     );
     return token;

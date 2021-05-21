@@ -57,6 +57,7 @@ const sectionAddFields = {
   $addFields: {
     sections: "$sections",
     totalSections: { $size: { $ifNull: ["$sections", []] } },
+    totalNotes: { $size: { $ifNull: ["$sections.notes", []] } },
   },
 };
 

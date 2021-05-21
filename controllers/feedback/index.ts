@@ -11,7 +11,7 @@ export async function getFeedbacks(req: Request, res: Response): Promise<any> {
       rating: {
         $gt: Number(req.query.rating),
       },
-      isApproved: req.query.isApproved,
+      isApproved: Boolean(req.query.isApproved),
     };
     const aggregators = [];
     aggregators.push({
@@ -50,6 +50,7 @@ export async function createFeedback(
       description: req.body?.description,
       rating: req.body?.rating,
       userId: user?._id,
+      isApproved: parseInt(req.body?.rating) === 5,
     });
     const feedbackCreated = await feedback.save();
     if (!feedbackCreated) {

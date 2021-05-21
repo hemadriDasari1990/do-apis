@@ -30,7 +30,6 @@ export async function updateNote(payload: {
         message: "Board isn't found",
       };
     }
-
     const createdById = !board?.isAnnonymous ? payload.createdById : null;
     const updatedById = !board?.isAnnonymous ? payload.updatedById : null;
 

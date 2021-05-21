@@ -17,11 +17,7 @@ import {
 import { addBoardToProject, createProject } from "../project";
 import { createMember, sendInviteToMember } from "../member";
 import { getPagination, getUser } from "../../util";
-import {
-  sectionAddFields,
-  sectionsLookup,
-  sectionsWithoutNoteLookup,
-} from "../../util/sectionFilters";
+import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 import Board from "../../models/board";
 import Project from "../../models/project";
@@ -361,7 +357,7 @@ export async function getBoardDetailsWithMembers(
       { $match: query },
       teamsLookup,
       teamAddFields,
-      sectionsWithoutNoteLookup,
+      sectionsLookup,
       sectionAddFields,
       projectLookup,
       {
@@ -388,6 +384,7 @@ export async function getBoardDetailsWithMembers(
           startedAt: 1,
           teams: 1,
           totalSections: 1,
+          totalNotes: 1,
           updatedAt: 1,
           totalTeams: 1,
           views: 1,

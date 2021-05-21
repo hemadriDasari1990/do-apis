@@ -1,8 +1,8 @@
 {
 	"name": "This is lets do retro micro service",
 	"version": "0.1",
-	"accessTokenSecret": "letsdoretro",
-	"refreshTokenSecret": "letsdoretro234",
+	"accessTokenSecret": "ldrwngrt2021",
+	"refreshTokenSecret": "1202trgnwrdl",
 	"database": "mongodb://localhost:27017/lets-do-retro",
 	"port": 8080,
 	"bcryptSalt": 10,
@@ -13,5 +13,5 @@
 		"user": "letsdoretro@gmail.com",
 		"password": "ziknjvfoihgdjabo"
 	},
-	"url": "http://www.letsdoretro.com"
+	"url": "https://www.letsdoretro.com"
 }
