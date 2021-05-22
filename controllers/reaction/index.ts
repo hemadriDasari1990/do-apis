@@ -6,7 +6,6 @@ import Note from "../../models/note";
 import Reaction from "../../models/reaction";
 import Section from "../../models/section";
 import { createActivity } from "../activity";
-import { getMember } from "../member";
 import { getPagination } from "../../util";
 import mongoose from "mongoose";
 import { notesLookup } from "../../util/noteFilters";
@@ -19,18 +18,12 @@ export async function createOrUpdateReaction(payload: {
 }): Promise<any> {
   try {
     /* Get the admin member */
-    const member: any = !payload?.isAnnonymous
-      ? await getMember({
-          userId: payload.reactedBy,
-          isAuthor: true,
-          isVerified: true,
-        })
-      : null;
-    const query = payload?.reactedBy
+    const reactedBy: any = !payload?.isAnnonymous ? payload?.reactedBy : null;
+    const query = reactedBy
         ? {
             $and: [
               { noteId: mongoose.Types.ObjectId(payload.noteId) },
-              { reactedBy: mongoose.Types.ObjectId(member?._id) },
+              { reactedBy: mongoose.Types.ObjectId(reactedBy) },
             ],
           }
         : {
@@ -39,7 +32,7 @@ export async function createOrUpdateReaction(payload: {
       update = {
         $set: {
           noteId: payload?.noteId,
-          reactedBy: member?._id,
+          reactedBy: reactedBy,
           type: payload?.type,
         },
       },
@@ -50,14 +43,16 @@ export async function createOrUpdateReaction(payload: {
     });
     const reactionDetails = await getReaction({
       $and: [
-        { reactedBy: mongoose.Types.ObjectId(member?._id) },
+        {
+          reactedBy: reactedBy ? mongoose.Types.ObjectId(reactedBy) : null,
+        },
         { noteId: mongoose.Types.ObjectId(payload?.noteId) },
       ],
     });
     /* Remove only if member is known */
     if (
       reactionDetails &&
-      payload.reactedBy &&
+      reactedBy &&
       reactionDetails?.type === payload?.type
     ) {
       if (note?.reactions?.includes(reactionDetails?._id)) {
@@ -65,7 +60,7 @@ export async function createOrUpdateReaction(payload: {
       }
       await removeReactionById(reactionDetails?._id);
       await createActivity({
-        memberId: payload.reactedBy,
+        memberId: reactedBy,
         boardId: payload?.boardId,
         title: payload?.type,
         primaryAction: "to",
@@ -89,7 +84,7 @@ export async function createOrUpdateReaction(payload: {
     if (!note?.reactions?.includes(newReaction?._id)) {
       await addReactionToNote(newReaction._id, payload.noteId);
       await createActivity({
-        memberId: payload.reactedBy,
+        memberId: reactedBy,
         boardId: payload?.boardId,
         title: payload?.type,
         primaryAction: "to",
