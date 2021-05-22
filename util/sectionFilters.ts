@@ -1,5 +1,6 @@
+import { noteAddFields, notesLookup } from "./noteFilters";
+
 import Section from "../models/section";
-import { notesLookup } from "./noteFilters";
 
 const sectionsLookup = {
   $lookup: {
@@ -15,6 +16,7 @@ const sectionsLookup = {
         $sort: { _id: 1 },
       },
       notesLookup,
+      noteAddFields,
     ],
     as: "sections",
   },
@@ -57,7 +59,7 @@ const sectionAddFields = {
   $addFields: {
     sections: "$sections",
     totalSections: { $size: { $ifNull: ["$sections", []] } },
-    totalNotes: { $size: { $ifNull: ["$sections.notes", []] } },
+    totalNotes: { $sum: "$sections.totalNotes" },
   },
 };
 
