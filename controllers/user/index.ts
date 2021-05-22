@@ -18,8 +18,8 @@ import {
 } from "../../util/projectFilters";
 import {
   memberAddFields,
-  membersLookup,
   memberLookup,
+  membersLookup,
 } from "../../util/memberFilters";
 import { teamAddFields, teamsLookup } from "../../util/teamFilters";
 
@@ -89,7 +89,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       updateMember,
       memberOptions
     );
-    await addMemberToUser(updatedMember?._id, userCreated?._id);
+    await addMemberToUser(updatedMember?._id, userCreated?._id, true);
     // Generate jwt token
     const jwtToken = await generateToken(
       {
@@ -421,7 +421,8 @@ export async function addTeamToUser(
 
 export async function addMemberToUser(
   memberId: string,
-  userId: string
+  userId: string,
+  updateMember?: boolean // Whether to update member id or not
 ): Promise<any> {
   try {
     if (!userId || !memberId) {
@@ -431,9 +432,13 @@ export async function addMemberToUser(
       userId,
       {
         $push: { members: memberId },
-        $set: {
-          memberId: memberId,
-        },
+        ...(updateMember
+          ? {
+              $set: {
+                memberId: memberId,
+              },
+            }
+          : {}),
       },
       { new: true, useFindAndModify: false }
     );
