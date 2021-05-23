@@ -35,6 +35,7 @@ const NoteSchema = new Schema(
     position: {
       type: Number,
       default: 0,
+      index: true,
     },
     reactions: [{ type: Schema.Types.ObjectId, ref: "Reaction" }],
     createdBy: { type: Schema.Types.ObjectId, ref: "Member" },

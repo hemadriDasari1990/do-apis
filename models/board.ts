@@ -35,7 +35,6 @@ const BoardSchema = new Schema(
       required: true,
       enum: ["new", "inprogress", "completed"],
       default: "draft",
-      index: true,
     },
     startedAt: {
       type: Date,
@@ -107,8 +106,6 @@ const BoardSchema = new Schema(
   }
 );
 
-BoardSchema.index({ projectId: 1, name: 1 }, { unique: true });
-BoardSchema.index({ projectId: 1, name: 1, sprint: 1 }, { unique: true });
 // BoardSchema.index({ "$**": "text" }); // for full text search with $text operator
 BoardSchema.index(
   { name: "text", sprint: "text" },

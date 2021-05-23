@@ -345,7 +345,7 @@ export async function updateNotePosition(payload: {
           position: payload?.destinationIndex,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = { new: true, setDefaultsOnInsert: true };
     const destinationQuery = {
         $and: [
           { sectionId: mongoose.Types.ObjectId(payload?.sectionId) },
@@ -358,7 +358,6 @@ export async function updateNotePosition(payload: {
         },
       },
       destinationOptions = {
-        upsert: true,
         new: true,
         setDefaultsOnInsert: true,
       };
