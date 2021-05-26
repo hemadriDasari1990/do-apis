@@ -1,4 +1,8 @@
+import { defaultSectionList, defaultSecurityQuestions } from "./util/constants";
+
 import { Application } from "express";
+import DefaultSection from "./models/defaultSection";
+import SecurityQuestion from "./models/securityQuestion";
 import bodyParser from "body-parser";
 import config from "config";
 import cors from "cors";
@@ -16,6 +20,7 @@ export default class Server {
     this.configureDatabase(); /* Connect to the Database */
     this.configureMiddleware(); /* Configuration set up*/
     this.configureRoutes(); /* Configure routes */
+    this.init();
     return this.app;
   }
 
@@ -24,6 +29,11 @@ export default class Server {
       useCreateIndex: true,
       useNewUrlParser: true,
     });
+  }
+
+  async init() {
+    await DefaultSection.insertMany(defaultSectionList);
+    await SecurityQuestion.insertMany(defaultSecurityQuestions);
   }
 
   private configureRoutes(): void {

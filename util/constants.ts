@@ -33,3 +33,75 @@ export const MAX_BOARDS_COUNT = 60;
 
 export const VERIFY_TOKEN_EXPIRY = "2d";
 export const JOIN_TOKEN_EXPIRY = "2d";
+
+export const defaultSectionList: Array<{ [Key: string]: any }> = [
+  {
+    name: "What Went Well, What Didn't Go Well, Action Items",
+  },
+  {
+    name: "Mad, Sad, Glad",
+  },
+  {
+    name: "Start, Stop, Continue",
+  },
+  {
+    name: "Went Well, To Improve, Action Items",
+  },
+  {
+    name: "To Dicuss, Discussing, Discussed",
+  },
+  {
+    name: "Liked, Learned, Lacked, Longed For",
+  },
+  {
+    name: "Keep, Add, Less, More",
+  },
+  {
+    name: "Drop, Add, Keep, Improve",
+  },
+  {
+    name: "Strengths, Weaknesses, Opportunities, Threats",
+  },
+  {
+    name: "Explorer, Shopper, Vacationer, Prisoner",
+  },
+  {
+    name: "Mistakes, Experiments, Practices, Learnings",
+  },
+  {
+    name: "We Do, We Value",
+  },
+  {
+    name: "Love, Want, Hate, Learn",
+  },
+  {
+    name: "Good, Bad, Better, Best",
+  },
+  {
+    name: "Key Results, Initiatives, Objectives",
+  },
+  {
+    name: "Happy, Meh, Sad",
+  },
+  {
+    name: "Rose, Bud, Thorn",
+  },
+  {
+    name: "Hopes, Fears",
+  },
+  {
+    name: "Keep Doing, Start Doing, Stop Doing, Less of, More of, Action Items",
+  },
+];
+
+export const defaultSecurityQuestions: Array<{ [Key: string]: any }> = [
+  {
+    name: "What is your favourite color?",
+  },
+  {
+    name: "What is your favourite city?",
+  },
+  {
+    name: "What is your favourite country",
+  },
+];
