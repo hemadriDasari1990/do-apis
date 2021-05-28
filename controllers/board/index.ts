@@ -7,7 +7,7 @@ import {
   RESOURCE_ALREADY_EXISTS,
   SECTION_COUNT_EXCEEDS,
 } from "../../util/constants";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 import {
   activeTeamsLookup,
   inActiveTeamsLookup,
@@ -487,16 +487,11 @@ export async function getBoards(req: Request, res: Response): Promise<any> {
   }
 }
 
-export async function deleteBoard(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function deleteBoard(req: Request, res: Response): Promise<any> {
   try {
-    const deleted = await Board.findByIdAndRemove(req.params.id);
+    const deleted = await deleteBoardLocal(req.params.id);
     if (!deleted) {
-      res.status(500).json({ message: `Cannot delete resource` });
-      return next(deleted);
+      return res.status(500).json({ message: `Cannot delete resource` });
     }
     return res.status(200).json({
       deleted: true,
@@ -504,6 +499,16 @@ export async function deleteBoard(
     });
   } catch (err) {
     return res.status(500).send(err || err.message);
+  }
+}
+
+export async function deleteBoardLocal(boardId: string): Promise<any> {
+  try {
+    await findSectionsByBoardAndDelete(boardId);
+    const deleted = await Board.findByIdAndRemove(boardId);
+    return deleted;
+  } catch (err) {
+    throw err | err.message;
   }
 }
 
@@ -532,8 +537,7 @@ export async function findBoardsByProjectAndDelete(
     const deleted = boardsList.reduce(
       async (promise: Promise<any>, board: { [Key: string]: any }) => {
         await promise;
-        await findSectionsByBoardAndDelete(board._id);
-        // await deleteNoteById(board._id);
+        await deleteBoardLocal(board._id);
       },
       [Promise.resolve()]
     );
@@ -559,7 +563,7 @@ async function getBoardsByProject(projectId: string): Promise<any> {
     if (!projectId) {
       return;
     }
-    return await Board.find({ projectId });
+    return await Board.find({ projectId: mongoose.Types.ObjectId(projectId) });
   } catch (err) {
     throw `Error while fetching boards ${err || err.message}`;
   }
