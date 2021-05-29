@@ -18,7 +18,7 @@ server.on("error", onError);
 
 const socket = require("socket.io")(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: config.get("url"),
     methods: ["GET", "POST", "PUT", "DELETE"],
     // credentials: true,
   },
