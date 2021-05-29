@@ -1,18 +1,18 @@
 import {
   addOrRemoveMemberFromTeam,
   deleteTeam,
+  getTeamsByMember,
   getTeamsByUser,
   sendInvitationToTeams,
   updateTeam,
-  getTeamsByMember,
 } from "../controllers/team";
 import {
   addOrRemoveMemberFromTeamValidator,
   deleteTeamValidator,
+  getTeamsByMemberValidator,
   getTeamsByUserValidator,
   sendInvitationToTeamsValidator,
   updateTeamValidator,
-  getTeamsByMemberValidator,
 } from "../controllers/team/validator";
 import {
   authenticateJWT,
@@ -24,7 +24,23 @@ import {
   verifyAccount,
 } from "../controllers/auth";
 import { createFeedback, getFeedbacks } from "../controllers/feedback";
-import { createFeedbackValidator } from "../controllers/feedback/validator";
+import {
+  createInstantBord,
+  deleteBoard,
+  downloadBoardReport,
+  downloadInstantBoardReport,
+  getBoardDetails,
+  getBoards,
+  updateBoard,
+} from "../controllers/board";
+import {
+  createInstantBordValidator,
+  deleteBoardValidator,
+  downloadBoardReportValidator,
+  getBoardDetailsValidator,
+  getBoardsByUserValidator,
+  updateBoardValidator,
+} from "../controllers/board/validator";
 import {
   createSecurityQuestion,
   getSecurityQuestions,
@@ -47,35 +63,18 @@ import {
   updatePassword,
 } from "../controllers/user";
 import {
-  deleteBoard,
-  downloadBoardReport,
-  getBoardDetails,
-  getBoards,
-  updateBoard,
-  createInstantBord,
-  downloadInstantBoardReport,
-} from "../controllers/board";
-import {
-  deleteBoardValidator,
-  downloadBoardReportValidator,
-  getBoardDetailsValidator,
-  getBoardsByUserValidator,
-  updateBoardValidator,
-  createInstantBordValidator,
-} from "../controllers/board/validator";
-import {
   deleteMember,
   getMemberDetails,
-  getMembersByUser,
   getMembersByTeam,
+  getMembersByUser,
   updateMember,
 } from "../controllers/member";
 import {
   deleteMemberValidator,
   getMemberDetailsValidator,
+  getMembersByTeamValidator,
   getMembersByUserValidator,
   updateMemberValidator,
-  getMembersByTeamValidator,
 } from "../controllers/member/validator";
 import {
   deleteProject,
@@ -112,16 +111,18 @@ import {
   getReactions,
 } from "../controllers/reaction";
 import { logout, refreshToken } from "../controllers/auth";
-import { getDefaultSections } from "../controllers/defaultSection";
+
+import { createFeedbackValidator } from "../controllers/feedback/validator";
+import { createRecommendation } from "../controllers/recommendation";
+import { createRecommendationValidator } from "../controllers/recommendation/validator";
 import { getActionByBoardId } from "../controllers/action";
 import { getActionItemsByActionId } from "../controllers/actionItem";
 import { getActivities } from "../controllers/activity";
+import { getDefaultSections } from "../controllers/defaultSection";
 import { getInvitedMembers } from "../controllers/invite";
 import { getJoinedMembers } from "../controllers/join";
 import { getNotesBySectionId } from "../controllers/note";
 import { getSectionsByBoardId } from "../controllers/section";
-import { createRecommendation } from "../controllers/recommendation";
-import { createRecommendationValidator } from "../controllers/recommendation/validator";
 
 export default function(app: Application) {
   // Initializing route groups
