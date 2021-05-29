@@ -19,8 +19,6 @@ export async function createSecurityQuestion(req: Request, res: Response) {
 
 export async function getSecurityQuestions(req: Request, res: Response) {
   try {
-    console.log(req);
-
     const securityQuestions = await SecurityQuestion.find({});
     return res.status(200).send(securityQuestions);
   } catch (err) {

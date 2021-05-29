@@ -4,8 +4,6 @@ import DefaultSection from "../../models/defaultSection";
 
 export async function getDefaultSections(req: Request, res: Response) {
   try {
-    console.log(req);
-
     const defaultSections = await DefaultSection.find({});
     return res.status(200).send(defaultSections);
   } catch (err) {

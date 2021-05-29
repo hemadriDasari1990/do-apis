@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
-import Recommendation from "../../models/recommendation";
 import { CREATION_FAILED } from "../../util/constants";
+import Recommendation from "../../models/recommendation";
 
 export async function createRecommendation(req: Request, res: Response) {
   try {
@@ -27,8 +27,6 @@ export async function createRecommendation(req: Request, res: Response) {
 
 export async function getRecommendations(req: Request, res: Response) {
   try {
-    console.log(req);
-
     const recommendations = await Recommendation.find({});
     return res.status(200).send(recommendations);
   } catch (err) {

@@ -39,7 +39,6 @@ function onError(error: any) {
 app.use(cors());
 
 app.get("/", (req: Request, res: Response) => {
-  console.log(req);
   res.send(`This is a landing page for letsdoretro service`);
 });
 

@@ -291,7 +291,6 @@ export async function getUserSummary(
 
 export async function getUsers(req: Request, res: Response): Promise<any> {
   try {
-    console.log(req);
     const users = await User.find({}).select({
       name: 1,
       _id: 0,
@@ -339,7 +338,6 @@ export async function getBoardsByUser(
 
 export async function getAllSummary(req: Request, res: Response): Promise<any> {
   try {
-    console.log(req);
     const usersCount = await User.find({}).count();
     const projectsCount = await Project.find({}).count();
     const boardsCount = await Board.find({}).count();
