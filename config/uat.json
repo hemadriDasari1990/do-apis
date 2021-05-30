@@ -1,17 +1,17 @@
 {
-	"name": "This is lets do retro micro service",
-	"version": "0.1",
-	"accessTokenSecret": "ldrwngrt2021",
-	"refreshTokenSecret": "1202trgnwrdl",
-	"database": "mongodb://localhost:27017/lets-do-retro",
-	"port": 8080,
-	"bcryptSalt": 10,
-	"email": {
-		"from": "letsdoretro@gmail.com",
-		"host": "smtp.gmail.com",
-		"port": 587,
-		"user": "letsdoretro@gmail.com",
-		"password": "ziknjvfoihgdjabo"
-	},
-	"url": "http://www.letsdoretro.com"
+  "name": "This is lets do retro micro service",
+  "version": "0.1",
+  "accessTokenSecret": "ldrwngrt2021",
+  "refreshTokenSecret": "1202trgnwrdl",
+  "database": "mongodb://localhost:27017/lets-do-retro",
+  "port": 8080,
+  "bcryptSalt": 10,
+  "email": {
+    "from": "letsdoretro@gmail.com",
+    "host": "smtp.gmail.com",
+    "port": 587,
+    "user": "letsdoretro@gmail.com",
+    "password": "ziknjvfoihgdjabo"
+  },
+  "url": "http://uat.letsdoretro.com:8080"
 }
