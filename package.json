@@ -8,8 +8,8 @@
   "scripts": {
     "test": "mocha -S --ui bdd --require ./tests/spec_helper.js --recursive ./tests --reporter spec",
     "dev": "nodemon --exec ts-node ./src/index.ts",
-    "dev:debug": "nodemon --inspect ./src/index.ts",
-    "start": "nodemon ./dist/index.js",
+    "dev:debug": "node --inspect ./src/index.ts",
+    "start": "node ./dist/index.js",
     "start:prod": "node ./dist/index.js",
     "build": "tsc",
     "build:watch": "tsc -w",
