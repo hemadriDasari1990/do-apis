@@ -3,7 +3,8 @@
 const config = {
   mongodb: {
     // TODO Change (or review) the url to your MongoDB:
-    url: "mongodb://localhost:27017",
+    url:
+      "mongodb://hemadri:Hemanth%401505@cluster0-shard-00-00.vgtdr.mongodb.net:27017,cluster0-shard-00-01.vgtdr.mongodb.net:27017,cluster0-shard-00-02.vgtdr.mongodb.net:27017/lets-do-retro?ssl=true&replicaSet=atlas-elrkrn-shard-0&authSource=admin&retryWrites=true&w=majority",
 
     // TODO Change this to your database name:
     databaseName: "lets-do-retro",
