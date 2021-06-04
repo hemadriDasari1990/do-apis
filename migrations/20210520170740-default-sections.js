@@ -1,66 +1,72 @@
 module.exports = {
   async up(db, client) {
-    await db.collection('defaultsections').insertMany([{
-        name: "What Went Well, What Didn't Go Well, Action Items"
+    await db.collection("defaultsections").insertMany([
+      {
+        name:
+          "What Went Well, What Could Have Been Better, What To Start, What To Stop",
       },
       {
-        name: "Mad, Sad, Glad"
+        name: "What Went Well, What Didn't Go Well, Action Items",
       },
       {
-        name: "Start, Stop, Continue"
+        name: "Mad, Sad, Glad",
       },
       {
-        name: "Went Well, To Improve, Action Items"
+        name: "Start, Stop, Continue",
       },
       {
-        name: "To Dicuss, Discussing, Discussed"
+        name: "Went Well, To Improve, Action Items",
       },
       {
-        name: "Liked, Learned, Lacked, Longed For"
+        name: "To Dicuss, Discussing, Discussed",
       },
       {
-        name: "Keep, Add, Less, More"
+        name: "Liked, Learned, Lacked, Longed For",
       },
       {
-        name: "Drop, Add, Keep, Improve"
+        name: "Keep, Add, Less, More",
       },
       {
-        name: "Strengths, Weaknesses, Opportunities, Threats"
+        name: "Drop, Add, Keep, Improve",
       },
       {
-        name: "Explorer, Shopper, Vacationer, Prisoner"
+        name: "Strengths, Weaknesses, Opportunities, Threats",
       },
       {
-        name: "Mistakes, Experiments, Practices, Learnings"
+        name: "Explorer, Shopper, Vacationer, Prisoner",
       },
       {
-        name: "We Do, We Value"
+        name: "Mistakes, Experiments, Practices, Learnings",
       },
       {
-        name: "Love, Want, Hate, Learn"
+        name: "We Do, We Value",
       },
       {
-        name: "Good, Bad, Better, Best"
+        name: "Love, Want, Hate, Learn",
       },
       {
-        name: "Key Results, Initiatives, Objectives"
+        name: "Good, Bad, Better, Best",
       },
       {
-        name: "Happy, Meh, Sad"
+        name: "Key Results, Initiatives, Objectives",
       },
       {
-        name: "Rose, Bud, Thorn"
+        name: "Happy, Meh, Sad",
       },
       {
-        name: "Hopes, Fears"
+        name: "Rose, Bud, Thorn",
       },
       {
-        name: "Keep Doing, Start Doing, Stop Doing, Less of, More of, Action Items"
-      }
+        name: "Hopes, Fears",
+      },
+      {
+        name:
+          "Keep Doing, Start Doing, Stop Doing, Less of, More of, Action Items",
+      },
     ]);
   },
 
   async down(db, client) {
-    await db.collection('defaultsections').drop();
-  }
+    await db.collection("defaultsections").drop();
+  },
 };
