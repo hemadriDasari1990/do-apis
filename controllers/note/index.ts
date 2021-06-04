@@ -32,14 +32,15 @@ export async function updateNote(payload: {
         message: "Board isn't found",
       };
     }
-    const createdById =
-      !payload?.isAnnonymous && !board?.isAnnonymous
-        ? payload.createdById
-        : null;
-    const updatedById =
-      !payload?.isAnnonymous && !board?.isAnnonymous
-        ? payload.updatedById
-        : null;
+    let createdById = null;
+    let updatedById = null;
+    if (!payload.noteId && !payload?.isAnnonymous && !board?.isAnnonymous) {
+      createdById = payload.createdById;
+    }
+
+    if (payload.noteId && !payload?.isAnnonymous && !board?.isAnnonymous) {
+      updatedById = payload.updatedById;
+    }
 
     // @TODO - Need a way to capture annonymous people avatar and name
     const query = { _id: mongoose.Types.ObjectId(payload.noteId) },
