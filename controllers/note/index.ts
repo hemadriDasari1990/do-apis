@@ -36,9 +36,11 @@ export async function updateNote(payload: {
     let updatedById = null;
     if (!payload.noteId && !payload?.isAnnonymous && !board?.isAnnonymous) {
       createdById = payload.createdById;
+      updatedById = payload.createdById;
     }
 
     if (payload.noteId && !payload?.isAnnonymous && !board?.isAnnonymous) {
+      createdById = payload.createdById;
       updatedById = payload.updatedById;
     }
 
