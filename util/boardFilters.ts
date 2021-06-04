@@ -2,6 +2,7 @@ import { sectionAddFields, sectionsLookup } from "./sectionFilters";
 import { teamAddFields, teamsLookup } from "./teamFilters";
 
 import Board from "../models/board";
+import Join from "../models/join";
 import Project from "../models/project";
 
 const boardsLookup = {
@@ -115,6 +116,24 @@ const newBoardsLookup = {
   },
 };
 
+const joinedMembersLookup = {
+  $lookup: {
+    from: Join.collection.name,
+    let: { joinedMembers: "$joinedMembers" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$joinedMembers", []] }] },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ],
+    as: "joinedMembers",
+  },
+};
+
 const boardAddFields = {
   $addFields: {
     boards: "$boards",
@@ -134,4 +153,5 @@ export {
   newBoardsLookup,
   inProgressBoardsLookup,
   completedBoardsLookup,
+  joinedMembersLookup,
 };

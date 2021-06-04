@@ -2,15 +2,18 @@ import { Request, Response } from "express";
 
 import Activity from "../../models/activity";
 import { getPagination } from "../../util";
-import mongoose from "mongoose";
 import { memberLookup } from "../../util/memberFilters";
+import mongoose from "mongoose";
 
-export async function createActivity(payload: {
-  [Key: string]: any;
-}): Promise<any> {
+export async function createActivity(
+  payload: {
+    [Key: string]: any;
+  },
+  session: any
+): Promise<any> {
   try {
     const activity = new Activity(payload);
-    return await activity.save();
+    return await activity.save({ session });
   } catch (err) {
     throw new Error(`Error while creating activity ${err || err.message}`);
   }

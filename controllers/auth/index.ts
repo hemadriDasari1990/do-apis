@@ -302,9 +302,12 @@ export async function validateForgotPassword(
         message: "Password reset token isn't found or has expired",
       });
     }
-    const member: any = await getMember({
-      _id: token.memberId,
-    });
+    const member: any = await getMember(
+      {
+        _id: token.memberId,
+      },
+      null
+    );
     if (member) {
       return res.status(200).json({
         user: { _id: member?.userId },
@@ -350,9 +353,12 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
         message: "Token is expired",
       });
     }
-    const member: any = await getMember({
-      _id: token.memberId,
-    });
+    const member: any = await getMember(
+      {
+        _id: token.memberId,
+      },
+      null
+    );
     if (!member) {
       return res.status(500).send({
         errorId: USER_NOT_FOUND,
@@ -412,9 +418,12 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
 export async function resendToken(req: Request, res: Response): Promise<any> {
   try {
     const emailService = await new EmailService();
-    const member: any = await getMember({
-      email: req.body.email,
-    });
+    const member: any = await getMember(
+      {
+        email: req.body.email,
+      },
+      null
+    );
     if (!member) {
       return res.status(500).json({
         errorId: USER_NOT_FOUND,

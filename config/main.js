@@ -3,7 +3,8 @@ module.exports = {
   accessTokenSecret: "ldrwngrt2021", // lets do retro with next generation retrospective tool
   refreshTokenSecret: "1202trgnwrdl", // access token secrete reverse
   // Database connection information
-  database: "mongodb://localhost:27017/lets-do-retro",
+  database:
+    "mongodb+srv://hemadri:Hemanth@1505@cluster0.vgtdr.mongodb.net/lets-do-retro?retryWrites=true&w=majority",
   // Setting port for server
   port: 8080,
   // Configuring Mailgun API for sending transactional email

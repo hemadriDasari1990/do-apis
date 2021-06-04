@@ -24,11 +24,13 @@ export async function updateProject(
   res: Response,
   next: NextFunction
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const user = getUser(req.headers.authorization as string);
     const count = await Project.find({
       userId: user?._id,
-    }).count();
+    }).countDocuments();
     if (count >= MAX_PROJECTS_COUNT) {
       return res.status(409).json({
         errorId: MAX_PROJECTS_ERROR,
@@ -45,11 +47,19 @@ export async function updateProject(
           isPrivate: req.body.isPrivate || false,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true }; // new true will return modified document instead of original one
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      }; // new true will return modified document instead of original one
 
-    const project = await getProject({
-      $and: [{ name: req.body.name?.trim() }, { userId: user?._id }],
-    });
+    const project = await getProject(
+      {
+        $and: [{ name: req.body.name?.trim() }, { userId: user?._id }],
+      },
+      session
+    );
 
     if (project) {
       return res.status(409).json({
@@ -61,10 +71,14 @@ export async function updateProject(
     if (!updated) {
       return next(updated);
     }
-    await addProjectToUser(updated?._id, user?._id);
+    await addProjectToUser(updated?._id, user?._id, session);
+    await session.commitTransaction();
     return res.status(200).send(updated);
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -116,18 +130,24 @@ export async function getProjects(req: Request, res: Response): Promise<any> {
   }
 }
 
-async function getProject(query: { [Key: string]: any }): Promise<any> {
+async function getProject(
+  query: { [Key: string]: any },
+  session: any
+): Promise<any> {
   try {
-    const project = await Project.findOne(query);
+    const project = await Project.findOne(query).session(session);
     return project;
   } catch (err) {
     throw err | err.message;
   }
 }
 
-export async function createProject(payload: {
-  [Key: string]: any;
-}): Promise<any> {
+export async function createProject(
+  payload: {
+    [Key: string]: any;
+  },
+  session: any
+): Promise<any> {
   try {
     if (!payload) {
       return;
@@ -137,8 +157,8 @@ export async function createProject(payload: {
       description: payload.description,
       userId: payload?.userId,
     });
-    const created = await project.save();
-    await addProjectToUser(created?._id, payload?.userId);
+    const created = await project.save({ session });
+    await addProjectToUser(created?._id, payload?.userId, session);
     return created;
   } catch (err) {
     throw err | err.message;
@@ -150,22 +170,31 @@ export async function deleteProject(
   res: Response,
   next: NextFunction
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    await findBoardsByProjectAndDelete(req.params.id);
-    const deleted = await Project.findByIdAndRemove(req.params.id);
+    await findBoardsByProjectAndDelete(req.params.id, session);
+    const deleted = await Project.findByIdAndRemove(req.params.id).session(
+      session
+    );
     if (!deleted) {
       res.status(500).json({ message: `Cannot delete resource` });
       return next(deleted);
     }
+    await session.commitTransaction();
     return res.status(200).json({ deleted: true });
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function addBoardToProject(
   boardId: string,
-  projectId: string
+  projectId: string,
+  session: any
 ): Promise<any> {
   try {
     if (!boardId || !projectId) {
@@ -174,7 +203,7 @@ export async function addBoardToProject(
     const updated = await Project.findByIdAndUpdate(
       projectId,
       { $push: { boards: boardId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return updated;
   } catch (err) {
@@ -183,7 +212,8 @@ export async function addBoardToProject(
 }
 
 export async function findProjectsByUserAndDelete(
-  userId: string
+  userId: string,
+  session: any
 ): Promise<any> {
   try {
     const projectsList = await getProjectsByUser(userId);
@@ -193,7 +223,7 @@ export async function findProjectsByUserAndDelete(
     const deleted = projectsList.reduce(
       async (promise: Promise<any>, project: { [Key: string]: any }) => {
         await promise;
-        await findBoardsByProjectAndDelete(project?.id);
+        await findBoardsByProjectAndDelete(project?.id, session);
         // await findSectionsByBoardAndDelete(board._id)
         // await deleteNoteById(board._id);
       },

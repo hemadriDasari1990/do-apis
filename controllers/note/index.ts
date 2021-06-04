@@ -22,8 +22,10 @@ import { sectionLookup } from "../../util/sectionFilters";
 export async function updateNote(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    const board = await getBoardDetailsWithProject(payload?.boardId);
+    const board = await getBoardDetailsWithProject(payload?.boardId, session);
     if (!board) {
       return {
         errorId: RESOURCE_NOT_FOUND,
@@ -45,41 +47,57 @@ export async function updateNote(payload: {
           ...(!payload.noteId ? { position: payload.position } : {}),
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     const updated: any = await Note.findOneAndUpdate(query, update, options);
     const sectionUpdated: any = await addNoteToSection(
       updated._id,
-      payload.sectionId
+      payload.sectionId,
+      session
     );
 
     if (payload.noteId) {
-      await createActivity({
-        memberId: updatedById,
-        boardId: payload?.boardId,
-        title: `${payload.previousDescription}`,
-        primaryAction: "to",
-        primaryTitle: `${payload.description}`,
-        secondaryAction: "under",
-        secondaryTitle: sectionUpdated?.name,
-        type: "note",
-        action: "update",
-      });
+      await createActivity(
+        {
+          memberId: updatedById,
+          boardId: payload?.boardId,
+          title: `${payload.previousDescription}`,
+          primaryAction: "to",
+          primaryTitle: `${payload.description}`,
+          secondaryAction: "under",
+          secondaryTitle: sectionUpdated?.name,
+          type: "note",
+          action: "update",
+        },
+        session
+      );
     } else {
-      await createActivity({
-        memberId: createdById,
-        boardId: payload?.boardId,
-        title: `${payload.description}`,
-        primaryAction: "under",
-        primaryTitle: sectionUpdated?.name,
-        type: "note",
-        action: "create",
-      });
+      await createActivity(
+        {
+          memberId: createdById,
+          boardId: payload?.boardId,
+          title: `${payload.description}`,
+          primaryAction: "under",
+          primaryTitle: sectionUpdated?.name,
+          type: "note",
+          action: "create",
+        },
+        session
+      );
     }
 
-    const note = await getNoteDetails(updated?._id);
+    const note = await getNoteDetails(updated?._id, session);
+    await session.commitTransaction();
     return note;
   } catch (err) {
+    await session.abortTransaction();
     return err || err.message;
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -147,7 +165,10 @@ export async function getNotesBySectionId(
   }
 }
 
-export async function getNoteDetails(noteId: string): Promise<any> {
+export async function getNoteDetails(
+  noteId: string,
+  session: any
+): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(noteId) };
     const notes = await Note.aggregate([
@@ -179,7 +200,7 @@ export async function getNoteDetails(noteId: string): Promise<any> {
       reactionMinusOneLookup,
       reactionLoveLookup,
       reactionAddFields,
-    ]);
+    ]).session(session);
     return notes ? notes[0] : null;
   } catch (err) {
     throw err || err.message;
@@ -189,6 +210,8 @@ export async function getNoteDetails(noteId: string): Promise<any> {
 export async function markNoteRead(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const query = { _id: mongoose.Types.ObjectId(payload.id) },
       update = {
@@ -196,59 +219,78 @@ export async function markNoteRead(payload: {
           read: payload.read,
         },
       },
-      options = { new: true };
+      options = { new: true, session: session };
     const noteUpdated: any = await Note.findOneAndUpdate(
       query,
       update,
       options
     );
-    await createActivity({
-      boardId: payload?.boardId,
-      memberId: payload?.memberId,
-      title: ` ${noteUpdated?.description}`,
-      primaryAction: "as",
-      primaryTitle: payload.read ? "read" : "un read",
-      type: "note",
-      action: payload.read ? "read" : "un-read",
-    });
+    await createActivity(
+      {
+        boardId: payload?.boardId,
+        memberId: payload?.memberId,
+        title: ` ${noteUpdated?.description}`,
+        primaryAction: "as",
+        primaryTitle: payload.read ? "read" : "un read",
+        type: "note",
+        action: payload.read ? "read" : "un-read",
+      },
+      session
+    );
+    await session.commitTransaction();
     return noteUpdated;
   } catch (err) {
+    await session.abortTransaction();
     return err || err.message;
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function deleteNote(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    const deleted: any = deleteNoteById(payload?.id);
+    const deleted: any = deleteNoteById(payload?.id, session);
     if (!deleted) {
       return deleted;
     }
-    const section: any = await Section.findById(payload?.sectionId);
-    await createActivity({
-      memberId: payload?.memberId,
-      boardId: payload?.boardId,
-      title: `${payload?.description}`,
-      primaryAction: "under",
-      primaryTitle: section?.name,
-      type: "note",
-      action: "delete",
-    });
+    const section: any = await Section.findById(payload?.sectionId).session(
+      session
+    );
+    await createActivity(
+      {
+        memberId: payload?.memberId,
+        boardId: payload?.boardId,
+        title: `${payload?.description}`,
+        primaryAction: "under",
+        primaryTitle: section?.name,
+        type: "note",
+        action: "delete",
+      },
+      session
+    );
+    await session.commitTransaction();
     return { deleted: true, _id: payload?.id, sectionId: payload?.sectionId };
   } catch (err) {
+    await session.abortTransaction();
     return {
       deleted: false,
       message: err || err?.message,
       _id: payload?.id,
       sectionId: payload?.sectionId,
     };
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function addReactionToNote(
   reactionId: string,
-  noteId: string
+  noteId: string,
+  session: any
 ): Promise<any> {
   try {
     if (!reactionId || !noteId) {
@@ -257,7 +299,7 @@ export async function addReactionToNote(
     const updated = await Note.findByIdAndUpdate(
       noteId,
       { $push: { reactions: reactionId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return updated;
   } catch (err) {
@@ -267,15 +309,16 @@ export async function addReactionToNote(
 
 export async function updateNoteSectionId(
   noteId: string,
-  sectionId: string
+  sectionId: string,
+  session: any
 ): Promise<any> {
   try {
-    if (!noteId || !sectionId) {
+    if (!noteId || !sectionId || !session) {
       return;
     }
     const updated = await Note.findByIdAndUpdate(noteId, {
       sectionId: sectionId,
-    });
+    }).session(session);
     return updated;
   } catch (err) {
     throw `Error while updating new section ${err || err.message}`;
@@ -284,31 +327,35 @@ export async function updateNoteSectionId(
 
 export async function removeReactionFromNote(
   reactionId: string,
-  noteId: string
+  noteId: string,
+  session: any
 ) {
   try {
-    if (!reactionId || !noteId) {
+    if (!reactionId || !noteId || !session) {
       return;
     }
-    await Note.findByIdAndUpdate(noteId, { $pull: { reactions: reactionId } });
+    await Note.findByIdAndUpdate(noteId, {
+      $pull: { reactions: reactionId },
+    }).session(session);
   } catch (err) {
     throw new Error("Error while removing reaction from note");
   }
 }
 
 export async function findNotesBySectionAndDelete(
-  sectionId: string
+  sectionId: string,
+  session: any
 ): Promise<any> {
   try {
-    const notesList = await getNotesBySection(sectionId);
+    const notesList = await getNotesBySection(sectionId, session);
     if (!notesList?.length) {
       return;
     }
     const deleted = notesList.reduce(
       async (promise: Promise<any>, note: { [Key: string]: any }) => {
         await promise;
-        await findReactionsByNoteAndDelete(note._id);
-        await deleteNoteById(note._id);
+        await findReactionsByNoteAndDelete(note._id, session);
+        await deleteNoteById(note._id, session);
       },
       [Promise.resolve()]
     );
@@ -318,9 +365,12 @@ export async function findNotesBySectionAndDelete(
   }
 }
 
-export async function getNote(query: { [Key: string]: any }): Promise<any> {
+export async function getNote(
+  query: { [Key: string]: any },
+  session: any
+): Promise<any> {
   try {
-    const note = await Note.findOne(query);
+    const note = await Note.findOne(query).session(session);
     return note;
   } catch (err) {
     throw err | err.message;
@@ -385,23 +435,26 @@ export async function updateNotePosition(payload: {
   }
 }
 
-async function deleteNoteById(noteId: string): Promise<any> {
+async function deleteNoteById(noteId: string, session: any): Promise<any> {
   try {
-    if (!noteId) {
+    if (!noteId || !session) {
       return;
     }
-    return await Note.findByIdAndRemove(noteId);
+    return await Note.findByIdAndRemove(noteId).session(session);
   } catch (err) {
     throw `Error while deleting note ${err || err.message}`;
   }
 }
 
-async function getNotesBySection(sectionId: string): Promise<any> {
+async function getNotesBySection(
+  sectionId: string,
+  session: any
+): Promise<any> {
   try {
-    if (!sectionId) {
+    if (!sectionId || !session) {
       return;
     }
-    return await Note.find({ sectionId });
+    return await Note.find({ sectionId }).session(session);
   } catch (err) {
     throw `Error while fetching notes ${err || err.message}`;
   }

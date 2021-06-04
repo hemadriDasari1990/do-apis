@@ -50,7 +50,8 @@ export async function getInvitedMembers(
 
 export async function createInvitedTeams(
   teams: Array<string>,
-  board: { [Key: string]: any }
+  board: { [Key: string]: any },
+  session: any
 ): Promise<any> {
   try {
     if (!teams || !Array.isArray(teams) || !teams?.length || !board?._id) {
@@ -68,7 +69,12 @@ export async function createInvitedTeams(
             teamId: id,
           },
         },
-        options = { upsert: true, new: true, setDefaultsOnInsert: true };
+        options = {
+          upsert: true,
+          new: true,
+          setDefaultsOnInsert: true,
+          session: session,
+        };
       await Invite.findOneAndUpdate(query, update, options);
     }, Promise.resolve());
   } catch (err) {

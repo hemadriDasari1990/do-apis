@@ -15,11 +15,12 @@ import {
   teamsLookup,
 } from "../../util/teamFilters";
 import { addBoardToProject, createProject } from "../project";
-import { createMember, sendInviteToMember } from "../member";
+import { createMember, getMember, sendInviteToMember } from "../member";
 import { getPagination, getUser } from "../../util";
 import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 import Board from "../../models/board";
+import Join from "../../models/join";
 import Project from "../../models/project";
 import XLSX from "xlsx";
 import { addMemberToUser } from "../user";
@@ -27,6 +28,7 @@ import { createActivity } from "../activity";
 import { createInvitedTeams } from "../invite";
 import { findSectionsByBoardAndDelete } from "../section";
 import fs from "fs";
+import { joinedMembersLookup } from "../../util/boardFilters";
 import mongoose from "mongoose";
 import { projectLookup } from "../../util/projectFilters";
 import { saveSection } from "../section";
@@ -34,16 +36,17 @@ import { sendInvitation } from "../team";
 
 export async function addSectionToBoard(
   sectionId: string,
-  boardId: string
+  boardId: string,
+  session: any
 ): Promise<any> {
   try {
-    if (!boardId || !sectionId) {
+    if (!boardId || !sectionId || !session) {
       return;
     }
     const board = await Board.findByIdAndUpdate(
       boardId,
       { $push: { sections: sectionId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return board;
   } catch (err) {
@@ -51,17 +54,23 @@ export async function addSectionToBoard(
   }
 }
 
-export async function checkIfNewBoardExists(projectId: string): Promise<any> {
+export async function checkIfNewBoardExists(
+  projectId: string,
+  session: any
+): Promise<any> {
   try {
-    if (!projectId) {
+    if (!projectId || !session) {
       return;
     }
-    const board = await getBoard({
-      $and: [
-        { $or: [{ status: "new" }, { status: "inprogress" }] },
-        { projectId: projectId },
-      ],
-    });
+    const board = await getBoard(
+      {
+        $and: [
+          { $or: [{ status: "new" }, { status: "inprogress" }] },
+          { projectId: projectId },
+        ],
+      },
+      session
+    );
     return board;
   } catch (err) {
     throw "Cannot get board details";
@@ -69,6 +78,8 @@ export async function checkIfNewBoardExists(projectId: string): Promise<any> {
 }
 
 export async function updateBoard(req: Request, res: Response): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     if (!req.body.defaultSection && req.body.noOfSections > 10) {
       return res.status(500).json({
@@ -83,7 +94,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     if (!req.body.projectId) {
       const count = await Project.find({
         userId: user?._id,
-      }).count();
+      }).countDocuments();
       if (count >= MAX_PROJECTS_COUNT) {
         return res.status(409).json({
           errorId: MAX_PROJECTS_ERROR,
@@ -96,7 +107,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     if (req.body.projectId) {
       const count = await Board.find({
         projectId: req.body.projectId,
-      }).count();
+      }).countDocuments();
       if (count >= MAX_BOARDS_COUNT) {
         return res.status(409).json({
           errorId: MAX_BOARDS_ERROR,
@@ -105,13 +116,16 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
       }
     }
 
-    const boardDetails = await getBoard({
-      $and: [
-        { name: req.body.name?.trim() },
-        { description: req.body.description?.trim() },
-        { projectId: mongoose.Types.ObjectId(req.body.projectId) },
-      ],
-    });
+    const boardDetails = await getBoard(
+      {
+        $and: [
+          { name: req.body.name?.trim() },
+          { description: req.body.description?.trim() },
+          { projectId: mongoose.Types.ObjectId(req.body.projectId) },
+        ],
+      },
+      session
+    );
     if (boardDetails) {
       return res.status(409).json({
         errorId: RESOURCE_ALREADY_EXISTS,
@@ -121,7 +135,10 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
 
     /* Check if board exists with status new when creating a new board */
     if (!req.body.boardId) {
-      const boardExists = await checkIfNewBoardExists(req.body.projectId);
+      const boardExists = await checkIfNewBoardExists(
+        req.body.projectId,
+        session
+      );
       if (boardExists?._id) {
         return res.status(409).json({
           errorId: RESOURCE_ALREADY_EXISTS,
@@ -132,7 +149,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
 
     const boardsCount: number = await Board.find({
       projectId: req.body.projectId,
-    }).count();
+    }).countDocuments();
 
     const query = mongoose.Types.ObjectId.isValid(req.body.boardId)
         ? { _id: mongoose.Types.ObjectId(req.body.boardId) }
@@ -148,7 +165,12 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
           isAnnonymous: req.body.isAnnonymous,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     const updated: any = await Board.findOneAndUpdate(query, update, options);
     if (!updated) {
       return res.status(409).json({
@@ -161,12 +183,15 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         .fill(0)
         .reduce(async (promise, index: number) => {
           await promise;
-          const section = await saveSection({
-            boardId: updated._id,
-            name: "Section Title",
-            position: index,
-          });
-          await addSectionToBoard(section?._id, updated._id);
+          const section = await saveSection(
+            {
+              boardId: updated._id,
+              name: "Section Title",
+              position: index,
+            },
+            session
+          );
+          await addSectionToBoard(section?._id, updated._id, session);
         }, Promise.resolve());
     }
     if (
@@ -179,57 +204,82 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         .reduce(
           async (promise: any, defaultSectionTitle: string, index: number) => {
             await promise;
-            const section = await saveSection({
-              boardId: updated._id,
-              name: defaultSectionTitle,
-              position: index,
-            });
-            await addSectionToBoard(section?._id, updated._id);
+            const section = await saveSection(
+              {
+                boardId: updated._id,
+                name: defaultSectionTitle,
+                position: index,
+              },
+              session
+            );
+            await addSectionToBoard(section?._id, updated._id, session);
           },
           Promise.resolve()
         );
     }
     if (!req.body.isAnnonymous && req.body.teams?.length && updated?._id) {
-      await addTeamsToBoad(req.body.teams, updated);
-      await createInvitedTeams(req.body.teams, updated?._id);
+      await addTeamsToBoad(req.body.teams, updated, session);
+      await createInvitedTeams(req.body.teams, updated?._id, session);
     }
     /* Add existing project to board */
     if (req.body.projectId) {
-      await addBoardToProject(updated?._id, req.body.projectId);
+      await addBoardToProject(updated?._id, req.body.projectId, session);
     }
 
     /* Create new project and map board to project */
     if (!req.body.projectId && req.body.projectTitle && user) {
-      const newProject = await createProject({
-        name: req.body.projectTitle,
-        description: req.body.projectDescription,
-        userId: user?._id,
-      });
-      await Board.findByIdAndUpdate(updated._id, {
-        projectId: newProject?._id,
-      });
-      await addBoardToProject(updated?._id, newProject?._id);
+      const newProject = await createProject(
+        {
+          name: req.body.projectTitle,
+          description: req.body.projectDescription,
+          userId: user?._id,
+        },
+        session
+      );
+      await Board.findByIdAndUpdate(
+        updated._id,
+        {
+          projectId: newProject?._id,
+        },
+        { session: session }
+      );
+      await addBoardToProject(updated?._id, newProject?._id, session);
     }
-    await sendInvitation(req.body.teams, user, updated?._id);
-    await createActivity({
-      memberId: user?.memberId,
-      boardId: updated?._id,
-      title: `${updated?.name}`,
-      primaryAction: "board",
-      type: "board",
-      action: req.body.boardId ? "update" : "create",
-    });
+    await sendInvitation(req.body.teams, user, updated?._id, session);
+    await createActivity(
+      {
+        memberId: user?.memberId,
+        boardId: updated?._id,
+        title: `${updated?.name}`,
+        primaryAction: "board",
+        type: "board",
+        action: req.body.boardId ? "update" : "create",
+      },
+      session
+    );
+    await session.commitTransaction();
     const board = await getBoardDetailsWithMembers(updated?._id);
     return res.status(200).send(board);
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function startOrCompleteBoard(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
+    const member = await getMember(
+      {
+        _id: mongoose.Types.ObjectId(payload.memberId),
+      },
+      session
+    );
     const query = { _id: mongoose.Types.ObjectId(payload.id) },
       update =
         payload.action === "start"
@@ -246,22 +296,41 @@ export async function startOrCompleteBoard(payload: {
                 isLocked: true,
               },
             };
-    const options = { new: true }; // return updated document
+    const options = { new: true, session: session }; // return updated document
     const updated: any = await Board.findOneAndUpdate(query, update, options);
     if (!updated) {
       return updated;
     }
-    await createActivity({
-      memberId: payload?.memberId,
-      boardId: payload.id,
-      title: "the session",
-      type: "board",
-      action: payload.action === "start" ? "session-start" : "session-stop",
-    });
+    /* Add member to the board who is starting the session */
+    if (payload.action === "start") {
+      const join = new Join({
+        boardId: payload.id,
+        memberId: member?._id,
+        guestName: member.name || "",
+        avatarId: member?.avatarId,
+      });
+      const joinedMember = await join.save({ session });
+      await addJoinedMemberToBoard(joinedMember?._id, payload.id, session);
+    }
+
+    await createActivity(
+      {
+        memberId: member?._id,
+        boardId: payload.id,
+        title: "the session",
+        type: "board",
+        action: payload.action === "start" ? "session-start" : "session-stop",
+      },
+      session
+    );
+    await session.commitTransaction();
     const board = await getBoardDetailsWithMembers(updated?._id);
     return board;
   } catch (err) {
+    await session.abortTransaction();
     return err || err.message;
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -269,6 +338,8 @@ export async function createInstantBord(
   req: Request,
   res: Response
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const query = { _id: { $exists: false } }, // Create new record if id is not matching
       update = {
@@ -282,19 +353,27 @@ export async function createInstantBord(
           isInstant: req.body?.isInstant,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     const updated: any = await Board.findOneAndUpdate(query, update, options);
     if (!req.body?.defaultSection && req.body?.noOfSections) {
       await Array(parseInt(req.body?.noOfSections))
         .fill(0)
         .reduce(async (promise, index: number) => {
           await promise;
-          const section = await saveSection({
-            boardId: updated._id,
-            name: "Section Title",
-            position: index,
-          });
-          await addSectionToBoard(section?._id, updated._id);
+          const section = await saveSection(
+            {
+              boardId: updated._id,
+              name: "Section Title",
+              position: index,
+            },
+            session
+          );
+          await addSectionToBoard(section?._id, updated._id, session);
         }, Promise.resolve());
     }
     if (
@@ -307,19 +386,26 @@ export async function createInstantBord(
         .reduce(
           async (promise: any, defaultSectionTitle: string, index: number) => {
             await promise;
-            const section = await saveSection({
-              boardId: updated._id,
-              name: defaultSectionTitle,
-              position: index,
-            });
-            await addSectionToBoard(section?._id, updated._id);
+            const section = await saveSection(
+              {
+                boardId: updated._id,
+                name: defaultSectionTitle,
+                position: index,
+              },
+              session
+            );
+            await addSectionToBoard(section?._id, updated._id, session);
           },
           Promise.resolve()
         );
     }
+    await session.commitTransaction();
     return res.status(200).send(updated);
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -360,6 +446,7 @@ export async function getBoardDetailsWithMembers(
       sectionsLookup,
       sectionAddFields,
       projectLookup,
+      joinedMembersLookup,
       {
         $unwind: {
           path: "$project",
@@ -391,6 +478,7 @@ export async function getBoardDetailsWithMembers(
           _id: 1,
           project: 1,
           isInstant: 1,
+          joinedMembers: 1,
         },
       },
     ]);
@@ -401,7 +489,8 @@ export async function getBoardDetailsWithMembers(
 }
 
 export async function getBoardDetailsWithProject(
-  boardId: string
+  boardId: string,
+  session: any
 ): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(boardId) };
@@ -414,7 +503,7 @@ export async function getBoardDetailsWithProject(
           preserveNullAndEmptyArrays: true,
         },
       },
-    ]);
+    ]).session(session);
     return boards ? boards[0] : null;
   } catch (err) {
     throw err || err.message;
@@ -425,22 +514,31 @@ export async function getBoardDetails(
   req: Request,
   res: Response
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const user = getUser(req.headers.authorization as string);
     const board = await getBoardDetailsWithMembers(req.params.id);
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const increment = { $inc: { views: 1 } };
-    await createActivity({
-      memberId: user?.memberId,
-      boardId: board?._id,
-      title: `${board?.name}`,
-      type: "board",
-      action: "view",
-    });
-    await Board.findOneAndUpdate(query, increment);
+    await createActivity(
+      {
+        memberId: user?.memberId,
+        boardId: board?._id,
+        title: `${board?.name}`,
+        type: "board",
+        action: "view",
+      },
+      session
+    );
+    await Board.findOneAndUpdate(query, increment, { session: session });
+    await session.commitTransaction();
     return res.status(200).send(board);
   } catch (err) {
+    await session.abortTransaction();
     throw err || err.message;
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -488,38 +586,52 @@ export async function getBoards(req: Request, res: Response): Promise<any> {
 }
 
 export async function deleteBoard(req: Request, res: Response): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    const deleted = await deleteBoardLocal(req.params.id);
+    const deleted = await deleteBoardLocal(req.params.id, session);
     if (!deleted) {
       return res.status(500).json({ message: `Cannot delete resource` });
     }
+    await session.commitTransaction();
     return res.status(200).json({
       deleted: true,
       message: "Resource has been deleted successfully",
     });
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
-export async function deleteBoardLocal(boardId: string): Promise<any> {
+export async function deleteBoardLocal(
+  boardId: string,
+  session: any
+): Promise<any> {
   try {
-    await findSectionsByBoardAndDelete(boardId);
-    const deleted = await Board.findByIdAndRemove(boardId);
+    await findSectionsByBoardAndDelete(boardId, session);
+    const deleted = await Board.findByIdAndRemove(boardId).session(session);
     return deleted;
   } catch (err) {
     throw err | err.message;
   }
 }
 
-export async function getBoard(query: { [Key: string]: any }): Promise<any> {
+export async function getBoard(
+  query: { [Key: string]: any },
+  session: any
+): Promise<any> {
   try {
-    const board = await Board.findOne(query).populate([
-      {
-        path: "projectId",
-        model: "Project",
-      },
-    ]);
+    const board = await Board.findOne(query)
+      .populate([
+        {
+          path: "projectId",
+          model: "Project",
+        },
+      ])
+      .session(session);
     return board;
   } catch (err) {
     throw err | err.message;
@@ -527,17 +639,18 @@ export async function getBoard(query: { [Key: string]: any }): Promise<any> {
 }
 
 export async function findBoardsByProjectAndDelete(
-  projectId: string
+  projectId: string,
+  session: any
 ): Promise<any> {
   try {
-    const boardsList = await getBoardsByProject(projectId);
+    const boardsList = await getBoardsByProject(projectId, session);
     if (!boardsList?.length) {
       return;
     }
     const deleted = boardsList.reduce(
       async (promise: Promise<any>, board: { [Key: string]: any }) => {
         await promise;
-        await deleteBoardLocal(board._id);
+        await deleteBoardLocal(board._id, session);
       },
       [Promise.resolve()]
     );
@@ -558,12 +671,17 @@ export async function findBoardsByProjectAndDelete(
 //   }
 // }
 
-async function getBoardsByProject(projectId: string): Promise<any> {
+async function getBoardsByProject(
+  projectId: string,
+  session: any
+): Promise<any> {
   try {
-    if (!projectId) {
+    if (!projectId || !session) {
       return;
     }
-    return await Board.find({ projectId: mongoose.Types.ObjectId(projectId) });
+    return await Board.find({
+      projectId: mongoose.Types.ObjectId(projectId),
+    }).session(session);
   } catch (err) {
     throw `Error while fetching boards ${err || err.message}`;
   }
@@ -571,10 +689,17 @@ async function getBoardsByProject(projectId: string): Promise<any> {
 
 export async function addTeamsToBoad(
   teams: Array<string>,
-  board: { [Key: string]: any }
+  board: { [Key: string]: any },
+  session: any
 ): Promise<any> {
   try {
-    if (!teams || !Array.isArray(teams) || !teams?.length || !board?._id) {
+    if (
+      !teams ||
+      !Array.isArray(teams) ||
+      !teams?.length ||
+      !board?._id ||
+      !session
+    ) {
       return;
     }
     await teams.reduce(async (promise, team: string) => {
@@ -583,7 +708,7 @@ export async function addTeamsToBoad(
         await Board.findByIdAndUpdate(
           board?._id,
           { $push: { teams: team } },
-          { new: true, useFindAndModify: false }
+          { new: true, useFindAndModify: false, session: session }
         );
       }
     }, Promise.resolve());
@@ -595,56 +720,74 @@ export async function addTeamsToBoad(
 export async function changeVisibility(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    console.log("visibility", payload);
     if (!payload || !payload?.id) {
       return;
     }
     const updated: any = await Board.findByIdAndUpdate(
       payload?.id,
       { $set: { isPrivate: payload?.isPrivate } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
-    await createActivity({
-      memberId: payload?.user?.memberId,
-      boardId: updated?._id,
-      title: `${updated?.name}`,
-      primaryAction: "visibility to",
-      primaryTitle: payload?.isPrivate ? "private" : "public",
-      type: "visibility",
-      action: payload?.isPrivate ? "private" : "public",
-    });
+    await createActivity(
+      {
+        memberId: payload?.user?.memberId,
+        boardId: updated?._id,
+        title: `${updated?.name}`,
+        primaryAction: "visibility to",
+        primaryTitle: payload?.isPrivate ? "private" : "public",
+        type: "visibility",
+        action: payload?.isPrivate ? "private" : "public",
+      },
+      session
+    );
+    await session.commitTransaction();
     return updated;
   } catch (err) {
+    await session.abortTransaction();
     return `Error while updating board visibility ${err || err.message}`;
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function inviteMemberToBoard(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     if (!payload || !payload?.id || !payload.user || !payload.member) {
       return;
     }
 
     if (payload?.createMember) {
-      const created = await createMember({
-        email: payload?.member?.email,
-        name: payload?.member?.name,
-        userId: payload?.user?._id,
-      });
-      await addMemberToUser(created?._id, payload?.user?._id);
+      const created = await createMember(
+        {
+          email: payload?.member?.email,
+          name: payload?.member?.name,
+          userId: payload?.user?._id,
+        },
+        session
+      );
+      await addMemberToUser(created?._id, payload?.user?._id, session);
     }
 
     const sent = await sendInviteToMember(
       payload?.id,
       payload?.user,
-      payload?.member
+      payload?.member,
+      session
     );
+    await session.commitTransaction();
     return sent;
   } catch (err) {
+    await session.abortTransaction();
     return `Error while sending inviting ${err || err.message}`;
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -659,6 +802,26 @@ export async function downloadBoardReport(
     return res.status(500).json({
       message: err,
     });
+  }
+}
+
+export async function addJoinedMemberToBoard(
+  joinedMemberId: string,
+  boardId: string,
+  session: any
+): Promise<any> {
+  try {
+    if (!boardId || !joinedMemberId || !session) {
+      return;
+    }
+    const board = await Board.findByIdAndUpdate(
+      boardId,
+      { $push: { joinedMembers: joinedMemberId } },
+      { new: true, useFindAndModify: false, session: session }
+    );
+    return board;
+  } catch (err) {
+    throw "Cannot joined member to board";
   }
 }
 

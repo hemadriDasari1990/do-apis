@@ -13,25 +13,27 @@ import {
 
 import EmailService from "../../services/email";
 import Member from "../../models/member";
+import TeamMember from "../../models/teamMember";
 import Token from "../../models/token";
 import { addMemberToUser } from "../user";
 import { addOrRemoveMemberFromTeamInternal } from "../team";
 import config from "config";
 import { generateToken } from "../auth";
-import mongoose from "mongoose";
 import { memberLookup } from "../../util/memberFilters";
-import TeamMember from "../../models/teamMember";
+import mongoose from "mongoose";
 
 export async function updateMember(
   req: Request,
   res: Response,
   next: NextFunction
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const user = getUser(req.headers.authorization as string);
     const count = await Member.find({
       userId: user?._id,
-    }).count();
+    }).countDocuments();
     if (count >= MAX_MEMBER_COUNT) {
       return res.status(409).json({
         errorId: MAX_MEMBER_ERROR,
@@ -56,6 +58,7 @@ export async function updateMember(
         setDefaultsOnInsert: true,
         runValidators: true,
         strict: false,
+        session: session,
       };
     const updated: any = await Member.findOneAndUpdate(query, update, options);
     if (!updated) {
@@ -65,27 +68,41 @@ export async function updateMember(
       await req.body?.teams.reduce(
         async (promise: any, team: { [Key: string]: any }) => {
           await promise;
-          await addOrRemoveMemberFromTeamInternal(team?._id, updated?._id);
+          await addOrRemoveMemberFromTeamInternal(
+            team?._id,
+            updated?._id,
+            session
+          );
         },
         Promise.resolve()
       );
     }
-    await addMemberToUser(updated?._id, req.body.userId);
+    await addMemberToUser(updated?._id, req.body.userId, session);
     /* Send email notification to confirm when creating new member */
     if (!req.body.memberId) {
-      await sendInviteToNewMember(user, updated);
+      await sendInviteToNewMember(user, updated, session);
     }
-    const members: any = await getMemberDetailsLocal({ _id: updated?._id });
+    const members: any = await getMemberDetailsLocal(
+      { _id: updated?._id },
+      session
+    );
+    await session.commitTransaction();
     return res.status(200).send(members ? members[0] : null);
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
-export async function createMember(payload: { [Key: string]: any }) {
+export async function createMember(
+  payload: { [Key: string]: any },
+  session: any
+) {
   try {
     const member = await new Member(payload);
-    return await member.save();
+    return await member.save({ session });
   } catch (err) {
     throw err | err.message;
   }
@@ -95,23 +112,32 @@ export async function getMemberDetails(
   req: Request,
   res: Response
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
-    const members = await getMemberDetailsLocal(query);
+    const members = await getMemberDetailsLocal(query, session);
+    await session.commitTransaction();
     return res.status(200).json(members);
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
-export async function getMemberDetailsLocal(query: {
-  [Key: string]: any;
-}): Promise<any> {
+export async function getMemberDetailsLocal(
+  query: {
+    [Key: string]: any;
+  },
+  session: any
+): Promise<any> {
   try {
     const members = await Member.aggregate([
       { $match: query },
       teamMemberTeamsLookup,
-    ]);
+    ]).session(session);
     return members;
   } catch (err) {
     throw err || err.message;
@@ -146,7 +172,7 @@ export async function getMembersByUser(
       $facet: {
         data: [
           { $match: query },
-          { $sort: { _id: -1 } },
+          // { $sort: { _id: -1 } },
           { $skip: offset },
           { $limit: limit },
           teamMemberTeamsLookup,
@@ -212,9 +238,12 @@ export async function getMembersByTeam(
   }
 }
 
-export async function getMember(query: { [Key: string]: any }): Promise<any> {
+export async function getMember(
+  query: { [Key: string]: any },
+  session: any
+): Promise<any> {
   try {
-    const member = await Member.findOne(query);
+    const member = await Member.findOne(query).session(session);
     return member;
   } catch (err) {
     throw err | err.message;
@@ -248,19 +277,30 @@ export async function deleteMember(
   res: Response,
   next: NextFunction
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    const deleted = await Member.findByIdAndRemove(req.params.id);
+    const deleted = await Member.findByIdAndRemove(req.params.id).session(
+      session
+    );
     if (!deleted) {
       res.status(500).json({ message: `Cannot delete resource` });
       return next(deleted);
     }
+    await session.commitTransaction();
     return res.status(200).json({ deleted: true });
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
-export async function findMembersByTeamAndDelete(teamId: string): Promise<any> {
+export async function findMembersByTeamAndDelete(
+  teamId: string,
+  session: any
+): Promise<any> {
   try {
     const membersList = await getMembersByTeamLocal(teamId);
     if (!membersList?.length) {
@@ -269,7 +309,7 @@ export async function findMembersByTeamAndDelete(teamId: string): Promise<any> {
     const deleted = membersList.reduce(
       async (promise: Promise<any>, member: { [Key: string]: any }) => {
         await promise;
-        await Member.findByIdAndRemove(member._id);
+        await Member.findByIdAndRemove(member._id).session(session);
       },
       [Promise.resolve()]
     );
@@ -292,16 +332,17 @@ async function getMembersByTeamLocal(teamId: string): Promise<any> {
 
 export async function addTeamMemberToMember(
   teamMemberId: string,
-  memberId: string
+  memberId: string,
+  session: any
 ): Promise<any> {
   try {
-    if (!teamMemberId || !teamMemberId) {
+    if (!teamMemberId || !teamMemberId || !session) {
       return;
     }
     const updated = await Member.findByIdAndUpdate(
       memberId,
       { $push: { teams: teamMemberId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return updated;
   } catch (err) {
@@ -309,12 +350,18 @@ export async function addTeamMemberToMember(
   }
 }
 
-export async function removeTeamFromMember(memberId: string, teamId: string) {
+export async function removeTeamFromMember(
+  memberId: string,
+  teamId: string,
+  session: any
+) {
   try {
-    if (!memberId || !teamId) {
+    if (!memberId || !teamId || !session) {
       return;
     }
-    await Member.findByIdAndUpdate(memberId, { $pull: { teams: teamId } });
+    await Member.findByIdAndUpdate(memberId, {
+      $pull: { teams: teamId },
+    }).session(session);
   } catch (err) {
     throw new Error("Cannot remove team from member");
   }
@@ -323,18 +370,22 @@ export async function removeTeamFromMember(memberId: string, teamId: string) {
 export async function sendInvitationsToMembers(
   memberIds: Array<string>,
   sender: { [Key: string]: any },
-  boardId: string
+  boardId: string,
+  session: any
 ) {
   try {
-    if (!memberIds?.length || !sender || !boardId) {
+    if (!memberIds?.length || !sender || !boardId || !session) {
       return;
     }
     return await memberIds.reduce(async (promise: any, memberId: string) => {
       await promise;
-      const member = await getMember({
-        _id: mongoose.Types.ObjectId(memberId),
-      });
-      await sendInviteToMember(boardId, sender, member);
+      const member = await getMember(
+        {
+          _id: mongoose.Types.ObjectId(memberId),
+        },
+        session
+      );
+      await sendInviteToMember(boardId, sender, member, session);
     }, Promise.resolve());
   } catch (err) {
     return new Error("Error while sending invite to members");
@@ -344,7 +395,8 @@ export async function sendInvitationsToMembers(
 export async function sendInviteToMember(
   boardId: string,
   sender: { [Key: string]: any },
-  receiver: { [Key: string]: any }
+  receiver: { [Key: string]: any },
+  session: any
 ) {
   try {
     if (!sender || !receiver || !boardId) {
@@ -364,18 +416,22 @@ export async function sendInviteToMember(
       memberId: receiver._id,
       token: jwtToken,
     });
-    const newToken: any = await token.save();
-    const sent = await emailService.sendEmail(
-      "/templates/invite.ejs",
-      {
-        url: config.get("url"),
-        invite_link: `${config.get("url")}/board/${boardId}/${newToken?.token}`,
-        name: receiver?.name,
-        senderName: sender?.name,
-      },
-      receiver.email,
-      `You've been invited to join a retrospective session`
-    );
+    const newToken: any = await token.save({ session });
+    const sent = newToken
+      ? await emailService.sendEmail(
+          "/templates/invite.ejs",
+          {
+            url: config.get("url"),
+            invite_link: `${config.get("url")}/board/${boardId}/${
+              newToken?.token
+            }`,
+            name: receiver?.name,
+            senderName: sender?.name,
+          },
+          receiver.email,
+          `You've been invited to join a retrospective session`
+        )
+      : null;
     return sent;
   } catch (err) {
     throw err | err.message;
@@ -385,10 +441,11 @@ export async function sendInviteToMember(
 /* Send invite to new member when created */
 export async function sendInviteToNewMember(
   sender: { [Key: string]: any },
-  receiver: { [Key: string]: any }
+  receiver: { [Key: string]: any },
+  session: any
 ) {
   try {
-    if (!sender || !receiver) {
+    if (!sender || !receiver || !session) {
       return;
     }
     const emailService = await new EmailService();
@@ -405,19 +462,23 @@ export async function sendInviteToNewMember(
       memberId: receiver._id,
       token: jwtToken,
     });
-    const newToken: any = await token.save();
+    const newToken: any = await token.save({ session });
+    let sent = null;
     //@TODO - Send Email Activation Link
-    const sent = await emailService.sendEmail(
-      "/templates/join-invitation.ejs",
-      {
-        url: config.get("url"),
-        confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
-        name: receiver?.name,
-        senderName: sender?.name,
-      },
-      receiver?.email,
-      "Cofirm your email"
-    );
+    if (newToken) {
+      sent = await emailService.sendEmail(
+        "/templates/join-invitation.ejs",
+        {
+          url: config.get("url"),
+          confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
+          name: receiver?.name,
+          senderName: sender?.name,
+        },
+        receiver?.email,
+        "Cofirm your email"
+      );
+    }
+
     return sent;
   } catch (err) {
     throw err | err.message;

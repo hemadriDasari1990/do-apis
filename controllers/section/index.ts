@@ -15,17 +15,17 @@ import {
 } from "../../util/noteFilters";
 
 import Section from "../../models/section";
+import { addSectionToBoard } from "../board";
 import { createActivity } from "../activity";
 import mongoose from "mongoose";
-import { addSectionToBoard } from "../board";
 
-export async function saveSection(input: any) {
+export async function saveSection(input: any, session: any) {
   try {
     if (!input) {
       return;
     }
     const section = new Section(input);
-    return await section.save();
+    return await section.save({ session });
   } catch (err) {
     throw err;
   }
@@ -34,10 +34,12 @@ export async function saveSection(input: any) {
 export async function updateSection(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const sectionCount: number = await Section.find({
       boardId: payload?.boardId,
-    }).count();
+    }).countDocuments();
     if (sectionCount > 10) {
       return {
         errorId: SECTION_COUNT_EXCEEDS,
@@ -52,7 +54,12 @@ export async function updateSection(payload: {
           ...(!payload?.sectionId ? { position: sectionCount || 0 } : {}),
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     const section = await getSection({
       $and: [{ name: payload?.name?.trim() }, { boardId: payload?.boardId }],
     });
@@ -65,35 +72,44 @@ export async function updateSection(payload: {
     const updated: any = await Section.findOneAndUpdate(query, update, options);
 
     if (!payload?.sectionId && updated?._id) {
-      await addSectionToBoard(updated?._id, updated?.boardId);
+      await addSectionToBoard(updated?._id, updated?.boardId, session);
     }
     if (payload?.sectionId) {
-      await createActivity({
-        memberId: payload?.memberId,
-        boardId: payload?.boardId,
-        title: `section`,
-        primaryAction: "from",
-        primaryTitle: payload?.previousTitle,
-        secondaryAction: "to",
-        secondaryTitle: updated?.name,
-        type: "section",
-        action: "update",
-      });
+      await createActivity(
+        {
+          memberId: payload?.memberId,
+          boardId: payload?.boardId,
+          title: `section`,
+          primaryAction: "from",
+          primaryTitle: payload?.previousTitle,
+          secondaryAction: "to",
+          secondaryTitle: updated?.name,
+          type: "section",
+          action: "update",
+        },
+        session
+      );
     } else {
-      await createActivity({
-        memberId: payload?.memberId,
-        boardId: payload?.boardId,
-        title: `${updated?.name}`,
-        primaryAction: "as",
-        primaryTitle: "section",
-        type: "section",
-        action: "create",
-      });
+      await createActivity(
+        {
+          memberId: payload?.memberId,
+          boardId: payload?.boardId,
+          title: `${updated?.name}`,
+          primaryAction: "as",
+          primaryTitle: "section",
+          type: "section",
+          action: "create",
+        },
+        session
+      );
     }
-
+    await session.commitTransaction();
     return updated;
   } catch (err) {
+    await session.abortTransaction();
     throw err;
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -125,31 +141,42 @@ export async function getSectionsByBoardId(
 export async function addAndRemoveNoteFromSection(data: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const destinationSectionUpdated: any = await addNoteToSection(
       data.noteId,
-      data.destinationSectionId
+      data.destinationSectionId,
+      session
     );
     const sourceSectionUpdated: any = await removeNoteFromSection(
       data.noteId,
-      data.sourceSectionId
+      data.sourceSectionId,
+      session
     );
-    await updateNoteSectionId(data.noteId, data.destinationSectionId);
-    const noteDetails = await getNoteDetails(data.noteId);
-    await createActivity({
-      memberId: data?.memberId,
-      boardId: data?.boardId,
-      title: `${noteDetails?.description}`,
-      primaryAction: "from",
-      primaryTitle: `${sourceSectionUpdated?.name}`,
-      secondaryAction: "to",
-      secondaryTitle: `${destinationSectionUpdated?.name}`,
-      type: "note",
-      action: "move",
-    });
+    await updateNoteSectionId(data.noteId, data.destinationSectionId, session);
+    const noteDetails = await getNoteDetails(data.noteId, session);
+    await createActivity(
+      {
+        memberId: data?.memberId,
+        boardId: data?.boardId,
+        title: `${noteDetails?.description}`,
+        primaryAction: "from",
+        primaryTitle: `${sourceSectionUpdated?.name}`,
+        secondaryAction: "to",
+        secondaryTitle: `${destinationSectionUpdated?.name}`,
+        type: "note",
+        action: "move",
+      },
+      session
+    );
+    await session.commitTransaction();
     return noteDetails;
   } catch (err) {
+    await session.abortTransaction();
     throw err || err.message;
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -174,32 +201,41 @@ export async function deleteSection(
   memberId: string,
   boardId: string
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    const deleted: any = deleteSectionAndNotes(sectionId);
+    const deleted: any = deleteSectionAndNotes(sectionId, session);
     if (!deleted) {
       return deleted;
     }
-    await createActivity({
-      memberId,
-      boardId: boardId,
-      title: "section",
-      type: "section",
-      action: "delete",
-    });
+    await createActivity(
+      {
+        memberId,
+        boardId: boardId,
+        title: "section",
+        type: "section",
+        action: "delete",
+      },
+      session
+    );
+    await session.commitTransaction();
     return { deleted: true, _id: sectionId };
   } catch (err) {
+    await session.abortTransaction();
     return {
       deleted: false,
       message: err || err?.message,
       _id: sectionId,
     };
+  } finally {
+    await session.endSession();
   }
 }
 
-async function deleteSectionAndNotes(sectionId: string) {
+async function deleteSectionAndNotes(sectionId: string, session: any) {
   try {
-    await findNotesBySectionAndDelete(sectionId);
-    const deleted = await Section.findByIdAndRemove(sectionId);
+    await findNotesBySectionAndDelete(sectionId, session);
+    const deleted = await Section.findByIdAndRemove(sectionId).session(session);
     return deleted;
   } catch (err) {
     throw `Error while deleting section and notes associated ${err ||
@@ -209,16 +245,17 @@ async function deleteSectionAndNotes(sectionId: string) {
 
 export async function removeNoteFromSection(
   noteId: string,
-  sectionId: string
+  sectionId: string,
+  session: any
 ): Promise<any> {
   try {
-    if (!noteId || !sectionId) {
+    if (!noteId || !sectionId || !session) {
       return;
     }
     const updated = await Section.findByIdAndUpdate(
       sectionId,
       { $pull: { notes: noteId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return updated;
   } catch (err) {
@@ -227,7 +264,8 @@ export async function removeNoteFromSection(
 }
 
 export async function findSectionsByBoardAndDelete(
-  boardId: string
+  boardId: string,
+  session: any
 ): Promise<any> {
   try {
     const sectionsList = await getSections(boardId);
@@ -237,7 +275,7 @@ export async function findSectionsByBoardAndDelete(
     const deleted = sectionsList.reduce(
       async (promise: Promise<any>, section: { [Key: string]: any }) => {
         await promise;
-        await deleteSectionAndNotes(section._id);
+        await deleteSectionAndNotes(section._id, session);
       },
       [Promise.resolve()]
     );
@@ -249,16 +287,17 @@ export async function findSectionsByBoardAndDelete(
 
 export async function addNoteToSection(
   noteId: string,
-  sectionId: string
+  sectionId: string,
+  session: any
 ): Promise<any> {
   try {
-    if (!noteId || !sectionId) {
+    if (!noteId || !sectionId || !session) {
       return;
     }
     const updated = await Section.findByIdAndUpdate(
       sectionId,
       { $push: { notes: noteId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return updated;
   } catch (err) {
@@ -270,6 +309,8 @@ export async function changeSectionPosition(
   sourceSection: { [Key: string]: any },
   destinationSection: { [Key: string]: any }
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     if (
       !sourceSection ||
@@ -282,17 +323,21 @@ export async function changeSectionPosition(
     await Section.findByIdAndUpdate(
       sourceSection?._id,
       { $set: { position: destinationSection?.position } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     await Section.findByIdAndUpdate(
       destinationSection?._id,
       { $set: { position: sourceSection?.position } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
+    await session.commitTransaction();
     return {
       updated: true,
     };
   } catch (err) {
+    await session.abortTransaction();
     throw `Error while reordering section ${err || err.message}`;
+  } finally {
+    await session.endSession();
   }
 }

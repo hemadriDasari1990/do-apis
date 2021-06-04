@@ -11,7 +11,7 @@ import router from "./router";
 
 export default class Server {
   private app: Application = express();
-
+  private dbInstance: any;
   public bootstrap(): Application {
     this.configureDatabase(); /* Connect to the Database */
     this.configureMiddleware(); /* Configuration set up*/
@@ -19,15 +19,25 @@ export default class Server {
     return this.app;
   }
 
-  private configureDatabase(): void {
-    mongoose.connect(config.get("database"), {
-      useCreateIndex: true,
-      useNewUrlParser: true,
-    });
+  private async configureDatabase(): Promise<void> {
+    const connectionInstance: any = await mongoose.connect(
+      config.get("database"),
+      {
+        useCreateIndex: true,
+        useNewUrlParser: true,
+        connectWithNoPrimary: true,
+        useUnifiedTopology: true, // To use the new Server Discover and Monitoring engine
+      }
+    );
+    this.dbInstance = connectionInstance;
   }
 
   private configureRoutes(): void {
     router(this.app);
+  }
+
+  public getDbInstance() {
+    return this.dbInstance;
   }
 
   private configureMiddleware(): void {

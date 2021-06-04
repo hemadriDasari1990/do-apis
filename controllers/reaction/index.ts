@@ -16,6 +16,8 @@ import { sectionsLookup } from "../../util/sectionFilters";
 export async function createOrUpdateReaction(payload: {
   [Key: string]: any;
 }): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     /* Get the admin member */
     const reactedBy: any = !payload?.isAnnonymous ? payload?.reactedBy : null;
@@ -36,19 +38,30 @@ export async function createOrUpdateReaction(payload: {
           type: payload?.type,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
 
-    const note = await getNote({
-      _id: mongoose.Types.ObjectId(payload?.noteId),
-    });
-    const reactionDetails = await getReaction({
-      $and: [
-        {
-          reactedBy: reactedBy ? mongoose.Types.ObjectId(reactedBy) : null,
-        },
-        { noteId: mongoose.Types.ObjectId(payload?.noteId) },
-      ],
-    });
+    const note = await getNote(
+      {
+        _id: mongoose.Types.ObjectId(payload?.noteId),
+      },
+      session
+    );
+    const reactionDetails = await getReaction(
+      {
+        $and: [
+          {
+            reactedBy: reactedBy ? mongoose.Types.ObjectId(reactedBy) : null,
+          },
+          { noteId: mongoose.Types.ObjectId(payload?.noteId) },
+        ],
+      },
+      session
+    );
     /* Remove only if member is known */
     if (
       reactionDetails &&
@@ -56,18 +69,25 @@ export async function createOrUpdateReaction(payload: {
       reactionDetails?.type === payload?.type
     ) {
       if (note?.reactions?.includes(reactionDetails?._id)) {
-        await removeReactionFromNote(reactionDetails?._id, payload?.noteId);
+        await removeReactionFromNote(
+          reactionDetails?._id,
+          payload?.noteId,
+          session
+        );
       }
-      await removeReactionById(reactionDetails?._id);
-      await createActivity({
-        memberId: reactedBy,
-        boardId: payload?.boardId,
-        title: payload?.type,
-        primaryAction: "to",
-        primaryTitle: note?.description,
-        type: payload?.type,
-        action: "un-react",
-      });
+      await removeReactionById(reactionDetails?._id, session);
+      await createActivity(
+        {
+          memberId: reactedBy,
+          boardId: payload?.boardId,
+          title: payload?.type,
+          primaryAction: "to",
+          primaryTitle: note?.description,
+          type: payload?.type,
+          action: "un-react",
+        },
+        session
+      );
       return {
         removed: true,
         ...reactionDetails,
@@ -78,25 +98,34 @@ export async function createOrUpdateReaction(payload: {
     if (!reactionUpdated) {
       return {};
     }
-    const newReaction: any = await getReaction({
-      _id: mongoose.Types.ObjectId(reactionUpdated?._id),
-    });
+    const newReaction: any = await getReaction(
+      {
+        _id: mongoose.Types.ObjectId(reactionUpdated?._id),
+      },
+      session
+    );
     if (!note?.reactions?.includes(newReaction?._id)) {
-      await addReactionToNote(newReaction._id, payload.noteId);
-      await createActivity({
-        memberId: reactedBy,
-        boardId: payload?.boardId,
-        title: payload?.type,
-        primaryAction: "to",
-        primaryTitle: note?.description,
-        type: payload?.type,
-        action: "react",
-      });
+      await addReactionToNote(newReaction._id, payload.noteId, session);
+      await createActivity(
+        {
+          memberId: reactedBy,
+          boardId: payload?.boardId,
+          title: payload?.type,
+          primaryAction: "to",
+          primaryTitle: note?.description,
+          type: payload?.type,
+          action: "react",
+        },
+        session
+      );
     }
-
+    await session.commitTransaction();
     return newReaction;
   } catch (err) {
+    await session.abortTransaction();
     throw new Error(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -117,17 +146,18 @@ async function updateReaction(
 }
 
 export async function findReactionsByNoteAndDelete(
-  noteId: string
+  noteId: string,
+  session: any
 ): Promise<any> {
   try {
-    const reactionsList = await getReactionsByNote({ noteId });
+    const reactionsList = await getReactionsByNote({ noteId }, session);
     if (!reactionsList?.length) {
       return;
     }
     const deleted = reactionsList.reduce(
       async (promise: Promise<any>, note: { [Key: string]: any }) => {
         await promise;
-        await removeReactionById(note._id);
+        await removeReactionById(note._id, session);
       },
       [Promise.resolve()]
     );
@@ -137,23 +167,29 @@ export async function findReactionsByNoteAndDelete(
   }
 }
 
-async function removeReactionById(reactionId: string): Promise<any> {
+async function removeReactionById(
+  reactionId: string,
+  session: any
+): Promise<any> {
   try {
     if (!reactionId) {
       return;
     }
-    return await Reaction.findByIdAndRemove(reactionId);
+    return await Reaction.findByIdAndRemove(reactionId).session(session);
   } catch (err) {
     throw `Error while deleting note ${err || err.message}`;
   }
 }
 
-async function getReactionsByNote(query: { [Key: string]: any }): Promise<any> {
+async function getReactionsByNote(
+  query: { [Key: string]: any },
+  session: any
+): Promise<any> {
   try {
     if (!query) {
       return;
     }
-    return await Reaction.find(query);
+    return await Reaction.find(query).session(session);
   } catch (err) {
     throw `Error while fetching notes ${err || err.message}`;
   }
@@ -194,7 +230,10 @@ export async function getReactions(req: Request, res: Response): Promise<any> {
   }
 }
 
-export async function getReaction(query: { [Key: string]: any }): Promise<any> {
+export async function getReaction(
+  query: { [Key: string]: any },
+  session: any
+): Promise<any> {
   try {
     const reaction = await Reaction.aggregate([
       { $match: query },
@@ -205,7 +244,7 @@ export async function getReaction(query: { [Key: string]: any }): Promise<any> {
           preserveNullAndEmptyArrays: true,
         },
       },
-    ]);
+    ]).session(session);
     return reaction ? reaction[0] : null;
   } catch (err) {
     throw err | err.message;

@@ -38,6 +38,8 @@ import { getUser } from "../../util";
 import mongoose from "mongoose";
 
 export async function createUser(req: Request, res: Response): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const emailService = await new EmailService();
     const user = await getUserByEmail(req.body.email);
@@ -70,7 +72,7 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       password: req.body.password,
       isAgreed: req.body.isAgreed,
     });
-    const userCreated = await newUser.save();
+    const userCreated = await newUser.save({ session });
     userCreated.password = undefined;
 
     /* Create member */
@@ -83,13 +85,18 @@ export async function createUser(req: Request, res: Response): Promise<any> {
           isAuthor: true,
         },
       },
-      memberOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
+      memberOptions = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     const updatedMember: any = await Member.findOneAndUpdate(
       memberQuery,
       updateMember,
       memberOptions
     );
-    await addMemberToUser(updatedMember?._id, userCreated?._id, true);
+    await addMemberToUser(updatedMember?._id, userCreated?._id, session, true);
     // Generate jwt token
     const jwtToken = await generateToken(
       {
@@ -107,25 +114,31 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       memberId: updatedMember._id,
       token: jwtToken,
     });
-    const newToken: any = await token.save();
+    const newToken: any = await token.save({ session });
     //@TODO - Send Email Activation Link
-    await emailService.sendEmail(
-      "/templates/account-confirmation.ejs",
-      {
-        url: config.get("url"),
-        confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
-        name: req.body.name,
-      },
-      req.body.email,
-      "Please confirm your email"
-    );
+    if (newToken) {
+      await emailService.sendEmail(
+        "/templates/account-confirmation.ejs",
+        {
+          url: config.get("url"),
+          confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
+          name: req.body.name,
+        },
+        req.body.email,
+        "Please confirm your email"
+      );
+    }
+    await session.commitTransaction();
     return res.status(200).json({
       message:
         "An email verification link has been sent. Please check your inbox",
       userCreated,
     });
   } catch (err) {
-    throw err || err.message;
+    await session.abortTransaction();
+    return res.status(500).json(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -133,10 +146,15 @@ export async function resendActivationLink(
   req: Request,
   res: Response
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    const member: any = await getMember({
-      email: req.body.email?.trim(),
-    });
+    const member: any = await getMember(
+      {
+        email: req.body.email?.trim(),
+      },
+      session
+    );
     if (!member) {
       return res.status(401).send({
         message: `We are unable to find an user account associated with ${req.body.email}. Make sure your Email is correct!`,
@@ -151,10 +169,14 @@ export async function resendActivationLink(
       userId: member._id,
       token: crypto.randomBytes(16).toString("hex"),
     });
-    await token.save();
+    await token.save({ session });
+    await session.commitTransaction();
     //@TODO - Send Email Activation Link
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).json(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -194,6 +216,8 @@ export async function getUserDetails(
 }
 
 export async function updateAvatar(req: Request, res: Response): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const user = getUser(req.headers.authorization as string);
     if (user?._id) {
@@ -207,6 +231,7 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
         },
         options = {
           new: true,
+          session: session,
         };
       await User.findOneAndUpdate(userQuery, userUpdate, options);
       const query = {
@@ -219,28 +244,28 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
         },
         memberOptions = {
           new: true,
+          session: session,
         };
       const updated: any = await Member.findOneAndUpdate(
         query,
         update,
         memberOptions
       );
+      await session.commitTransaction();
       return res.status(200).send(updated);
     }
-    // const updated: any = await updateMemberAvatar(
-    //   req.body.email,
-    //   user?._id,
-    //   req.body.avatarId
-    // );
-    // return res.status(200).send(updated);
   } catch (err) {
-    return res.status(500).send(err || err.message);
+    await session.abortTransaction();
+    return res.status(500).json(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function updateMemberAvatar(
   memberId: string,
-  avatarId: number
+  avatarId: number,
+  session: any
 ): Promise<any> {
   try {
     const query = {
@@ -253,6 +278,7 @@ export async function updateMemberAvatar(
       },
       options = {
         new: true,
+        session: session,
       };
     const updated: any = await Member.findOneAndUpdate(query, update, options);
     return updated;
@@ -338,9 +364,9 @@ export async function getBoardsByUser(
 
 export async function getAllSummary(req: Request, res: Response): Promise<any> {
   try {
-    const usersCount = await User.find({}).count();
-    const projectsCount = await Project.find({}).count();
-    const boardsCount = await Board.find({}).count();
+    const usersCount = await User.find({}).countDocuments();
+    const projectsCount = await Project.find({}).countDocuments();
+    const boardsCount = await Board.find({}).countDocuments();
     return res.status(200).json({
       usersCount,
       projectsCount,
@@ -356,17 +382,25 @@ export async function deleteUser(
   res: Response,
   next: NextFunction
 ): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
-    const deleted = await User.findByIdAndRemove(req.params.id);
+    const deleted = await User.findByIdAndRemove(req.params.id).session(
+      session
+    );
     if (!deleted) {
       res.status(500).json({ message: `Cannot delete resource` });
       return next(deleted);
     }
+    await session.commitTransaction();
     return res
       .status(200)
       .json({ message: "Resource has been deleted successfully" });
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -381,7 +415,8 @@ export async function getUserByEmail(email: string): Promise<any> {
 
 export async function addDepartmentToUser(
   departmentId: string,
-  userId: string
+  userId: string,
+  session: any
 ): Promise<any> {
   try {
     if (!userId || !departmentId) {
@@ -390,7 +425,7 @@ export async function addDepartmentToUser(
     const user = await User.findByIdAndUpdate(
       userId,
       { $push: { departments: departmentId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return user;
   } catch (err) {
@@ -400,7 +435,8 @@ export async function addDepartmentToUser(
 
 export async function addTeamToUser(
   teamId: string,
-  userId: string
+  userId: string,
+  session: any
 ): Promise<any> {
   try {
     if (!userId || !teamId) {
@@ -409,7 +445,7 @@ export async function addTeamToUser(
     const user = await User.findByIdAndUpdate(
       userId,
       { $push: { teams: teamId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return user;
   } catch (err) {
@@ -420,6 +456,7 @@ export async function addTeamToUser(
 export async function addMemberToUser(
   memberId: string,
   userId: string,
+  session: any,
   updateMember?: boolean // Whether to update member id or not
 ): Promise<any> {
   try {
@@ -438,7 +475,7 @@ export async function addMemberToUser(
             }
           : {}),
       },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return user;
   } catch (err) {
@@ -448,7 +485,8 @@ export async function addMemberToUser(
 
 export async function addProjectToUser(
   projectId: string,
-  userId: string
+  userId: string,
+  session: any
 ): Promise<any> {
   try {
     if (!projectId || !userId) {
@@ -457,7 +495,7 @@ export async function addProjectToUser(
     const updated = await User.findByIdAndUpdate(
       userId,
       { $push: { projects: projectId } },
-      { new: true, useFindAndModify: false }
+      { new: true, useFindAndModify: false, session: session }
     );
     return updated;
   } catch (err) {
@@ -466,9 +504,10 @@ export async function addProjectToUser(
 }
 
 export async function updateEmail(req: Request, res: Response) {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const user = await getUser(req.headers.authorization as string);
-
     const userFromDb: any = await User.findOne({
       _id: mongoose.Types.ObjectId(user?._id),
     });
@@ -497,7 +536,12 @@ export async function updateEmail(req: Request, res: Response) {
           newEmail: req.body.email, // This flag is required for changing email address
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     const updatedUser: any = await User.findOneAndUpdate(
       query,
       update,
@@ -510,36 +554,48 @@ export async function updateEmail(req: Request, res: Response) {
           token: crypto.randomBytes(16).toString("hex"),
         },
       },
-      tokenOptions = { upsert: true, new: true, setDefaultsOnInsert: true };
+      tokenOptions = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     const newToken: any = await Token.findOneAndUpdate(
       tokenQuery,
       updateToken,
       tokenOptions
     );
-    await emailService.sendEmail(
-      "/templates/account-confirmation.ejs",
-      {
-        url: config.get("url"),
-        confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
-        name: updatedUser.name,
-      },
-      req.body.email,
-      "Please confirm your email"
-    );
+    if (newToken) {
+      await emailService.sendEmail(
+        "/templates/account-confirmation.ejs",
+        {
+          url: config.get("url"),
+          confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
+          name: updatedUser.name,
+        },
+        req.body.email,
+        "Please confirm your email"
+      );
+    }
+    await session.commitTransaction();
     return res.status(200).send({
       updated: true,
       message:
         "We've sent an email confirmation link to your new email address. Please check your inbox",
     });
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function updatePassword(req: Request, res: Response) {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const user = await getUser(req.headers.authorization as string);
-
     const userFromDb: any = await User.findOne({
       _id: mongoose.Types.ObjectId(user?._id),
     });
@@ -583,24 +639,34 @@ export async function updatePassword(req: Request, res: Response) {
           password: hashedPassword,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     await User.findByIdAndUpdate(
       mongoose.Types.ObjectId(userFromDb?._id),
       update,
       options
     );
-
+    await session.commitTransaction();
     return res.status(200).send({
       updated: true,
       message:
         "Your password is successfully changed. Please login with new password",
     });
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }
 
 export async function updateName(req: Request, res: Response) {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     if (!req.body.name?.trim()?.length) {
       return;
@@ -623,13 +689,22 @@ export async function updateName(req: Request, res: Response) {
           name: req.body.name,
         },
       },
-      options = { upsert: true, new: true, setDefaultsOnInsert: true };
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
     await User.findOneAndUpdate(query, update, options);
+    await session.commitTransaction();
     return res.status(200).send({
       updated: true,
       message: "Name has been updated successfully",
     });
   } catch (err) {
+    await session.abortTransaction();
     return res.status(500).send(err || err.message);
+  } finally {
+    await session.endSession();
   }
 }

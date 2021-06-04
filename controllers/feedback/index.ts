@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 
+import { CREATION_FAILED } from "../../util/constants";
 import Feedback from "../../models/feedback";
 import { getUser } from "../../util";
 import { userLookup } from "../../util/userFilters";
-import { CREATION_FAILED } from "../../util/constants";
 
 export async function getFeedbacks(req: Request, res: Response): Promise<any> {
   try {
