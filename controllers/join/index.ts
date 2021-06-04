@@ -1,10 +1,10 @@
 import { RESOURCE_NOT_FOUND, TOKEN_EXPIRED } from "../../util/constants";
 import { Request, Response } from "express";
 
+import Board from "../../models/board";
 import Join from "../../models/join";
 import Token from "../../models/token";
 import config from "config";
-import { getBoardDetailsWithProject } from "../board";
 import { getMember } from "../member";
 import { getPagination } from "../../util";
 import jwt from "jsonwebtoken";
@@ -32,10 +32,7 @@ export async function joinMemberToBoard(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    if (
-      (!payload?.token && !payload?.guestName?.trim()?.length) ||
-      !payload?.boardId
-    ) {
+    if (!payload?.token || !payload?.boardId) {
       return;
     }
 
@@ -58,13 +55,13 @@ export async function joinMemberToBoard(payload: {
         token?.token,
         config.get("accessTokenSecret")
       );
-      if (!decodedUser?.email || !decodedUser) {
+      if (!decodedUser?.memberId || !decodedUser) {
         return {
           errorId: TOKEN_EXPIRED,
           message: "The token is expired",
         };
       }
-      const board = await getBoardDetailsWithProject(payload?.boardId, session);
+      const board = await Board.findById(payload?.boardId).session(session);
       if (!board) {
         return {
           errorId: RESOURCE_NOT_FOUND,
@@ -73,44 +70,43 @@ export async function joinMemberToBoard(payload: {
       }
     }
 
-    let member = null;
-    let joinedMember: any;
-    if (token?.memberId) {
-      member = await getMember(
-        {
-          _id: token?.memberId,
-        },
-        session
-      );
+    const member = await getMember(
+      {
+        _id: token?.memberId,
+      },
+      session
+    );
 
-      /* Update member avatar */
-      if (member && payload?.avatarId) {
-        await updateMemberAvatar(member?._id, payload?.avatarId, session);
-      }
-
-      /* Check if member joined */
-      joinedMember = await getJoinedMember(
-        {
-          memberId: member?._id,
-          boardId: payload?.boardId,
-        },
-        session
-      );
-
-      /* Do nothing if member is already joined */
-      if (joinedMember?._id) {
-        joinedMember.avatarId = payload?.avatarId;
-        return joinedMember;
-      }
+    /* Update member avatar */
+    if (member && payload?.avatarId) {
+      await updateMemberAvatar(member?._id, payload?.avatarId, session);
     }
 
-    const join = new Join({
-      boardId: payload.boardId,
-      memberId: member?._id,
-      guestName: member ? member?.name : payload.guestName,
-      avatarId: payload?.avatarId,
-    });
-    joinedMember = await join.save({ session });
+    const query = {
+        $and: [
+          { boardId: mongoose.Types.ObjectId(payload.boardId) },
+          { memberId: token?.memberId },
+        ],
+      },
+      update = {
+        $set: {
+          boardId: payload.boardId,
+          memberId: token.memberId,
+          guestName: member ? member?.name : payload.guestName,
+          avatarId: payload?.avatarId,
+        },
+      },
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
+    const joinedMember: any = await Join.findOneAndUpdate(
+      query,
+      update,
+      options
+    );
     await session.commitTransaction();
     return joinedMember;
   } catch (err) {
@@ -121,50 +117,50 @@ export async function joinMemberToBoard(payload: {
   }
 }
 
-export async function checkIfMemberJoinedBoard(payload: {
-  [Key: string]: any;
-}): Promise<any> {
-  const session = await mongoose.startSession();
-  await session.startTransaction();
-  try {
-    if (!payload?.token) {
-      return;
-    }
-    /* Check if token exists */
-    const token: any = await Token.findOne({
-      token: payload?.token?.trim(),
-    }).session(session);
-    if (!token) {
-      return;
-    }
-    /* Verify JWT Token */
-    const decodedMember: any = await jwt.verify(
-      token?.token,
-      config.get("accessTokenSecret")
-    );
-    if (!decodedMember?.email || !decodedMember) {
-      return {
-        errorId: TOKEN_EXPIRED,
-        message: "The token is expired",
-      };
-    }
-    /* Check if member joined */
-    const joinedMember = await getJoinedMember(
-      {
-        memberId: token?.memberId,
-        boardId: payload?.boardId,
-      },
-      session
-    );
-    await session.commitTransaction();
-    return joinedMember;
-  } catch (err) {
-    await session.abortTransaction();
-    throw `Error while checking if member already joined ${err || err.message}`;
-  } finally {
-    await session.endSession();
-  }
-}
+// export async function checkIfMemberJoinedBoard(payload: {
+//   [Key: string]: any;
+// }): Promise<any> {
+//   const session = await mongoose.startSession();
+//   await session.startTransaction();
+//   try {
+//     if (!payload?.token) {
+//       return;
+//     }
+//     /* Check if token exists */
+//     const token: any = await Token.findOne({
+//       token: payload?.token?.trim(),
+//     }).session(session);
+//     if (!token) {
+//       return;
+//     }
+//     /* Verify JWT Token */
+//     const decodedMember: any = await jwt.verify(
+//       token?.token,
+//       config.get("accessTokenSecret")
+//     );
+//     if (!decodedMember?.email || !decodedMember) {
+//       return {
+//         errorId: TOKEN_EXPIRED,
+//         message: "The token is expired",
+//       };
+//     }
+//     /* Check if member joined */
+//     const joinedMember = await getJoinedMember(
+//       {
+//         memberId: token?.memberId,
+//         boardId: payload?.boardId,
+//       },
+//       session
+//     );
+//     await session.commitTransaction();
+//     return joinedMember;
+//   } catch (err) {
+//     await session.abortTransaction();
+//     throw `Error while checking if member already joined ${err || err.message}`;
+//   } finally {
+//     await session.endSession();
+//   }
+// }
 
 export async function getJoinedMembers(
   req: Request,

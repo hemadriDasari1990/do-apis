@@ -9,7 +9,7 @@ export default function reaction(io: socketio.Server, socket: Socket) {
     const user: any = decodeToken(query?.token);
     const reactionUpdated = await createOrUpdateReaction({
       ...payload,
-      reactedBy: user?.memberId,
+      reactedBy: user?.memberId || payload?.joinedMemberId,
       //   ...decodeToken(query?.token),
     });
 

@@ -406,8 +406,8 @@ export async function sendInviteToMember(
     // Generate jwt token
     const jwtToken = await generateToken(
       {
+        memberId: receiver?._id,
         name: receiver.name,
-        email: receiver.email,
       },
       config.get("accessTokenSecret"),
       JOIN_TOKEN_EXPIRY

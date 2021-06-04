@@ -257,8 +257,8 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
       },
       session
     );
+    const board = await getBoardDetailsWithMembers(updated?._id, session);
     await session.commitTransaction();
-    const board = await getBoardDetailsWithMembers(updated?._id);
     return res.status(200).send(board);
   } catch (err) {
     await session.abortTransaction();
@@ -306,7 +306,7 @@ export async function startOrCompleteBoard(payload: {
       const join = new Join({
         boardId: payload.id,
         memberId: member?._id,
-        guestName: member.name || "",
+        guestName: member?.name || "Team Member",
         avatarId: member?.avatarId,
       });
       const joinedMember = await join.save({ session });
@@ -323,8 +323,8 @@ export async function startOrCompleteBoard(payload: {
       },
       session
     );
+    const board = await getBoardDetailsWithMembers(updated?._id, session);
     await session.commitTransaction();
-    const board = await getBoardDetailsWithMembers(updated?._id);
     return board;
   } catch (err) {
     await session.abortTransaction();
@@ -435,7 +435,8 @@ export async function getBoardDetailsForReport(boardId: string): Promise<any> {
 }
 
 export async function getBoardDetailsWithMembers(
-  boardId: string
+  boardId: string,
+  session: any
 ): Promise<any> {
   try {
     const query = { _id: mongoose.Types.ObjectId(boardId) };
@@ -481,7 +482,7 @@ export async function getBoardDetailsWithMembers(
           joinedMembers: 1,
         },
       },
-    ]);
+    ]).session(session);
     return boards ? boards[0] : null;
   } catch (err) {
     throw err || err.message;
@@ -518,7 +519,7 @@ export async function getBoardDetails(
   await session.startTransaction();
   try {
     const user = getUser(req.headers.authorization as string);
-    const board = await getBoardDetailsWithMembers(req.params.id);
+    const board = await getBoardDetailsWithMembers(req.params.id, session);
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const increment = { $inc: { views: 1 } };
     await createActivity(
