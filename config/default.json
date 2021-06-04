@@ -3,7 +3,7 @@
   "version": "0.1",
   "accessTokenSecret": "ldrwngrt2021",
   "refreshTokenSecret": "1202trgnwrdl",
-  "database": "mongodb://localhost:27017/lets-do-retro",
+  "database": "mongodb://uat.letsdoretro.com:27017/lets-do-retro",
   "port": 8080,
   "env": "dev",
   "bcryptSalt": 10,
