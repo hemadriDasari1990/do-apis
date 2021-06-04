@@ -4,7 +4,7 @@ module.exports = {
   refreshTokenSecret: "1202trgnwrdl", // access token secrete reverse
   // Database connection information
   database:
-    "mongodb://hemadri:Hemanth@1505@cluster0-shard-00-00.vgtdr.mongodb.net:27017,cluster0-shard-00-01.vgtdr.mongodb.net:27017,cluster0-shard-00-02.vgtdr.mongodb.net:27017/lets-do-retro?ssl=true&replicaSet=atlas-elrkrn-shard-0&authSource=admin&retryWrites=true&w=majority",
+    "mongodb://hemadri:Hemanth%401505@cluster0-shard-00-00.vgtdr.mongodb.net:27017,cluster0-shard-00-01.vgtdr.mongodb.net:27017,cluster0-shard-00-02.vgtdr.mongodb.net:27017/lets-do-retro?ssl=true&replicaSet=atlas-elrkrn-shard-0&authSource=admin&retryWrites=true&w=majority",
   // Setting port for server
   port: 8080,
   // Configuring Mailgun API for sending transactional email
