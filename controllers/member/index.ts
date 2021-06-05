@@ -5,6 +5,10 @@ import {
   VERIFY_TOKEN_EXPIRY,
 } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
+import {
+  addOrRemoveMemberFromTeamInternal,
+  removeMemberFromTeam,
+} from "../team";
 import { getPagination, getUser } from "../../util";
 import {
   teamMemberTeamsAddFields,
@@ -16,7 +20,6 @@ import Member from "../../models/member";
 import TeamMember from "../../models/teamMember";
 import Token from "../../models/token";
 import { addMemberToUser } from "../user";
-import { addOrRemoveMemberFromTeamInternal } from "../team";
 import config from "config";
 import { generateToken } from "../auth";
 import { memberLookup } from "../../util/memberFilters";
@@ -272,21 +275,31 @@ export async function searchMembers(payload: {
   }
 }
 
-export async function deleteMember(
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> {
+export async function deleteMember(req: Request, res: Response): Promise<any> {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    const deleted = await Member.findByIdAndRemove(req.params.id).session(
-      session
-    );
-    if (!deleted) {
-      res.status(500).json({ message: `Cannot delete resource` });
-      return next(deleted);
+    const member: any = await Member.findById(req.params.id).session(session);
+    if (!member) {
+      return res.status(500).json({ message: `Cannot find member` });
     }
+    await member?.teams?.reduce(
+      async (promise: any, teamMemberId: string) => {
+        await promise;
+        const teamMember: any = await TeamMember.findById(teamMemberId).session(
+          session
+        );
+        if (teamMember) {
+          await removeMemberFromTeam(
+            teamMember?._id,
+            teamMember.teamId,
+            session
+          );
+        }
+      },
+      [Promise.resolve()]
+    );
+    await Member.findByIdAndRemove(member._id).session(session);
     await session.commitTransaction();
     return res.status(200).json({ deleted: true });
   } catch (err) {

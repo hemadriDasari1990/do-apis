@@ -413,9 +413,10 @@ export async function removeMemberFromTeam(
   session: any
 ) {
   try {
-    if (!memberId || !teamId) {
+    if (!memberId || !teamId || !session) {
       return;
     }
+
     await Team.findByIdAndUpdate(teamId, {
       $pull: { members: memberId },
     }).session(session);
