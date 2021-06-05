@@ -15,7 +15,12 @@ import {
   teamsLookup,
 } from "../../util/teamFilters";
 import { addBoardToProject, createProject } from "../project";
-import { createMember, getMember, sendInviteToMember } from "../member";
+import {
+  createMember,
+  getMember,
+  sendBoardInviteToMemberWithoutToken,
+  sendInviteToMember,
+} from "../member";
 import { getPagination, getUser } from "../../util";
 import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
@@ -764,8 +769,9 @@ export async function inviteMemberToBoard(payload: {
       return;
     }
 
-    if (payload?.createMember) {
-      const created = await createMember(
+    /* If new member */
+    if (payload?.createMember && !payload?.member?._id) {
+      const memberCreated = await createMember(
         {
           email: payload?.member?.email,
           name: payload?.member?.name,
@@ -773,20 +779,40 @@ export async function inviteMemberToBoard(payload: {
         },
         session
       );
-      await addMemberToUser(created?._id, payload?.user?._id, session);
+      await addMemberToUser(memberCreated?._id, payload?.user?._id, session);
+      const sent = await sendInviteToMember(
+        payload?.id,
+        payload?.user,
+        memberCreated,
+        session
+      );
+      await session.commitTransaction();
+      return sent;
     }
 
-    const sent = await sendInviteToMember(
-      payload?.id,
-      payload?.user,
-      payload?.member,
-      session
-    );
-    await session.commitTransaction();
-    return sent;
+    /* If existing member */
+    if (payload?.member?._id) {
+      const sent = await sendInviteToMember(
+        payload?.id,
+        payload?.user,
+        payload?.member,
+        session
+      );
+      await session.commitTransaction();
+      return sent;
+    } else {
+      /* If new member and require only board url to be shared */
+      const sent = await sendBoardInviteToMemberWithoutToken(
+        payload?.id,
+        payload?.user,
+        payload?.member
+      );
+      await session.commitTransaction();
+      return sent;
+    }
   } catch (err) {
     await session.abortTransaction();
-    return `Error while sending inviting ${err || err.message}`;
+    return `Error while sending invite ${err || err.message}`;
   } finally {
     await session.endSession();
   }

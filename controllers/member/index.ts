@@ -104,8 +104,26 @@ export async function createMember(
   session: any
 ) {
   try {
-    const member = await new Member(payload);
-    return await member.save({ session });
+    const query = {
+        _id: { $exists: false },
+      },
+      update = {
+        $set: {
+          name: payload?.name,
+          email: payload?.email,
+          userId: payload?.userId,
+        },
+      },
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        runValidators: true,
+        strict: false,
+        session: session,
+      };
+    const updated: any = await Member.findOneAndUpdate(query, update, options);
+    return updated;
   } catch (err) {
     throw err | err.message;
   }
@@ -445,6 +463,33 @@ export async function sendInviteToMember(
           `You've been invited to join a retrospective session`
         )
       : null;
+    return sent;
+  } catch (err) {
+    throw err | err.message;
+  }
+}
+
+export async function sendBoardInviteToMemberWithoutToken(
+  boardId: string,
+  sender: { [Key: string]: any },
+  receiver: { [Key: string]: any }
+) {
+  try {
+    if (!sender || !receiver || !boardId) {
+      return;
+    }
+    const emailService = await new EmailService();
+    const sent = await emailService.sendEmail(
+      "/templates/invite.ejs",
+      {
+        url: config.get("url"),
+        invite_link: `${config.get("url")}/board/${boardId}`,
+        name: receiver?.name,
+        senderName: sender?.name,
+      },
+      receiver.email,
+      `You've been invited to join a retrospective session`
+    );
     return sent;
   } catch (err) {
     throw err | err.message;
