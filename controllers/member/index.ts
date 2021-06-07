@@ -125,7 +125,7 @@ export async function createMember(
     const updated: any = await Member.findOneAndUpdate(query, update, options);
     return updated;
   } catch (err) {
-    throw err | err.message;
+    throw err || err.message;
   }
 }
 

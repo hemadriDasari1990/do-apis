@@ -15,6 +15,7 @@ import {
   teamsLookup,
 } from "../../util/teamFilters";
 import { addBoardToProject, createProject } from "../project";
+import { createInvitedMember, createInvitedTeams } from "../invite";
 import {
   createMember,
   getMember,
@@ -30,7 +31,6 @@ import Project from "../../models/project";
 import XLSX from "xlsx";
 import { addMemberToUser } from "../user";
 import { createActivity } from "../activity";
-import { createInvitedTeams } from "../invite";
 import { findSectionsByBoardAndDelete } from "../section";
 import fs from "fs";
 import { joinedMembersLookup } from "../../util/boardFilters";
@@ -256,7 +256,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         memberId: user?.memberId,
         boardId: updated?._id,
         title: `${updated?.name}`,
-        primaryAction: "board",
+        primaryAction: "",
         type: "board",
         action: req.body.boardId ? "update" : "create",
       },
@@ -765,6 +765,8 @@ export async function inviteMemberToBoard(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
+    let sent = null;
+    console.log("payload", payload);
     if (!payload || !payload?.id || !payload.user || !payload.member) {
       return;
     }
@@ -780,39 +782,65 @@ export async function inviteMemberToBoard(payload: {
         session
       );
       await addMemberToUser(memberCreated?._id, payload?.user?._id, session);
-      const sent = await sendInviteToMember(
+      await createInvitedMember(memberCreated?._id, payload.id, "", 0, session);
+      sent = await sendInviteToMember(
         payload?.id,
         payload?.user,
         memberCreated,
         session
       );
-      await session.commitTransaction();
-      return sent;
     }
 
     /* If existing member */
-    if (payload?.member?._id) {
-      const sent = await sendInviteToMember(
+    if (payload?.member?._id && !payload?.createMember) {
+      await createInvitedMember(
+        payload?.member?._id,
+        payload.id,
+        "",
+        0,
+        session
+      );
+      sent = await sendInviteToMember(
         payload?.id,
         payload?.user,
         payload?.member,
         session
       );
-      await session.commitTransaction();
-      return sent;
-    } else {
+    }
+    if (!payload?.member?._id && !payload?.createMember) {
+      await createInvitedMember(
+        payload?.member?._id, // will be undefined
+        payload.id,
+        payload?.member?.name,
+        0,
+        session
+      );
       /* If new member and require only board url to be shared */
-      const sent = await sendBoardInviteToMemberWithoutToken(
+      sent = await sendBoardInviteToMemberWithoutToken(
         payload?.id,
         payload?.user,
         payload?.member
       );
-      await session.commitTransaction();
-      return sent;
     }
+    await createActivity(
+      {
+        memberId: payload?.user?.memberId || null,
+        boardId: payload?.id,
+        title: `${payload?.member?.name}`,
+        primaryAction: "to the board",
+        type: "invite",
+        action: "invite",
+      },
+      session
+    );
+    await session.commitTransaction();
+    return sent;
   } catch (err) {
     await session.abortTransaction();
-    return `Error while sending invite ${err || err.message}`;
+    return {
+      error: true,
+      message: err?.message,
+    };
   } finally {
     await session.endSession();
   }

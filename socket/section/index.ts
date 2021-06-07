@@ -1,9 +1,9 @@
-import { decodeToken, verifyToken } from "../../util";
 import {
+  changeSectionPosition,
   deleteSection,
   updateSection,
-  changeSectionPosition,
 } from "../../controllers/section";
+import { decodeToken, verifyToken } from "../../util";
 import socketio, { Socket } from "socket.io";
 
 export default function section(io: socketio.Server, socket: Socket) {
@@ -64,8 +64,9 @@ export default function section(io: socketio.Server, socket: Socket) {
         );
         io.emit("update-section-position-response", {
           ...updated,
-          destinationIndex: payload.destinationIndex,
-          sourceIndex: payload.sourceIndex,
+          destinationIndex: payload?.destinationIndex,
+          sourceIndex: payload?.sourceIndex,
+          boardId: payload?.sourceSection?.boardId,
         });
       } catch (err) {
         return err;

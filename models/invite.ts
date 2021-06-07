@@ -5,11 +5,10 @@ delete mongoose.connection.models["Board"];
 const Schema = mongoose.Schema;
 const InviteSchema = new Schema(
   {
-    teamId: {
+    memberId: {
       type: Schema.Types.ObjectId,
-      ref: "Team",
-      index: true,
-      required: true,
+      ref: "Member",
+      default: null,
     },
     boardId: {
       type: Schema.Types.ObjectId,
@@ -17,20 +16,25 @@ const InviteSchema = new Schema(
       index: true,
       required: true,
     },
+    guestName: {
+      type: String,
+    },
+    avatarId: {
+      type: Number,
+      default: 0,
+    },
     board: {
       type: Schema.Types.ObjectId,
       ref: "Board",
     },
-    team: {
+    member: {
       type: Schema.Types.ObjectId,
-      ref: "Team",
+      ref: "Member",
     },
   },
   {
     timestamps: true, // Saves createdAt and updatedAt as dates. createdAt will be our timestamp.
   }
 );
-
-InviteSchema.index({ boardId: 1, teamId: 1 }, { unique: true });
 
 export default mongoose.model("Invite", InviteSchema);
