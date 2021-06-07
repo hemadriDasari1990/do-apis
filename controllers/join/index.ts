@@ -202,3 +202,25 @@ export async function getJoinedMembers(
     return res.status(500).send(err || err.message);
   }
 }
+
+export async function findJoinedMembersByBoardAndDelete(
+  boardId: string,
+  session: any
+): Promise<any> {
+  try {
+    const joinedMembersList: any = await Join.find({ boardId: boardId });
+    if (!joinedMembersList?.length) {
+      return;
+    }
+    const deleted = joinedMembersList?.reduce(
+      async (promise: Promise<any>, joinedMember: { [Key: string]: any }) => {
+        await promise;
+        await Join.findByIdAndRemove(joinedMember?._id).session(session);
+      },
+      [Promise.resolve()]
+    );
+    return deleted;
+  } catch (err) {
+    throw err || err.message;
+  }
+}

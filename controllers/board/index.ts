@@ -15,7 +15,13 @@ import {
   teamsLookup,
 } from "../../util/teamFilters";
 import { addBoardToProject, createProject } from "../project";
-import { createInvitedMember, createInvitedTeams } from "../invite";
+import { createActivity, findActivitiesByBoardAndDelete } from "../activity";
+import {
+  createInvitedMember,
+  createInvitedTeams,
+  findInvitedMembersByBoardAndDelete,
+  updateInvitedMember,
+} from "../invite";
 import {
   createMember,
   getMember,
@@ -30,7 +36,7 @@ import Join from "../../models/join";
 import Project from "../../models/project";
 import XLSX from "xlsx";
 import { addMemberToUser } from "../user";
-import { createActivity } from "../activity";
+import { findJoinedMembersByBoardAndDelete } from "../join";
 import { findSectionsByBoardAndDelete } from "../section";
 import fs from "fs";
 import { joinedMembersLookup } from "../../util/boardFilters";
@@ -266,6 +272,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     await session.commitTransaction();
     return res.status(200).send(board);
   } catch (err) {
+    console.log("err", err);
     await session.abortTransaction();
     return res.status(500).send(err || err.message);
   } finally {
@@ -618,6 +625,9 @@ export async function deleteBoardLocal(
 ): Promise<any> {
   try {
     await findSectionsByBoardAndDelete(boardId, session);
+    await findInvitedMembersByBoardAndDelete(boardId, session);
+    await findJoinedMembersByBoardAndDelete(boardId, session);
+    await findActivitiesByBoardAndDelete(boardId, session);
     const deleted = await Board.findByIdAndRemove(boardId).session(session);
     return deleted;
   } catch (err) {
@@ -766,7 +776,6 @@ export async function inviteMemberToBoard(payload: {
   await session.startTransaction();
   try {
     let sent = null;
-    console.log("payload", payload);
     if (!payload || !payload?.id || !payload.user || !payload.member) {
       return;
     }
@@ -782,7 +791,7 @@ export async function inviteMemberToBoard(payload: {
         session
       );
       await addMemberToUser(memberCreated?._id, payload?.user?._id, session);
-      await createInvitedMember(memberCreated?._id, payload.id, "", 0, session);
+      await updateInvitedMember(memberCreated?._id, payload.id, "", 0, session);
       sent = await sendInviteToMember(
         payload?.id,
         payload?.user,
@@ -793,7 +802,7 @@ export async function inviteMemberToBoard(payload: {
 
     /* If existing member */
     if (payload?.member?._id && !payload?.createMember) {
-      await createInvitedMember(
+      await updateInvitedMember(
         payload?.member?._id,
         payload.id,
         "",

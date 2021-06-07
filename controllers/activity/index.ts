@@ -61,3 +61,25 @@ export async function getActivities(req: Request, res: Response): Promise<any> {
     return res.status(500).send(err || err.message);
   }
 }
+
+export async function findActivitiesByBoardAndDelete(
+  boardId: string,
+  session: any
+): Promise<any> {
+  try {
+    const activitiesList: any = await Activity.find({ boardId: boardId });
+    if (!activitiesList?.length) {
+      return;
+    }
+    const deleted = activitiesList?.reduce(
+      async (promise: Promise<any>, activity: { [Key: string]: any }) => {
+        await promise;
+        await Activity.findByIdAndRemove(activity?._id).session(session);
+      },
+      [Promise.resolve()]
+    );
+    return deleted;
+  } catch (err) {
+    throw err || err.message;
+  }
+}

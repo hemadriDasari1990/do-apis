@@ -28,9 +28,12 @@ export async function getInvitedMembers(
           { $limit: limit },
           memberLookup,
           {
-            $unwind: "$member",
+            $unwind: {
+              path: "$member",
+              preserveNullAndEmptyArrays: true,
+            },
           },
-          { $replaceRoot: { newRoot: "$member" } },
+          // { $replaceRoot: { newRoot: "$member" } },
         ],
         total: [{ $match: query }, { $count: "count" }],
       },
@@ -54,7 +57,7 @@ export async function createInvitedTeams(
     }
     await teams.reduce(async (promise, id: string) => {
       await promise;
-      await createInvitedMembers(id, boardId, session);
+      await updateInvitedMembers(id, boardId, session);
     }, Promise.resolve());
   } catch (err) {
     throw new Error(
@@ -63,7 +66,7 @@ export async function createInvitedTeams(
   }
 }
 
-export async function createInvitedMembers(
+export async function updateInvitedMembers(
   teamId: string,
   boardId: string,
   session: any
@@ -81,7 +84,7 @@ export async function createInvitedMembers(
     await teamMembers?.reduce(
       async (promise: any, teamMember: { [Key: string]: any }) => {
         await promise;
-        await createInvitedMember(
+        await updateInvitedMember(
           teamMember?.memberId,
           boardId,
           "",
@@ -98,7 +101,7 @@ export async function createInvitedMembers(
   }
 }
 
-export async function createInvitedMember(
+export async function updateInvitedMember(
   memberId: string,
   boardId: string,
   guestName: string,
@@ -132,5 +135,52 @@ export async function createInvitedMember(
     throw new Error(
       `Error while adding invited members to board ${err || err.message}`
     );
+  }
+}
+
+export async function createInvitedMember(
+  memberId: string,
+  boardId: string,
+  guestName: string,
+  avatarId: number,
+  session: any
+): Promise<any> {
+  try {
+    if (!boardId) {
+      return;
+    }
+    const invite = new Invite({
+      boardId: boardId,
+      memberId: memberId,
+      guestName: guestName,
+      avatarId: avatarId,
+    });
+    return await invite.save({ session });
+  } catch (err) {
+    throw new Error(
+      `Error while adding invited member to board ${err || err.message}`
+    );
+  }
+}
+
+export async function findInvitedMembersByBoardAndDelete(
+  boardId: string,
+  session: any
+): Promise<any> {
+  try {
+    const invitedMembersList: any = await Invite.find({ boardId: boardId });
+    if (!invitedMembersList?.length) {
+      return;
+    }
+    const deleted = invitedMembersList?.reduce(
+      async (promise: Promise<any>, invitedMember: { [Key: string]: any }) => {
+        await promise;
+        await Invite.findByIdAndRemove(invitedMember?._id).session(session);
+      },
+      [Promise.resolve()]
+    );
+    return deleted;
+  } catch (err) {
+    throw err || err.message;
   }
 }
