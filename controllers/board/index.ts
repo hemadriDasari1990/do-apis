@@ -272,7 +272,6 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     await session.commitTransaction();
     return res.status(200).send(board);
   } catch (err) {
-    console.log("err", err);
     await session.abortTransaction();
     return res.status(500).send(err || err.message);
   } finally {
