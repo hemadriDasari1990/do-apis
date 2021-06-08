@@ -60,9 +60,12 @@ export async function updateSection(payload: {
         setDefaultsOnInsert: true,
         session: session,
       };
-    const section = await getSection({
-      $and: [{ name: payload?.name?.trim() }, { boardId: payload?.boardId }],
-    });
+    const section = await getSection(
+      {
+        $and: [{ name: payload?.name?.trim() }, { boardId: payload?.boardId }],
+      },
+      session
+    );
     if (section && !payload?.sectionId) {
       return {
         errorId: RESOURCE_ALREADY_EXISTS,
@@ -113,13 +116,16 @@ export async function updateSection(payload: {
   }
 }
 
-export async function getSection(query: { [Key: string]: any }): Promise<any> {
+export async function getSection(
+  query: { [Key: string]: any },
+  session: any
+): Promise<any> {
   try {
     const sections = await Section.aggregate([
       { $match: query },
       notesLookup,
       noteAddFields,
-    ]);
+    ]).session(session);
     return sections ? sections[0] : null;
   } catch (err) {
     throw err || err.message;
