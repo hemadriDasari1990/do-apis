@@ -10,7 +10,7 @@ const ActivitySchema = new Schema(
     },
     memberId: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Member",
       index: true,
     },
     boardId: {

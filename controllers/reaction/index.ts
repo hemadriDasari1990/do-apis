@@ -62,6 +62,7 @@ export async function createOrUpdateReaction(payload: {
       },
       session
     );
+
     /* Remove only if member is known */
     if (
       reactionDetails &&
@@ -81,13 +82,14 @@ export async function createOrUpdateReaction(payload: {
           memberId: reactedBy,
           boardId: payload?.boardId,
           title: payload?.type,
-          primaryAction: "to",
+          primaryAction: "on the note",
           primaryTitle: note?.description,
           type: payload?.type,
           action: "un-react",
         },
         session
       );
+      await session.commitTransaction();
       return {
         removed: true,
         ...reactionDetails,
@@ -96,7 +98,9 @@ export async function createOrUpdateReaction(payload: {
 
     const reactionUpdated: any = await updateReaction(query, update, options);
     if (!reactionUpdated) {
-      return {};
+      return {
+        removed: false,
+      };
     }
     const newReaction: any = await getReaction(
       {
@@ -111,7 +115,7 @@ export async function createOrUpdateReaction(payload: {
           memberId: reactedBy,
           boardId: payload?.boardId,
           title: payload?.type,
-          primaryAction: "to",
+          primaryAction: "to the note",
           primaryTitle: note?.description,
           type: payload?.type,
           action: "react",

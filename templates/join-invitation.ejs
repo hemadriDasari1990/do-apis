@@ -1,76 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <%- include('./head'); %>
     <script></script>
     <style type="text/css">
-        .mail-body-container {
-            background: #eef5ff;
-            padding: 25px 0 25px 0;
-            margin: 10px 0;
-            border-radius: 6px;
-        }
+      .mail-body-container {
+        background: #eef5ff;
+        padding: 25px 0 25px 0;
+        margin: 10px 0;
+        border-radius: 6px;
+      }
 
-        .text-center {
-            text-align: center;
-        }
+      .text-center {
+        text-align: center;
+      }
 
-        .content {
-            min-width: 480px;
-            width: 100%;
-        }
+      .content {
+        min-width: 480px;
+        width: 100%;
+      }
 
-        center {
-            display: block;
-            text-align: -webkit-center;
-        }
+      center {
+        display: block;
+        text-align: -webkit-center;
+      }
 
-        .content-table {
-            border-spacing: 0;
-            font-family: gt-eesti, ArialMT, Helvetica, Arial, sans-serif;
-            margin: 0 auto;
-            padding: 0px 40px 40px 40px;
-            width: 100%;
-            max-width: 500px;
-            background: #fefefe;
-        }
+      .content-table {
+        border-spacing: 0;
+        font-family: gt-eesti, ArialMT, Helvetica, Arial, sans-serif;
+        margin: 0 auto;
+        padding: 0px 40px 40px 40px;
+        width: 100%;
+        max-width: 500px;
+        background: #fefefe;
+      }
 
-        .primary-button {
-            background: linear-gradient(180deg, #7997ff 0, #57f 100%);
-            border-radius: 4px;
-            color: #fff !important;
-            display: inline-block;
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            line-height: 1.43;
-            margin: 0;
-            outline: 0;
-            padding: 13px 0 13px 0;
-            text-align: center;
-            text-decoration: none;
-            width: 100%;
-        }
+      .primary-button {
+        background: linear-gradient(180deg, #7997ff 0, #57f 100%);
+        border-radius: 4px;
+        color: #fff !important;
+        display: inline-block;
+        font-family: Helvetica, Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.43;
+        margin: 0;
+        outline: 0;
+        padding: 13px 0 13px 0;
+        text-align: center;
+        text-decoration: none;
+        width: 100%;
+      }
     </style>
-</head>
+  </head>
 
-<body class="container">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" class="mail-body-container">
-        <tbody>
-            <tr>
-                <td width="100%">
-                    <center class="content">
-                        <table align="center" cellpadding="0" cellspacing="0" class="content-table">
-                            <tbody>
-                                <!-- <tr>
+  <body class="container">
+    <table
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      border="0"
+      class="mail-body-container"
+    >
+      <tbody>
+        <tr>
+          <td width="100%">
+            <center class="content">
+              <table
+                align="center"
+                cellpadding="0"
+                cellspacing="0"
+                class="content-table"
+              >
+                <tbody>
+                  <!-- <tr>
                                     <td>
                                         <table style="margin-bottom:20px;width:100%" width="100%">
                                             <tbody>
                                                 <tr>
                                                     <td>
                                                         <a href="http://8link.in/?ref=mail"
-                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;color:#172B4D;"
+                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;color:#113561;"
                                                             target="_blank">
                                                             <img src="http://8link.in/assets/mail/logo.png"
                                                                 style="display:block" alt="8link" width="200"
@@ -82,99 +92,115 @@
                                         </table>
                                     </td>
                                 </tr> -->
-                                <tr style="line-height:2px">
+                  <tr style="line-height:2px">
+                    <td>
+                      <%- include('./header'); %>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <table
+                        style="margin-bottom:20px;width:100%;margin-top:20px;"
+                        width="100%"
+                      >
+                        <tbody>
+                          <tr>
+                            <td>
+                              <table
+                                style="width:100%;margin-bottom:20px"
+                                width="100%"
+                                cellpadding="0"
+                                cellspacing="0"
+                              >
+                                <tbody>
+                                  <tr>
+                                    <td style="padding-bottom:16px;">
+                                      <span style="font-size:28px;">
+                                        Hey,
+                                      </span>
+                                      <b style="font-size:28px;">
+                                        <%= name %>!
+                                      </b>
+                                    </td>
+                                  </tr>
+                                  <tr>
+                                    <td style="padding-bottom:12px;">
+                                      <span
+                                        style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;"
+                                        >You have been added as member by <%=
+                                        senderName%>.
+                                      </span>
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>
+                              <table
+                                style="background-color:#fff;margin-bottom:20px;table-layout:fixed;width:100%"
+                                width=""
+                                cellspacing="0"
+                                cellpadding="0"
+                              >
+                                <tbody>
+                                  <tr>
                                     <td>
-                                        <%- include('./header'); %>
+                                      <a
+                                        class="primary-button"
+                                        href="<%- confirm_link %>"
+                                        target="_blank"
+                                      >
+                                        Please acknowledge
+                                      </a>
                                     </td>
-                                </tr>
-                                <tr>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="text-align:justify;">
+                      <table style="margin-bottom:20px;width:100%" width="100%">
+                        <tbody>
+                          <tr>
+                            <td>
+                              <table
+                                style="width:100%;margin-bottom:20px"
+                                width="100%"
+                                cellpadding="0"
+                                cellspacing="0"
+                              >
+                                <tbody>
+                                  <tr>
                                     <td>
-                                        <table style="margin-bottom:20px;width:100%;margin-top:20px;" width="100%">
-                                            <tbody>
-                                                <tr>
-                                                    <td>
-                                                        <table style="width:100%;margin-bottom:20px" width="100%"
-                                                            cellpadding="0" cellspacing="0">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td style="padding-bottom:16px;">
-                                                                        <span style="font-size:28px;">
-                                                                            Hey,
-                                                                        </span>
-                                                                        <b style="font-size:28px;">
-                                                                            <%= name %>!
-                                                                        </b>
-                                                                    </td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td style="padding-bottom:12px;">
-                                                                        <span
-                                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">You
-                                                                            have been added as member by
-                                                                            <%= senderName%>.
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td>
-                                                        <table
-                                                            style="background-color:#fff;margin-bottom:20px;table-layout:fixed;width:100%"
-                                                            width="" cellspacing="0" cellpadding="0">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td>
-                                                                        <a class="primary-button"
-                                                                            href="<%- confirm_link %>" target="_blank">
-                                                                            Please acknowledge
-                                                                        </a>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                      <span
+                                        style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;"
+                                        >If you didn't know who invited you.
+                                        Just delete this email.
+                                      </span>
                                     </td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align:justify;">
-                                        <table style="margin-bottom:20px;width:100%" width="100%">
-                                            <tbody>
-                                                <tr>
-                                                    <td>
-                                                        <table style="width:100%;margin-bottom:20px" width="100%"
-                                                            cellpadding="0" cellspacing="0">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td>
-                                                                        <span
-                                                                            style="font-family:Roboto,RobotoDraft,Helvetica,Arial,sans-serif;font-size:16px;">If
-                                                                            you didn't know who invited you.
-                                                                            Just delete this email.
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <%- include('./team-signature'); %>
-                            </tbody>
-                        </table>
-                    </center>
-                </td>
-            </tr>
-        </tbody>
+                                  </tr>
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                  <%- include('./team-signature'); %>
+                </tbody>
+              </table>
+            </center>
+          </td>
+        </tr>
+      </tbody>
     </table>
-</body>
-
+  </body>
 </html>
