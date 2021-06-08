@@ -204,7 +204,7 @@ export async function deleteSection(
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    const deleted: any = deleteSectionAndNotes(sectionId, session);
+    const deleted: any = await deleteSectionAndNotes(sectionId, session);
     if (!deleted) {
       return deleted;
     }
