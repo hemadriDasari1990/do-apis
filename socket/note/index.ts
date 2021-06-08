@@ -36,11 +36,11 @@ export default function note(io: socketio.Server, socket: Socket) {
   });
 
   socket.on("delete-note", async (payload: { [Key: string]: any }) => {
-    const deleted = await deleteNote(payload);
-    if (deleted?.deleted) {
-      io.emit(`minus-note-count-response`, deleted);
+    const deletedNote = await deleteNote(payload);
+    if (deletedNote?.deleted) {
+      io.emit(`minus-note-count-response`, deletedNote);
     }
-    io.emit(`delete-note-response-${payload?.sectionId}`, deleted);
+    io.emit(`delete-note-response-${payload?.sectionId}`, deletedNote);
   });
 
   socket.on("mark-note-read", async (payload: { [Key: string]: any }) => {

@@ -262,9 +262,11 @@ export async function deleteNote(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    const deleted: any = deleteNoteById(payload?.id, session);
+    const deleted: any = await deleteNoteById(payload?.id, session);
     if (!deleted) {
-      return deleted;
+      return {
+        deleted: false,
+      };
     }
     const section: any = await Section.findById(payload?.sectionId).session(
       session
