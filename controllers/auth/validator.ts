@@ -8,8 +8,6 @@ export const loginValidator = [
   check("email")
     .notEmpty()
     .withMessage("Email is required")
-    .isString()
-    .withMessage("Email must be string")
     .isEmail()
     .withMessage("Invalid Email Address")
     .trim()
@@ -18,17 +16,7 @@ export const loginValidator = [
   /* Check Password */
   check("password")
     .notEmpty()
-    .withMessage("password is required")
-    .isString()
-    .withMessage("Password must be string")
-    .isLength({ min: 8, max: 15 })
-    .withMessage("Password Must Be at Least 8 Characters")
-    .matches("[0-9]")
-    .withMessage("Password Must Contain a Number")
-    .matches("[A-Z]")
-    .withMessage("Password Must Contain an Uppercase Letter")
-    .matches(/[!@#$%^&*(),.?":{}|<>]/)
-    .withMessage("your password should have at least one sepcial character")
+    .withMessage("Password is required")
     .trim()
     .escape(),
   (req: Request, res: Response, next: NextFunction) => {
