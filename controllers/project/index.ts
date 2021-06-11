@@ -14,6 +14,7 @@ import {
 import { getPagination, getUser } from "../../util";
 
 import Project from "../../models/project";
+import User from "../../models/user";
 import { addProjectToUser } from "../user";
 import { findBoardsByProjectAndDelete } from "../board";
 import mongoose from "mongoose";
@@ -36,6 +37,13 @@ export async function updateProject(
         errorId: MAX_PROJECTS_ERROR,
         message: `You have reached the limit of maximum projects ${MAX_PROJECTS_COUNT}. Please upgrade your plan.`,
       });
+    }
+    if (!count) {
+      await User.findByIdAndUpdate(
+        user?._id,
+        { $set: { isStarted: true } },
+        { session: session }
+      );
     }
     const query = { _id: mongoose.Types.ObjectId(req.body.projectId) },
       update = {

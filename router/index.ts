@@ -18,6 +18,7 @@ import {
   authenticateJWT,
   forgotPassword,
   login,
+  resendActivation,
   resendToken,
   resetPassword,
   validateForgotPassword,
@@ -99,6 +100,7 @@ import {
   forgotPasswordValidator,
   loginValidator,
   refreshTokenValidator,
+  resendActivationValidator,
   resendTokenValidator,
   resetPasswordValidator,
   validateForgotPasswordValidator,
@@ -170,6 +172,13 @@ export default function(app: Application) {
 
   // forgot password
   authRoutes.post("/forgot-password", forgotPasswordValidator, forgotPassword);
+
+  // resend activation Link
+  authRoutes.post(
+    "/resend-activation",
+    resendActivationValidator,
+    resendActivation
+  );
 
   // validate forgot password token
   authRoutes.post(

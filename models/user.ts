@@ -51,6 +51,10 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    isStarted: {
+      type: Boolean,
+      default: false,
+    },
     accountType: {
       type: String,
       required: true,

@@ -11,21 +11,22 @@ export const updateBoardValidator = [
   check("description")
     .trim()
     .escape(),
-  // check("projectId")
-  //   .notEmpty()
-  //   .withMessage("Project id is required")
-  //   .trim(),
-  check("noOfSections")
-    .isNumeric()
-    .withMessage("No of sections should be a number")
-    .isLength({ min: 1, max: 10 })
-    .withMessage("No of sections must be between 1 and 10"),
-  // check("isDefaultBoard").custom((value) => {
-  //   if (typeof value != "boolean") {
-  //     throw new Error("Default board flag must be a boolean value");
-  //   }
-  //   return true;
-  // }),
+  check("noOfSections").custom((value) => {
+    if (value && check("defaultSection")?.trim()) {
+      throw new Error("Can't have both no of sections and default template");
+    }
+    if (typeof value !== "number" && !check("defaultSection")?.trim()) {
+      throw new Error("No of sections must be a number");
+    }
+    if (!value && !check("defaultSection")?.trim()) {
+      throw new Error("No of sections cannot be 0");
+    }
+    if (parseInt(value) > 10) {
+      throw new Error("No of sections cannot be more than 10");
+    }
+
+    return true;
+  }),
   check("isAnnonymous").custom((value) => {
     if (value == false && !check("teams").isArray()) {
       throw new Error("Team must be an array");

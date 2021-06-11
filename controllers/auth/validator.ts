@@ -82,6 +82,31 @@ export const forgotPasswordValidator = [
   },
 ];
 
+export const resendActivationValidator = [
+  check("email")
+    .notEmpty()
+    .withMessage("Email is required")
+    .isString()
+    .withMessage("Email must be string")
+    .isEmail()
+    .withMessage("Invalid Email Address")
+    .trim()
+    .escape()
+    .normalizeEmail(),
+  (req: Request, res: Response, next: NextFunction) => {
+    const error = validationResult(req).formatWith(({ msg }) => msg);
+    const hasError = !error.isEmpty();
+    if (hasError) {
+      res.status(422).json({
+        errorId: VALIDATION_FAILED,
+        message: error.array().join(", \n"),
+      });
+    } else {
+      next();
+    }
+  },
+];
+
 export const validateForgotPasswordValidator = [
   /* Check refresh token */
   check("token")

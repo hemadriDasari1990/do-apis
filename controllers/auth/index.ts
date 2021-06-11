@@ -7,6 +7,7 @@ import {
   UNAUTHORIZED,
   USER_NOT_FOUND,
   VERIFIED,
+  VERIFY_TOKEN_EXPIRY,
 } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
 import { getToken, getUser } from "../../util";
@@ -244,7 +245,7 @@ export async function forgotPassword(
     if (!user) {
       return res.status(409).json({
         errorId: USER_NOT_FOUND,
-        message: "Email does not exist! Please create account",
+        message: "Email does not exist! Please create an account",
       });
     }
 
@@ -271,9 +272,91 @@ export async function forgotPassword(
       req.body.email,
       "Resetting your letsdoretro password"
     );
-    res.status(200).json({
+    return res.status(200).json({
       message:
         "Email has been sent. Please check your inbox for further instructions to reset the password",
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err || err.message });
+  }
+}
+
+/**
+ * Generate activation link and send an email notification to activate
+ *
+ * @param {Request} _req
+ * @param {Response} res
+ * @param {NextFunction} next
+ * @returns {Response}
+ */
+export async function resendActivation(
+  req: Request,
+  res: Response
+): Promise<any> {
+  try {
+    const emailService = await new EmailService();
+    const user: any = await User.findOne({
+      email: req.body.email,
+    });
+
+    if (!user) {
+      return res.status(409).json({
+        errorId: USER_NOT_FOUND,
+        message: "Email does not exist! Please create an account",
+      });
+    }
+
+    if (user.isVerified) {
+      return res.status(409).json({
+        errorId: ALREADY_VERIFIED,
+        message: "Your account has been already verified. Please login!",
+      });
+    }
+
+    // Generate jwt token
+    const jwtToken = await generateToken(
+      {
+        name: user.name,
+        email: user.email,
+        memberId: user.memberId,
+      },
+      config.get("accessTokenSecret"),
+      VERIFY_TOKEN_EXPIRY
+    );
+    if (!jwtToken) {
+      return res
+        .status(500)
+        .json({ message: "Error while generating the token" });
+    }
+    const query = { memberId: mongoose.Types.ObjectId(user?.memberId) },
+      update = {
+        $set: {
+          token: jwtToken,
+        },
+      },
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      };
+    const newToken: any = await Token.findOneAndUpdate(query, update, options);
+
+    //@TODO - Send Email Activation Link
+    if (newToken) {
+      await emailService.sendEmail(
+        "/templates/account-confirmation.ejs",
+        {
+          url: config.get("url"),
+          confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
+          name: user?.name,
+        },
+        user?.email,
+        "Please confirm your email"
+      );
+    }
+    return res.status(200).json({
+      message:
+        "Email has been sent. Please check your inbox for further instructions to activate your account",
     });
   } catch (err) {
     return res.status(500).json({ message: err || err.message });

@@ -34,6 +34,7 @@ import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 import Board from "../../models/board";
 import Join from "../../models/join";
 import Project from "../../models/project";
+import User from "../../models/user";
 import XLSX from "xlsx";
 import { addMemberToUser } from "../user";
 import { findJoinedMembersByBoardAndDelete } from "../join";
@@ -100,13 +101,13 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     }
 
     const user = getUser(req.headers.authorization as string);
-
+    let projectCount = 0;
     /* Check if user has reached projects limit on user level */
     if (!req.body.projectId) {
-      const count = await Project.find({
+      projectCount = await Project.find({
         userId: user?._id,
       }).countDocuments();
-      if (count >= MAX_PROJECTS_COUNT) {
+      if (projectCount >= MAX_PROJECTS_COUNT) {
         return res.status(409).json({
           errorId: MAX_PROJECTS_ERROR,
           message: `You have reached the limit of maximum projects ${MAX_PROJECTS_COUNT}. Please upgrade your plan.`,
@@ -255,6 +256,13 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         { session: session }
       );
       await addBoardToProject(updated?._id, newProject?._id, session);
+      if (!projectCount) {
+        await User.findByIdAndUpdate(
+          user?._id,
+          { $set: { isStarted: true } },
+          { session: session }
+        );
+      }
     }
     await sendInvitation(req.body.teams, user, updated?._id, session);
     await createActivity(

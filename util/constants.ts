@@ -20,16 +20,16 @@ export const VALIDATION_FAILED = "VALIDATION_FAILED";
 export const CREATION_FAILED = "CREATION_FAILED";
 
 export const MAX_TEAM_ERROR = "MAX_TEAM_ERROR";
-export const MAX_TEAM_COUNT = 10;
+export const MAX_TEAM_COUNT = 1000;
 
 export const MAX_MEMBER_ERROR = "MAX_MEMBER_ERROR";
-export const MAX_MEMBER_COUNT = 300;
+export const MAX_MEMBER_COUNT = 1000;
 
 export const MAX_PROJECTS_ERROR = "MAX_PROJECTS_ERROR";
-export const MAX_PROJECTS_COUNT = 10;
+export const MAX_PROJECTS_COUNT = 1000;
 
 export const MAX_BOARDS_ERROR = "MAX_BOARDS_ERROR";
-export const MAX_BOARDS_COUNT = 60;
+export const MAX_BOARDS_COUNT = 1000;
 
 export const VERIFY_TOKEN_EXPIRY = "2d";
 export const JOIN_TOKEN_EXPIRY = "2d";
