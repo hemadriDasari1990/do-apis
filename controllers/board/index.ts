@@ -361,6 +361,15 @@ export async function createInstantBord(
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
+    if (
+      !req.body.defaultSection?.length &&
+      parseInt(req.body.noOfSections) > MAX_SECTIONS_COUNT
+    ) {
+      return res.status(500).json({
+        errorId: MAX_SECTIONS_ERROR,
+        message: `Max no of sections allowed are only 10`,
+      });
+    }
     const query = { _id: { $exists: false } }, // Create new record if id is not matching
       update = {
         $set: {
