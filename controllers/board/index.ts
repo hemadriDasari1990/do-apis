@@ -4,6 +4,8 @@ import {
   MAX_BOARDS_ERROR,
   MAX_PROJECTS_COUNT,
   MAX_PROJECTS_ERROR,
+  MAX_SECTIONS_COUNT,
+  MAX_SECTIONS_ERROR,
   RESOURCE_ALREADY_EXISTS,
   SECTION_COUNT_EXCEEDS,
 } from "../../util/constants";
@@ -139,6 +141,16 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
       return res.status(409).json({
         errorId: RESOURCE_ALREADY_EXISTS,
         message: `Board with ${boardDetails?.name} already exist. Please contact administrator`,
+      });
+    }
+
+    if (
+      !req.body.defaultSection &&
+      parseInt(req.body.noOfSections) > MAX_SECTIONS_COUNT
+    ) {
+      return res.status(409).json({
+        errorId: MAX_SECTIONS_ERROR,
+        message: `Maximum sections allowed are upto 10 only`,
       });
     }
 
