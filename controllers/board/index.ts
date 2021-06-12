@@ -783,72 +783,140 @@ export async function inviteMemberToBoard(payload: {
   await session.startTransaction();
   try {
     let sent = null;
-    if (!payload || !payload?.id || !payload.user || !payload.member) {
+    if (!payload || !payload?.id || !payload.user) {
       return;
     }
 
-    /* If new member */
-    if (payload?.createMember && !payload?.member?._id) {
-      const memberCreated = await createMember(
+    /* Invite team if team selected */
+    if (payload?.teams?.length) {
+      const teamIds: any = payload?.teams?.map(
+        (team: { [Key: string]: any }) => team?._id
+      );
+      const board: any = await Board.findById(payload?.id);
+      await addTeamsToBoad(teamIds, board, session);
+      await createInvitedTeams(teamIds, board?._id, session);
+      await sendInvitation(teamIds, payload?.user, board?._id, session);
+      await createActivity(
         {
-          email: payload?.member?.email,
-          name: payload?.member?.name,
+          memberId: payload?.user?.memberId || null,
+          boardId: payload?.id,
+          title: `${payload?.teams[0]?.name}`,
+          primaryAction: " team to the board",
+          type: "invite",
+          action: "invite",
+        },
+        session
+      );
+      sent = {
+        error: false,
+      };
+    }
+
+    /* If new member */
+    if (payload?.createMember && !payload?.teams?.length) {
+      let member = null;
+      member = await getMember(
+        {
+          email: payload?.email,
           userId: payload?.user?._id,
         },
         session
       );
-      await addMemberToUser(memberCreated?._id, payload?.user?._id, session);
-      await updateInvitedMember(memberCreated?._id, payload.id, "", 0, session);
+      if (!member?._id) {
+        member = await createMember(
+          {
+            email: payload?.email,
+            name: payload?.name,
+            userId: payload?.user?._id,
+          },
+          session
+        );
+        await addMemberToUser(member?._id, payload?.user?._id, session);
+      }
+      await updateInvitedMember(member?._id, payload.id, "", 0, session);
       sent = await sendInviteToMember(
         payload?.id,
         payload?.user,
-        memberCreated,
+        member,
+        session
+      );
+      await createActivity(
+        {
+          memberId: payload?.user?.memberId || null,
+          boardId: payload?.id,
+          title: `${payload?.name}`,
+          primaryAction: "to the board",
+          type: "invite",
+          action: "invite",
+        },
         session
       );
     }
 
     /* If existing member */
-    if (payload?.member?._id && !payload?.createMember) {
-      await updateInvitedMember(
-        payload?.member?._id,
-        payload.id,
-        "",
-        0,
+    // if (payload?.member?._id && !payload?.createMember) {
+    //   await updateInvitedMember(
+    //     payload?.member?._id,
+    //     payload.id,
+    //     "",
+    //     0,
+    //     session
+    //   );
+    //   sent = await sendInviteToMember(
+    //     payload?.id,
+    //     payload?.user,
+    //     payload?.member,
+    //     session
+    //   );
+    // }
+
+    /* invite without token If new user but dont create as team member */
+    if (payload?.email && !payload?.createMember && !payload?.teams?.length) {
+      const member: any = await getMember(
+        {
+          email: payload?.email,
+          userId: payload?.user?._id,
+        },
         session
       );
-      sent = await sendInviteToMember(
-        payload?.id,
-        payload?.user,
-        payload?.member,
-        session
-      );
-    }
-    if (!payload?.member?._id && !payload?.createMember) {
       await createInvitedMember(
         payload?.member?._id, // will be undefined
         payload.id,
-        payload?.member?.name,
+        payload?.name,
         0,
         session
       );
+      if (!member?._id) {
+        sent = await sendBoardInviteToMemberWithoutToken(
+          payload?.id,
+          payload?.user,
+          {
+            name: payload?.name,
+            email: payload?.email,
+          }
+        );
+      } else {
+        sent = await sendInviteToMember(
+          payload?.id,
+          payload?.user,
+          member,
+          session
+        );
+      }
       /* If new member and require only board url to be shared */
-      sent = await sendBoardInviteToMemberWithoutToken(
-        payload?.id,
-        payload?.user,
-        payload?.member
+
+      await createActivity(
+        {
+          memberId: payload?.user?.memberId || null,
+          boardId: payload?.id,
+          title: `${payload?.name}`,
+          primaryAction: "to the board",
+          type: "invite",
+          action: "invite",
+        },
+        session
       );
     }
-    await createActivity(
-      {
-        memberId: payload?.user?.memberId || null,
-        boardId: payload?.id,
-        title: `${payload?.member?.name}`,
-        primaryAction: "to the board",
-        type: "invite",
-        action: "invite",
-      },
-      session
-    );
     await session.commitTransaction();
     return sent;
   } catch (err) {
