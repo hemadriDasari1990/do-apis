@@ -19,7 +19,6 @@ import {
   forgotPassword,
   login,
   resendActivation,
-  resendToken,
   resetPassword,
   validateForgotPassword,
   verifyAccount,
@@ -101,7 +100,6 @@ import {
   loginValidator,
   refreshTokenValidator,
   resendActivationValidator,
-  resendTokenValidator,
   resetPasswordValidator,
   validateForgotPasswordValidator,
   verifyAccountValidator,
@@ -166,9 +164,6 @@ export default function(app: Application) {
 
   // verify account
   authRoutes.post("/verify-token", verifyAccountValidator, verifyAccount);
-
-  // resend verification token
-  authRoutes.post("/resend-token", resendTokenValidator, resendToken);
 
   // forgot password
   authRoutes.post("/forgot-password", forgotPasswordValidator, forgotPassword);

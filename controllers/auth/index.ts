@@ -2,6 +2,7 @@ import {
   ALREADY_VERIFIED,
   INCORRECT_PASSWORD,
   INTERNAL_SERVER_ERROR,
+  PASSWORDS_ARE_SAME,
   TOKEN_EXPIRED,
   TOKEN_MISSING,
   UNAUTHORIZED,
@@ -10,15 +11,14 @@ import {
   VERIFY_TOKEN_EXPIRY,
 } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
-import { getToken, getUser } from "../../util";
+import { decodeToken, getToken, getUser } from "../../util";
 
 import EmailService from "../../services/email";
+import Member from "../../models/member";
 import Token from "../../models/token";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import config from "config";
-import crypto from "crypto";
-import { getMember } from "../member";
 import { getUserByEmail } from "../user";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
@@ -81,7 +81,7 @@ export async function login(req: Request, res: Response): Promise<any> {
     /* Check if user is registered */
     if (!user) {
       return res.status(422).json({
-        message: "Email is not registered with us. Please create an account",
+        message: `We are unable to find an user account associated with ${req.body.email}. Make sure your Email is correct!`,
       });
     }
     /* Check if user account is verified */
@@ -214,7 +214,7 @@ export async function refreshToken(req: Request, res: Response): Promise<any> {
  */
 export async function logout(req: Request, res: Response): Promise<any> {
   try {
-    const user = getUser(req.headers.authorization as string);
+    const user: any = getUser(req.headers.authorization as string);
     await User.findByIdAndUpdate(user?._id, {
       token: null,
     });
@@ -245,22 +245,42 @@ export async function forgotPassword(
     if (!user) {
       return res.status(409).json({
         errorId: USER_NOT_FOUND,
-        message: "Email does not exist! Please create an account",
+        message: `We are unable to find an user account associated with ${req.body.email}. Make sure your Email is correct!`,
       });
     }
+    const payload = {
+      name: user.name,
+      email: user.email,
+      type: "forgot-password",
+    };
 
-    const token: any = new Token({
-      memberId: user.memberId,
-      token: crypto.randomBytes(16).toString("hex"),
-      createdAt: Date.now(),
-    });
-    await token.save();
-    await Token.find({
-      memberId: user.memberId,
-      token: { $ne: token?.token },
-    })
-      .remove()
-      .exec();
+    // Sign token
+    const jwtToken = await generateToken(
+      payload,
+      config.get("accessTokenSecret"),
+      86400
+    ); // 86400 i.e., expires in 24 hrs
+    const query = {
+        userId: user._id,
+        email: user?.email,
+        type: "forgot-password",
+      },
+      update = {
+        $set: {
+          userId: user._id,
+          email: user?.email,
+          type: "forgot-password",
+          token: jwtToken,
+          createdAt: Date.now(),
+        },
+      },
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      };
+    const token: any = await Token.findOneAndUpdate(query, update, options);
+
     //@TODO - Send forgot password email to reset the password
     await emailService.sendEmail(
       "/templates/forgot-password.ejs",
@@ -302,7 +322,7 @@ export async function resendActivation(
     if (!user) {
       return res.status(409).json({
         errorId: USER_NOT_FOUND,
-        message: "Email does not exist! Please create an account",
+        message: `We are unable to find an user account associated with ${req.body.email}. Make sure your Email is correct!`,
       });
     }
 
@@ -316,9 +336,10 @@ export async function resendActivation(
     // Generate jwt token
     const jwtToken = await generateToken(
       {
+        userId: user._id,
         name: user.name,
         email: user.email,
-        memberId: user.memberId,
+        type: "confirm-email",
       },
       config.get("accessTokenSecret"),
       VERIFY_TOKEN_EXPIRY
@@ -328,10 +349,18 @@ export async function resendActivation(
         .status(500)
         .json({ message: "Error while generating the token" });
     }
-    const query = { memberId: mongoose.Types.ObjectId(user?.memberId) },
+    const query = {
+        userId: user?._id,
+        email: user?.email,
+        type: "confirm-email",
+      },
       update = {
         $set: {
+          userId: user?._id,
+          email: user?.email,
+          type: "confirm-email",
           token: jwtToken,
+          createdAt: Date.now(),
         },
       },
       options = {
@@ -376,27 +405,43 @@ export async function validateForgotPassword(
   res: Response
 ): Promise<any> {
   try {
+    const decodedUser: any = await decodeToken(req.body.token as string);
+    const user: any = await User.findOne({
+      email: decodedUser?.email,
+    });
+
+    if (!user) {
+      return res.status(409).json({
+        errorId: USER_NOT_FOUND,
+        message: `We are unable to find an user account associated with ${user.email}. Make sure your Email is correct!`,
+      });
+    }
     const token: any = await Token.findOne({
-      token: req.body.token,
+      email: user?.email,
+      type: "forgot-password",
+      token: req?.body?.token?.trim(),
     });
     if (!token) {
       return res.status(409).json({
         errorId: TOKEN_EXPIRED,
-        message: "Password reset token isn't found or has expired",
+        message:
+          "Password reset token isn't found or has expired. Please request a new one",
       });
     }
-    const member: any = await getMember(
-      {
-        _id: token.memberId,
-      },
-      null
+    const verifyUser: any = await jwt.verify(
+      token?.token,
+      config.get("accessTokenSecret")
     );
-    if (member) {
-      return res.status(200).json({
-        user: { _id: member?.userId },
-        message: "Token verified successfully. Please set new password",
+    if (!verifyUser?.email || !verifyUser) {
+      return res.status(401).json({
+        errorId: TOKEN_EXPIRED,
+        message:
+          "Your token is expired! Please request for new forgot password link.",
       });
     }
+    return res.status(200).json({
+      message: "Token verified successfully. Please set new password",
+    });
   } catch (err) {
     return res.status(500).json({ message: err || err.message });
   }
@@ -411,12 +456,56 @@ export async function validateForgotPassword(
  * @returns {Response}
  */
 export async function verifyAccount(req: Request, res: Response): Promise<any> {
+  const session = await mongoose.startSession();
+  await session.startTransaction();
   try {
     const emailService = await new EmailService();
+    const tokenUser: any = await jwt.verify(
+      req.body.token,
+      config.get("accessTokenSecret")
+    );
+
+    if (!tokenUser?.email || !tokenUser) {
+      return res.status(401).json({
+        errorId: TOKEN_EXPIRED,
+        message:
+          "Your token is expired! Please request for new activation link.",
+      });
+    }
+
+    if (tokenUser?.type !== "update-email") {
+      const member: any = await Member.findOne({
+        userId: tokenUser?.userId,
+        email: tokenUser?.email,
+      }).session(session);
+
+      if (!member) {
+        return res.status(409).json({
+          errorId: USER_NOT_FOUND,
+          message: `We are unable to find an user account associated with ${tokenUser?.email}. Make sure your Email is correct!`,
+        });
+      }
+
+      if (member?.isVerified) {
+        return res.status(500).send({
+          errorId: ALREADY_VERIFIED,
+          message: "This account has already been verified.",
+        });
+      }
+      await Member.findByIdAndUpdate(
+        member?._id,
+        { $set: { isVerified: true } },
+        { session }
+      );
+    }
+
     /* Check if token exists */
     const token: any = await Token.findOne({
-      token: req.body.token,
-    });
+      userId: mongoose.Types.ObjectId(tokenUser?.userId),
+      email: tokenUser?.email,
+      type: "confirm-email",
+      token: req?.body?.token?.trim(),
+    }).session(session);
 
     if (!token) {
       return res.status(500).json({
@@ -426,123 +515,62 @@ export async function verifyAccount(req: Request, res: Response): Promise<any> {
       });
     }
     /* Verify JWT Token */
-    const decodedUser: any = await jwt.verify(
-      token?.token,
-      config.get("accessTokenSecret")
-    );
-    if (!decodedUser?.email || !decodedUser) {
-      return res.status(401).json({
-        errorId: TOKEN_EXPIRED,
-        message: "Token is expired",
-      });
-    }
-    const member: any = await getMember(
-      {
-        _id: token.memberId,
-      },
-      null
-    );
-    if (!member) {
-      return res.status(500).send({
-        errorId: USER_NOT_FOUND,
-        message: "We are unable to find a user for this token.",
-      });
-    }
-    if (member?.isVerified) {
-      return res.status(500).send({
-        errorId: ALREADY_VERIFIED,
-        message: "This account has already been verified.",
-      });
-    }
-    member.isVerified = true;
-    await member.save();
-
     const user: any = await User.findOne({
-      _id: member.userId,
-    });
-    // Verify and save the user
-    user.isVerified = true;
-    user.isActive = true;
-    user.email = user.newEmail; // Add new email address to current email address
-    const userUpdated = await user.save();
-    if (!userUpdated) {
-      return res.status(500).send({
-        errorId: INTERNAL_SERVER_ERROR,
-        message: "Error while verifying the account",
-      });
+      email: tokenUser?.email,
+    }).session(session);
+    if (user) {
+      const userUpdated = await User.findByIdAndUpdate(
+        user?._id,
+        { $set: { isVerified: true, isActive: true, email: user.newEmail } },
+        { session, new: true }
+      );
+      if (!userUpdated) {
+        return res.status(500).send({
+          errorId: INTERNAL_SERVER_ERROR,
+          message: "Error while verifying the account",
+        });
+      }
     }
 
-    await emailService.sendEmail(
-      "/templates/welcome.ejs",
-      {
-        url: config.get("url"),
-        login_link: `${config.get("url")}/login`,
-        name: user.name,
-      },
-      user.email,
-      "Welcome to letsdoretro.com"
-    );
+    if (tokenUser?.type === "update-email") {
+      await Member.findOneAndUpdate(
+        {
+          userId: tokenUser?.userId,
+          email: tokenUser?.email,
+        },
+        {
+          $set: {
+            email: user.newEmail,
+          },
+        },
+        {
+          session: session,
+        }
+      );
+    }
+    await Token.findByIdAndRemove(token?._id).session(session);
+    if (user) {
+      await emailService.sendEmail(
+        "/templates/welcome.ejs",
+        {
+          url: config.get("url"),
+          login_link: `${config.get("url")}/login`,
+          name: user.name,
+        },
+        user.email,
+        "Welcome to letsdoretro.com"
+      );
+    }
+
+    await session.commitTransaction();
     return res.status(200).json({ message: "Your account has been verified" });
   } catch (err) {
+    await session.abortTransaction();
     return res
       .status(500)
       .json({ errorId: INTERNAL_SERVER_ERROR, message: err || err.message });
-  }
-}
-
-/**
- * Validate the forgot password token request
- *
- * @param {Request} _req
- * @param {Response} res
- * @param {NextFunction} next
- * @returns {Response}
- */
-export async function resendToken(req: Request, res: Response): Promise<any> {
-  try {
-    const emailService = await new EmailService();
-    const member: any = await getMember(
-      {
-        email: req.body.email,
-      },
-      null
-    );
-    if (!member) {
-      return res.status(500).json({
-        errorId: USER_NOT_FOUND,
-        message: "We are unable to find a user with that email.",
-      });
-    }
-    if (member.isVerified) {
-      return res.status(500).json({
-        errorId: ALREADY_VERIFIED,
-        message: "This account has already been verified. Please log in.",
-      });
-    }
-
-    const token: any = new Token({
-      memberId: member._id,
-      token: crypto.randomBytes(16).toString("hex"),
-    });
-    const newToken: any = await token.save();
-
-    await emailService.sendEmail(
-      "/templates/account-confirmation.ejs",
-      {
-        url: config.get("url"),
-        confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
-        name: member.name,
-      },
-      req.body.email,
-      "Please confirm your email"
-    );
-    return res.status(200).json({
-      message: "A verification email has been sent to " + member.email + ".",
-    });
-  } catch (err) {
-    return res
-      .status(500)
-      .json({ errorId: INTERNAL_SERVER_ERROR, message: err || err.message });
+  } finally {
+    await session.endSession();
   }
 }
 
@@ -557,15 +585,25 @@ export async function resendToken(req: Request, res: Response): Promise<any> {
 export async function resetPassword(req: Request, res: Response): Promise<any> {
   try {
     const emailService = await new EmailService();
+    const decodedUser: any = await decodeToken(req.body.token as string);
     const user: any = await User.findOne({
-      _id: mongoose.Types.ObjectId(req.body.userId),
+      email: decodedUser?.email,
     });
+
+    if (!user) {
+      return res.status(409).json({
+        errorId: USER_NOT_FOUND,
+        message: `We are unable to find an user account associated with ${user.email}. Make sure your Email is correct!`,
+      });
+    }
+
     const isPasswordSame = await bcrypt.compare(
       req.body.password,
       user.password
     );
     if (isPasswordSame) {
       return res.status(500).json({
+        errorId: PASSWORDS_ARE_SAME,
         message:
           "Your new password and old password can't be same. Please use different one",
       });
@@ -575,7 +613,7 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
       Number(config.get("bcryptSalt"))
     );
     const query = {
-        _id: mongoose.Types.ObjectId(req.body.userId),
+        _id: mongoose.Types.ObjectId(user._id),
       },
       update = {
         $set: {
@@ -585,9 +623,10 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
       options = { useFindAndModify: true };
     const updated: any = await User.findOneAndUpdate(query, update, options);
     if (!updated) {
-      return res
-        .status(500)
-        .json({ message: "Error while updating new password" });
+      return res.status(500).json({
+        errorId: INTERNAL_SERVER_ERROR,
+        message: "Error while updating new password",
+      });
     }
     await emailService.sendEmail(
       "/templates/password-changed.ejs",
@@ -597,10 +636,13 @@ export async function resetPassword(req: Request, res: Response): Promise<any> {
         name: updated.name,
       },
       updated.email,
-      "Your letsdoretro password has been changed"
+      "Your password has been changed successfully"
     );
     await Token.find({
-      userId: updated._id,
+      userId: user?._id,
+      email: user?.email,
+      type: "forgot-password",
+      token: req?.body?.token?.trim(),
     })
       .remove()
       .exec();

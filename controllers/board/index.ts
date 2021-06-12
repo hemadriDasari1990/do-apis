@@ -20,10 +20,8 @@ import {
   createInvitedMember,
   createInvitedTeams,
   findInvitedMembersByBoardAndDelete,
-  updateInvitedMember,
 } from "../invite";
 import {
-  createMember,
   getMember,
   sendBoardInviteToMemberWithoutToken,
   sendInviteToMember,
@@ -36,7 +34,6 @@ import Join from "../../models/join";
 import Project from "../../models/project";
 import User from "../../models/user";
 import XLSX from "xlsx";
-import { addMemberToUser } from "../user";
 import { findJoinedMembersByBoardAndDelete } from "../join";
 import { findSectionsByBoardAndDelete } from "../section";
 import fs from "fs";
@@ -786,7 +783,13 @@ export async function inviteMemberToBoard(payload: {
     if (!payload || !payload?.id || !payload.user) {
       return;
     }
-
+    if (payload?.user?.email?.trim() === payload?.email?.trim()) {
+      sent = {
+        error: true,
+        message: "You are the owner of this board. You can't invite yourself.",
+      };
+      return sent;
+    }
     /* Invite team if team selected */
     if (payload?.teams?.length) {
       const teamIds: any = payload?.teams?.map(
@@ -812,66 +815,8 @@ export async function inviteMemberToBoard(payload: {
       };
     }
 
-    /* If new member */
-    if (payload?.createMember && !payload?.teams?.length) {
-      let member = null;
-      member = await getMember(
-        {
-          email: payload?.email,
-          userId: payload?.user?._id,
-        },
-        session
-      );
-      if (!member?._id) {
-        member = await createMember(
-          {
-            email: payload?.email,
-            name: payload?.name,
-            userId: payload?.user?._id,
-          },
-          session
-        );
-        await addMemberToUser(member?._id, payload?.user?._id, session);
-      }
-      await updateInvitedMember(member?._id, payload.id, "", 0, session);
-      sent = await sendInviteToMember(
-        payload?.id,
-        payload?.user,
-        member,
-        session
-      );
-      await createActivity(
-        {
-          memberId: payload?.user?.memberId || null,
-          boardId: payload?.id,
-          title: `${payload?.name}`,
-          primaryAction: "to the board",
-          type: "invite",
-          action: "invite",
-        },
-        session
-      );
-    }
-
-    /* If existing member */
-    // if (payload?.member?._id && !payload?.createMember) {
-    //   await updateInvitedMember(
-    //     payload?.member?._id,
-    //     payload.id,
-    //     "",
-    //     0,
-    //     session
-    //   );
-    //   sent = await sendInviteToMember(
-    //     payload?.id,
-    //     payload?.user,
-    //     payload?.member,
-    //     session
-    //   );
-    // }
-
     /* invite without token If new user but dont create as team member */
-    if (payload?.email && !payload?.createMember && !payload?.teams?.length) {
+    if (payload?.email && !payload?.teams?.length) {
       const member: any = await getMember(
         {
           email: payload?.email,

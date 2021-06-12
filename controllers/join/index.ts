@@ -32,8 +32,16 @@ export async function joinMemberToBoard(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    if (!payload?.token || !payload?.boardId) {
+    if (!payload?.boardId) {
       return;
+    }
+
+    const board = await Board.findById(payload?.boardId).session(session);
+    if (!board) {
+      return {
+        errorId: RESOURCE_NOT_FOUND,
+        message: "Board isn't found",
+      };
     }
 
     /* Validate invited users */
@@ -41,6 +49,9 @@ export async function joinMemberToBoard(payload: {
     if (payload?.token) {
       /* Check if token exists */
       token = await Token.findOne({
+        userId: payload?.userId,
+        type: "join-board",
+        email: payload?.email,
         token: payload?.token?.trim(),
       });
       if (!token) {
@@ -55,31 +66,31 @@ export async function joinMemberToBoard(payload: {
         token?.token,
         config.get("accessTokenSecret")
       );
-      if (!decodedUser?.memberId || !decodedUser) {
+      if (!decodedUser) {
         return {
           errorId: TOKEN_EXPIRED,
-          message: "The token is expired",
-        };
-      }
-      const board = await Board.findById(payload?.boardId).session(session);
-      if (!board) {
-        return {
-          errorId: RESOURCE_NOT_FOUND,
-          message: "Board isn't found",
+          message: "Your token is expired. Please join as normal member",
         };
       }
     }
 
     const member = await getMember(
       {
-        _id: token?.memberId,
+        userId: payload?.userId,
+        email: payload?.email,
       },
       session
     );
 
     /* Update member avatar */
     if (member && payload?.avatarId) {
-      await updateMemberAvatar(member?._id, payload?.avatarId, session);
+      await updateMemberAvatar(
+        {
+          _id: member?._id,
+        },
+        payload?.avatarId,
+        session
+      );
     }
 
     const query = {
@@ -111,7 +122,7 @@ export async function joinMemberToBoard(payload: {
     return joinedMember;
   } catch (err) {
     await session.abortTransaction();
-    throw `Error while joining member to board ${err || err.message}`;
+    throw `Error while adding member to the board ${err || err.message}`;
   } finally {
     await session.endSession();
   }

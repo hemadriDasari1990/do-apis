@@ -23,7 +23,7 @@ export const updateMemberValidator = [
     .withMessage("Invalid Email Address")
     .trim()
     .escape()
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   check("status")
     .trim()
     .escape(),

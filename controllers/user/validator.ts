@@ -23,7 +23,7 @@ export const signupValidator = [
     .isEmail()
     .trim()
     .escape()
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   /* Check Password */
   check("password")
     .notEmpty()
@@ -142,7 +142,7 @@ export const updateEmailValidator = [
     .withMessage("Invalid Email Address")
     .trim()
     .escape()
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   /* Check current Email */
   check("currentEmail")
     .notEmpty()
@@ -153,7 +153,7 @@ export const updateEmailValidator = [
     .withMessage("Invalid Current Email Address")
     .trim()
     .escape()
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   /* Check Password */
   check("password")
     .notEmpty()

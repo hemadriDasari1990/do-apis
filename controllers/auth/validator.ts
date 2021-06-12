@@ -12,7 +12,7 @@ export const loginValidator = [
     .withMessage("Invalid Email Address")
     .trim()
     .escape()
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   /* Check Password */
   check("password")
     .notEmpty()
@@ -67,7 +67,7 @@ export const forgotPasswordValidator = [
     .withMessage("Invalid Email Address")
     .trim()
     .escape()
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);
     const hasError = !error.isEmpty();
@@ -92,7 +92,7 @@ export const resendActivationValidator = [
     .withMessage("Invalid Email Address")
     .trim()
     .escape()
-    .normalizeEmail(),
+    .normalizeEmail({ gmail_remove_dots: false }),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);
     const hasError = !error.isEmpty();
@@ -153,32 +153,6 @@ export const verifyAccountValidator = [
   },
 ];
 
-export const resendTokenValidator = [
-  /* Check refresh token */
-  check("email")
-    .notEmpty()
-    .withMessage("Email is required")
-    .isString()
-    .withMessage("Email must be string")
-    .isEmail()
-    .withMessage("Invalid Email Address")
-    .trim()
-    .escape()
-    .normalizeEmail(),
-  (req: Request, res: Response, next: NextFunction) => {
-    const error = validationResult(req).formatWith(({ msg }) => msg);
-    const hasError = !error.isEmpty();
-    if (hasError) {
-      res.status(422).json({
-        errorId: VALIDATION_FAILED,
-        message: error.array().join(", \n"),
-      });
-    } else {
-      next();
-    }
-  },
-];
-
 export const resetPasswordValidator = [
   /* Check Password */
   check("password")
@@ -214,11 +188,11 @@ export const resetPasswordValidator = [
     )
     .trim()
     .escape(),
-  check("userId")
+  check("token")
     .notEmpty()
-    .withMessage("userId is required")
+    .withMessage("token is required")
     .isString()
-    .withMessage("User id must be string")
+    .withMessage("token must be string")
     .trim(),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);

@@ -3,6 +3,7 @@ import {
   INCORRECT_PASSWORD,
   PASSWORDS_ARE_NOT_SAME,
   PASSWORDS_ARE_SAME,
+  RESOURCE_ALREADY_EXISTS,
   UNAUTHORIZED,
   USER_ALREADY_EXIST,
   USER_NOT_FOUND,
@@ -31,7 +32,6 @@ import Token from "../../models/token";
 import User from "../../models/user";
 import bcrypt from "bcrypt";
 import config from "config";
-import crypto from "crypto";
 import { generateToken } from "../auth";
 import { getMember } from "../member";
 import { getUser } from "../../util";
@@ -100,9 +100,10 @@ export async function createUser(req: Request, res: Response): Promise<any> {
     // Generate jwt token
     const jwtToken = await generateToken(
       {
+        userId: userCreated._id,
         name: userCreated.name,
         email: userCreated.email,
-        memberId: updatedMember._id,
+        type: "confirm-email",
       },
       config.get("accessTokenSecret"),
       VERIFY_TOKEN_EXPIRY
@@ -111,9 +112,12 @@ export async function createUser(req: Request, res: Response): Promise<any> {
       return res.status(500).json({ message: "Error while generating tokens" });
     }
     const token = new Token({
-      memberId: updatedMember._id,
+      userId: userCreated?._id,
+      email: userCreated.email,
+      type: "confirm-email",
       token: jwtToken,
     });
+
     const newToken: any = await token.save({ session });
     //@TODO - Send Email Activation Link
     if (newToken) {
@@ -134,44 +138,6 @@ export async function createUser(req: Request, res: Response): Promise<any> {
         "An email verification link has been sent. Please check your inbox",
       userCreated,
     });
-  } catch (err) {
-    await session.abortTransaction();
-    return res.status(500).json(err || err.message);
-  } finally {
-    await session.endSession();
-  }
-}
-
-export async function resendActivationLink(
-  req: Request,
-  res: Response
-): Promise<any> {
-  const session = await mongoose.startSession();
-  await session.startTransaction();
-  try {
-    const member: any = await getMember(
-      {
-        email: req.body.email?.trim(),
-      },
-      session
-    );
-    if (!member) {
-      return res.status(401).send({
-        message: `We are unable to find an user account associated with ${req.body.email}. Make sure your Email is correct!`,
-      });
-    }
-    if (member.isVerified) {
-      return res
-        .status(200)
-        .send("User has been already verified. Please Login");
-    }
-    const token = new Token({
-      userId: member._id,
-      token: crypto.randomBytes(16).toString("hex"),
-    });
-    await token.save({ session });
-    await session.commitTransaction();
-    //@TODO - Send Email Activation Link
   } catch (err) {
     await session.abortTransaction();
     return res.status(500).json(err || err.message);
@@ -263,15 +229,12 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
 }
 
 export async function updateMemberAvatar(
-  memberId: string,
+  query: { [Key: string]: any },
   avatarId: number,
   session: any
 ): Promise<any> {
   try {
-    const query = {
-        _id: mongoose.Types.ObjectId(memberId),
-      },
-      update = {
+    const update = {
         $set: {
           avatarId: avatarId,
         },
@@ -519,6 +482,22 @@ export async function updateEmail(req: Request, res: Response) {
       });
     }
 
+    const member: any = await getMember(
+      {
+        userId: user?._id,
+        email: req.body.email,
+        isAuthor: false,
+      },
+      session
+    );
+
+    if (member?._id) {
+      return res.status(500).json({
+        errorId: RESOURCE_ALREADY_EXISTS,
+        errorMessage: `The request email address currently associated with one your team member. Please delete the member and try again`,
+      });
+    }
+
     const isPasswordValid = await bcrypt.compare(
       req.body.password,
       userFromDb?.password
@@ -547,11 +526,33 @@ export async function updateEmail(req: Request, res: Response) {
       update,
       options
     );
-    const tokenQuery = { userId: updatedUser._id },
+
+    // Generate jwt token
+    const jwtToken = await generateToken(
+      {
+        userId: updatedUser?._id,
+        email: updatedUser?.email,
+        type: "update-email",
+      },
+      config.get("accessTokenSecret"),
+      VERIFY_TOKEN_EXPIRY
+    );
+    if (!jwtToken) {
+      return res.status(500).json({ message: "Error while generating tokens" });
+    }
+
+    const tokenQuery = {
+        userId: updatedUser?._id,
+        email: updatedUser?.email,
+        type: "confirm-email",
+      },
       updateToken = {
         $set: {
           userId: updatedUser._id,
-          token: crypto.randomBytes(16).toString("hex"),
+          type: "confirm-email",
+          email: updatedUser?.email,
+          token: jwtToken,
+          createdAt: Date.now(),
         },
       },
       tokenOptions = {
@@ -567,14 +568,14 @@ export async function updateEmail(req: Request, res: Response) {
     );
     if (newToken) {
       await emailService.sendEmail(
-        "/templates/account-confirmation.ejs",
+        "/templates/update-email.ejs",
         {
           url: config.get("url"),
           confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
           name: updatedUser.name,
         },
         req.body.email,
-        "Please confirm your email"
+        "Please confirm your new email"
       );
     }
     await session.commitTransaction();
@@ -682,6 +683,21 @@ export async function updateName(req: Request, res: Response) {
         errorMessage: "User not found",
       });
     }
+
+    await Member.findOneAndUpdate(
+      {
+        userId: userFromDb?._id,
+        email: userFromDb?.email,
+      },
+      {
+        $set: {
+          name: req.body.name,
+        },
+      },
+      {
+        session: session,
+      }
+    );
 
     const query = { _id: mongoose.Types.ObjectId(userFromDb?._id) },
       update = {

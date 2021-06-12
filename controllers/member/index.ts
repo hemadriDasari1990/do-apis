@@ -2,6 +2,7 @@ import {
   JOIN_TOKEN_EXPIRY,
   MAX_MEMBER_COUNT,
   MAX_MEMBER_ERROR,
+  RESOURCE_ALREADY_EXISTS,
   VERIFY_TOKEN_EXPIRY,
 } from "../../util/constants";
 import { NextFunction, Request, Response } from "express";
@@ -43,6 +44,22 @@ export async function updateMember(
         message: `You have reached the limit of maximum members ${MAX_MEMBER_COUNT}. Please upgrade your plan.`,
       });
     }
+    if (!req.body.memberId) {
+      const member: any = await getMember(
+        {
+          userId: user?._id,
+          email: req.body.email,
+        },
+        session
+      );
+      if (member?._id) {
+        return res.status(409).json({
+          errorId: RESOURCE_ALREADY_EXISTS,
+          message: `Member already exists.`,
+        });
+      }
+    }
+
     const query = {
         _id: mongoose.Types.ObjectId(req.body.memberId),
       },
@@ -437,17 +454,34 @@ export async function sendInviteToMember(
     // Generate jwt token
     const jwtToken = await generateToken(
       {
-        memberId: receiver?._id,
-        name: receiver.name,
+        userId: sender?._id,
+        name: receiver?.name,
+        avatarId: receiver?.avatarId,
+        email: receiver?.email,
       },
       config.get("accessTokenSecret"),
       JOIN_TOKEN_EXPIRY
     );
-    const token = new Token({
-      memberId: receiver._id,
-      token: jwtToken,
-    });
-    const newToken: any = await token.save({ session });
+
+    const query = {
+        userId: sender?._id,
+        email: receiver?.email,
+        type: "join-board",
+      },
+      update = {
+        $set: {
+          token: jwtToken,
+          createdAt: Date.now(),
+        },
+      },
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session,
+      };
+    const newToken: any = await Token.findOneAndUpdate(query, update, options);
+
     const sent = newToken
       ? await emailService.sendEmail(
           "/templates/invite.ejs",
@@ -510,22 +544,41 @@ export async function sendInviteToNewMember(
     // Generate jwt token
     const jwtToken = await generateToken(
       {
+        userId: sender._id,
         name: receiver.name,
         email: receiver.email,
+        type: "confirm-email",
       },
       config.get("accessTokenSecret"),
       VERIFY_TOKEN_EXPIRY
     );
-    const token = new Token({
-      memberId: receiver._id,
-      token: jwtToken,
-    });
-    const newToken: any = await token.save({ session });
+
+    const query = {
+        userId: sender?._id,
+        email: receiver?.email,
+        type: "confirm-email",
+      },
+      update = {
+        $set: {
+          userId: sender?._id,
+          email: receiver?.email,
+          type: "confirm-email",
+          token: jwtToken,
+          createdAt: Date.now(),
+        },
+      },
+      options = {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+        session: session,
+      };
+    const newToken: any = await Token.findOneAndUpdate(query, update, options);
     let sent = null;
     //@TODO - Send Email Activation Link
     if (newToken) {
       sent = await emailService.sendEmail(
-        "/templates/join-invitation.ejs",
+        "/templates/join-team.ejs",
         {
           url: config.get("url"),
           confirm_link: `${config.get("url")}/verify/${newToken?.token}`,
