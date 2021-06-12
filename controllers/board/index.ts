@@ -7,7 +7,6 @@ import {
   MAX_SECTIONS_COUNT,
   MAX_SECTIONS_ERROR,
   RESOURCE_ALREADY_EXISTS,
-  SECTION_COUNT_EXCEEDS,
 } from "../../util/constants";
 import { Request, Response } from "express";
 import {
@@ -92,9 +91,12 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    if (!req.body.defaultSection && req.body.noOfSections > 10) {
+    if (
+      !req.body.defaultSection?.length &&
+      parseInt(req.body.noOfSections) > MAX_SECTIONS_COUNT
+    ) {
       return res.status(500).json({
-        errorId: SECTION_COUNT_EXCEEDS,
+        errorId: MAX_SECTIONS_ERROR,
         message: `Max no of sections allowed are only 10`,
       });
     }
@@ -141,16 +143,6 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
       return res.status(409).json({
         errorId: RESOURCE_ALREADY_EXISTS,
         message: `Board with ${boardDetails?.name} already exist. Please contact administrator`,
-      });
-    }
-
-    if (
-      !req.body.defaultSection &&
-      parseInt(req.body.noOfSections) > MAX_SECTIONS_COUNT
-    ) {
-      return res.status(409).json({
-        errorId: MAX_SECTIONS_ERROR,
-        message: `Maximum sections allowed are upto 10 only`,
       });
     }
 
