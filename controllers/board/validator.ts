@@ -12,13 +12,13 @@ export const updateBoardValidator = [
     .trim()
     .escape(),
   check("noOfSections").custom((value) => {
-    if (value && check("defaultSection")?.trim()) {
+    if (value && check("defaultSection")?.trim()?.length) {
       throw new Error("Can't have both no of sections and default template");
     }
-    if (typeof value !== "number" && !check("defaultSection")?.trim()) {
+    if (typeof value !== "number" && !check("defaultSection")?.trim()?.length) {
       throw new Error("No of sections must be a number");
     }
-    if (!value && !check("defaultSection")?.trim()) {
+    if (!value && !check("defaultSection")?.trim()?.length) {
       throw new Error("No of sections cannot be 0");
     }
     if (parseInt(value) > 10) {
