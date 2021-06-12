@@ -11,22 +11,11 @@ export const updateBoardValidator = [
   check("description")
     .trim()
     .escape(),
-  check("noOfSections").custom((value) => {
-    if (value && check("defaultSection")?.trim()?.length) {
-      throw new Error("Can't have both no of sections and default template");
-    }
-    if (typeof value !== "number" && !check("defaultSection")?.trim()?.length) {
-      throw new Error("No of sections must be a number");
-    }
-    if (!value && !check("defaultSection")?.trim()?.length) {
-      throw new Error("No of sections cannot be 0");
-    }
-    if (parseInt(value) > 10) {
-      throw new Error("No of sections cannot be more than 10");
-    }
-
-    return true;
-  }),
+  check("noOfSections")
+    .isNumeric()
+    .withMessage("No of sections should be a number")
+    .isLength({ min: 1, max: 10 })
+    .withMessage("No of sections must be between 1 and 10"),
   check("isAnnonymous").custom((value) => {
     if (value == false && !check("teams").isArray()) {
       throw new Error("Team must be an array");
