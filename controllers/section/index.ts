@@ -1,6 +1,7 @@
 import {
+  MAX_SECTIONS_COUNT,
+  MAX_SECTIONS_ERROR,
   RESOURCE_ALREADY_EXISTS,
-  SECTION_COUNT_EXCEEDS,
 } from "../../util/constants";
 import { Request, Response } from "express";
 import {
@@ -40,10 +41,10 @@ export async function updateSection(payload: {
     const sectionCount: number = await Section.find({
       boardId: payload?.boardId,
     }).countDocuments();
-    if (sectionCount > 10) {
+    if (sectionCount > MAX_SECTIONS_COUNT) {
       return {
-        errorId: SECTION_COUNT_EXCEEDS,
-        message: `Max no of sections allowed are only 10`,
+        errorId: MAX_SECTIONS_ERROR,
+        message: `Maximum sections allowed are upto 10 only`,
       };
     }
     const query = { _id: mongoose.Types.ObjectId(payload?.sectionId) },
