@@ -3,7 +3,7 @@ import { Request, Response } from "express";
 
 import Board from "../../models/board";
 import Join from "../../models/join";
-import Token from "../../models/token";
+import JoinToken from "../../models/joinToken";
 import config from "config";
 import { getMember } from "../member";
 import { getPagination } from "../../util";
@@ -48,12 +48,11 @@ export async function joinMemberToBoard(payload: {
     let token: any;
     if (payload?.token) {
       /* Check if token exists */
-      token = await Token.findOne({
-        userId: payload?.userId,
-        type: "join-board",
-        email: payload?.email,
+      token = await JoinToken.findOne({
+        memberId: payload?.memberId,
+        boardId: payload?.boardId,
         token: payload?.token?.trim(),
-      });
+      }).session(session);
       if (!token) {
         return {
           errorId: TOKEN_EXPIRED,
@@ -76,12 +75,10 @@ export async function joinMemberToBoard(payload: {
 
     const member = await getMember(
       {
-        userId: payload?.userId,
-        email: payload?.email,
+        _id: payload?.memberId,
       },
       session
     );
-
     /* Update member avatar */
     if (member && payload?.avatarId) {
       await updateMemberAvatar(
@@ -103,7 +100,7 @@ export async function joinMemberToBoard(payload: {
         $set: {
           boardId: payload.boardId,
           memberId: token.memberId,
-          guestName: member ? member?.name : payload.guestName,
+          guestName: member?.name,
           avatarId: payload?.avatarId,
         },
       },
@@ -118,6 +115,7 @@ export async function joinMemberToBoard(payload: {
       update,
       options
     );
+    joinedMember.member = member;
     await session.commitTransaction();
     return joinedMember;
   } catch (err) {

@@ -17,6 +17,7 @@ import {
 } from "../../util/teamMemberFilters";
 
 import EmailService from "../../services/email";
+import JoinToken from "../../models/joinToken";
 import Member from "../../models/member";
 import TeamMember from "../../models/teamMember";
 import Token from "../../models/token";
@@ -99,8 +100,8 @@ export async function updateMember(
     }
     await addMemberToUser(updated?._id, req.body.userId, session);
     /* Send email notification to confirm when creating new member */
-    if (!req.body.memberId) {
-      await sendInviteToNewMember(user, updated, session);
+    if (!updated?.isVerified) {
+      await sendEmailConfirmationToMember(user, updated, session);
     }
     const members: any = await getMemberDetailsLocal(
       { _id: updated?._id },
@@ -140,6 +141,7 @@ export async function createMember(
         session: session,
       };
     const updated: any = await Member.findOneAndUpdate(query, update, options);
+    console.log("updated", updated);
     return updated;
   } catch (err) {
     throw err || err.message;
@@ -454,19 +456,16 @@ export async function sendInviteToMember(
     // Generate jwt token
     const jwtToken = await generateToken(
       {
-        userId: sender?._id,
+        memberId: receiver?._id,
         name: receiver?.name,
-        avatarId: receiver?.avatarId,
-        email: receiver?.email,
       },
       config.get("accessTokenSecret"),
       JOIN_TOKEN_EXPIRY
     );
 
     const query = {
-        userId: sender?._id,
-        email: receiver?.email,
-        type: "join-board",
+        boardId: boardId,
+        memberId: receiver?._id,
       },
       update = {
         $set: {
@@ -480,7 +479,11 @@ export async function sendInviteToMember(
         setDefaultsOnInsert: true,
         session,
       };
-    const newToken: any = await Token.findOneAndUpdate(query, update, options);
+    const newToken: any = await JoinToken.findOneAndUpdate(
+      query,
+      update,
+      options
+    );
 
     const sent = newToken
       ? await emailService.sendEmail(
@@ -503,35 +506,8 @@ export async function sendInviteToMember(
   }
 }
 
-export async function sendBoardInviteToMemberWithoutToken(
-  boardId: string,
-  sender: { [Key: string]: any },
-  receiver: { [Key: string]: any }
-) {
-  try {
-    if (!sender || !receiver || !boardId) {
-      return;
-    }
-    const emailService = await new EmailService();
-    const sent = await emailService.sendEmail(
-      "/templates/invite.ejs",
-      {
-        url: config.get("url"),
-        invite_link: `${config.get("url")}/board/${boardId}`,
-        name: receiver?.name,
-        senderName: sender?.name,
-      },
-      receiver.email,
-      `You've been invited to join a retrospective session`
-    );
-    return sent;
-  } catch (err) {
-    throw err | err.message;
-  }
-}
-
 /* Send invite to new member when created */
-export async function sendInviteToNewMember(
+export async function sendEmailConfirmationToMember(
   sender: { [Key: string]: any },
   receiver: { [Key: string]: any },
   session: any

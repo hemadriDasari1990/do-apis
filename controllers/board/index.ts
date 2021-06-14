@@ -16,17 +16,14 @@ import {
   teamsLookup,
 } from "../../util/teamFilters";
 import { addBoardToProject, createProject } from "../project";
-import { createActivity, findActivitiesByBoardAndDelete } from "../activity";
 import {
+  checkIfMemberAlreadyInvited,
   createInvitedMember,
   createInvitedTeams,
   findInvitedMembersByBoardAndDelete,
 } from "../invite";
-import {
-  getMember,
-  sendBoardInviteToMemberWithoutToken,
-  sendInviteToMember,
-} from "../member";
+import { createActivity, findActivitiesByBoardAndDelete } from "../activity";
+import { createMember, getMember, sendInviteToMember } from "../member";
 import { getPagination, getUser } from "../../util";
 import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
@@ -837,23 +834,47 @@ export async function inviteMemberToBoard(payload: {
         },
         session
       );
-      await createInvitedMember(
-        payload?.member?._id, // will be undefined
-        payload.id,
-        payload?.name,
-        0,
-        session
-      );
+
+      /* If no member found then create member and send invite */
       if (!member?._id) {
-        sent = await sendBoardInviteToMemberWithoutToken(
+        const newMember: any = await createMember(
+          {
+            email: payload?.email,
+            userId: payload?.user?._id,
+            name: payload?.name,
+          },
+          session
+        );
+        await createInvitedMember(
+          newMember?._id,
+          payload.id,
+          newMember?.name,
+          0,
+          session
+        );
+        sent = await sendInviteToMember(
           payload?.id,
           payload?.user,
-          {
-            name: payload?.name,
-            email: payload?.email,
-          }
+          newMember,
+          session
         );
-      } else {
+      }
+
+      if (member?._id) {
+        const invitedMember: any = await checkIfMemberAlreadyInvited(
+          member?._id,
+          payload?.id,
+          session
+        );
+        if (!invitedMember) {
+          await createInvitedMember(
+            member?._id,
+            payload.id,
+            member?.name,
+            0,
+            session
+          );
+        }
         sent = await sendInviteToMember(
           payload?.id,
           payload?.user,
@@ -861,8 +882,8 @@ export async function inviteMemberToBoard(payload: {
           session
         );
       }
-      /* If new member and require only board url to be shared */
 
+      /* If new member and require only board url to be shared */
       await createActivity(
         {
           memberId: payload?.user?.memberId || null,

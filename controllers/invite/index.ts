@@ -163,6 +163,26 @@ export async function createInvitedMember(
   }
 }
 
+export async function checkIfMemberAlreadyInvited(
+  memberId: string,
+  boardId: string,
+  session: any
+): Promise<any> {
+  try {
+    if (!boardId || !memberId) {
+      return;
+    }
+    return await Invite.findOne({
+      boardId: boardId,
+      memberId: memberId,
+    }).session(session);
+  } catch (err) {
+    throw new Error(
+      `Error while fetching invited member details ${err || err.message}`
+    );
+  }
+}
+
 export async function findInvitedMembersByBoardAndDelete(
   boardId: string,
   session: any
