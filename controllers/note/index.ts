@@ -51,7 +51,7 @@ export async function updateNote(payload: {
           description: payload.description,
           sectionId: payload.sectionId,
           createdById: createdById,
-          updatedById: updatedById,
+          updatedById: payload.noteId ? updatedById : null,
           isAnnonymous: payload.isAnnonymous || false,
           ...(!payload.noteId ? { position: payload.position } : {}),
         },
