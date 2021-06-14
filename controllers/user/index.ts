@@ -185,7 +185,7 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    const user = getUser(req.headers.authorization as string);
+    const user: any = await getUser(req.headers.authorization as string);
     if (user?._id) {
       const userQuery = {
           _id: mongoose.Types.ObjectId(user?._id),
@@ -199,9 +199,13 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
           new: true,
           session: session,
         };
-      await User.findOneAndUpdate(userQuery, userUpdate, options);
+      const updatedUser: any = await User.findOneAndUpdate(
+        userQuery,
+        userUpdate,
+        options
+      );
       const query = {
-          userId: mongoose.Types.ObjectId(user?._id),
+          memberId: updatedUser?.memberId,
         },
         update = {
           $set: {
