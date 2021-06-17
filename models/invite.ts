@@ -5,31 +5,35 @@ delete mongoose.connection.models["Board"];
 const Schema = mongoose.Schema;
 const InviteSchema = new Schema(
   {
-    memberId: {
-      type: Schema.Types.ObjectId,
-      ref: "Member",
-      default: null,
-    },
     boardId: {
       type: Schema.Types.ObjectId,
       ref: "Board",
       index: true,
       required: true,
     },
-    guestName: {
+    name: {
       type: String,
+      trim: true,
+      minlength: 1,
+    },
+    email: {
+      type: String,
+      // min: [5, "Too short, min is 5 characters"],
+      // max: [32, "Too long, max is 32 characters"],
+      unique: true,
+      lowercase: true,
+      required: true,
     },
     avatarId: {
       type: Number,
       default: 0,
     },
+    token: {
+      type: String,
+    },
     board: {
       type: Schema.Types.ObjectId,
       ref: "Board",
-    },
-    member: {
-      type: Schema.Types.ObjectId,
-      ref: "Member",
     },
   },
   {
@@ -37,4 +41,6 @@ const InviteSchema = new Schema(
   }
 );
 
-export default mongoose.model("Invite", InviteSchema);
+InviteSchema.index({ email: 1, boardId: 1 }, { unique: true });
+
+export default mongoose.model("InviteMember", InviteSchema);

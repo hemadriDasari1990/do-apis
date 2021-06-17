@@ -3,8 +3,26 @@ import { teamAddFields, teamsLookup } from "./teamFilters";
 
 import Board from "../models/board";
 import Invite from "../models/invite";
-import Join from "../models/join";
+import JoinMember from "../models/join";
 import Project from "../models/project";
+
+const joinedMembersLookup = {
+  $lookup: {
+    from: JoinMember.collection.name,
+    let: { joinedMembers: "$joinedMembers" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $in: ["$_id", { $ifNull: ["$$joinedMembers", []] }] },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+    ],
+    as: "joinedMembers",
+  },
+};
 
 const boardsLookup = {
   $lookup: {
@@ -43,6 +61,7 @@ const boardsLookup = {
       teamAddFields,
       sectionsLookup,
       sectionAddFields,
+      joinedMembersLookup,
     ],
     as: "boards",
   },
@@ -114,24 +133,6 @@ const newBoardsLookup = {
       },
     ],
     as: "newBoards",
-  },
-};
-
-const joinedMembersLookup = {
-  $lookup: {
-    from: Join.collection.name,
-    let: { joinedMembers: "$joinedMembers" },
-    pipeline: [
-      {
-        $match: {
-          $expr: { $in: ["$_id", { $ifNull: ["$$joinedMembers", []] }] },
-        },
-      },
-      {
-        $sort: { _id: 1 },
-      },
-    ],
-    as: "joinedMembers",
   },
 };
 

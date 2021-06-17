@@ -20,14 +20,14 @@ const RecommendationSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    memberId: {
+    joinedMemberId: {
       type: Schema.Types.ObjectId,
-      ref: "Member",
+      ref: "JoinMember",
       index: true,
     },
-    member: {
+    joinedMember: {
       type: Schema.Types.ObjectId,
-      ref: "Member",
+      ref: "JoinMember",
     },
   },
   {

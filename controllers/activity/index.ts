@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import Activity from "../../models/activity";
 import { getPagination } from "../../util";
-import { memberLookup } from "../../util/memberFilters";
+import { joinedMemberLookUp } from "../../util/memberFilters";
 import mongoose from "mongoose";
 
 export async function createActivity(
@@ -43,7 +43,7 @@ export async function getActivities(req: Request, res: Response): Promise<any> {
           { $sort: { _id: -1 } },
           { $skip: offset },
           { $limit: limit },
-          memberLookup,
+          joinedMemberLookUp,
           {
             $unwind: {
               path: "$member",

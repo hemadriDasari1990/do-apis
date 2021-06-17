@@ -1,5 +1,4 @@
 import {
-  JOIN_TOKEN_EXPIRY,
   MAX_MEMBER_COUNT,
   MAX_MEMBER_ERROR,
   RESOURCE_ALREADY_EXISTS,
@@ -17,12 +16,12 @@ import {
 } from "../../util/teamMemberFilters";
 
 import EmailService from "../../services/email";
-import JoinToken from "../../models/joinToken";
 import Member from "../../models/member";
 import TeamMember from "../../models/teamMember";
 import Token from "../../models/token";
 import { addMemberToUser } from "../user";
 import config from "config";
+import { createActivity } from "../activity";
 import { generateToken } from "../auth";
 import { memberLookup } from "../../util/memberFilters";
 import mongoose from "mongoose";
@@ -141,7 +140,6 @@ export async function createMember(
         session: session,
       };
     const updated: any = await Member.findOneAndUpdate(query, update, options);
-    console.log("updated", updated);
     return updated;
   } catch (err) {
     throw err || err.message;
@@ -453,53 +451,27 @@ export async function sendInviteToMember(
       return;
     }
     const emailService = await new EmailService();
-    // Generate jwt token
-    const jwtToken = await generateToken(
+    const sent = await emailService.sendEmail(
+      "/templates/invite.ejs",
+      {
+        url: config.get("url"),
+        invite_link: `${config.get("url")}/board/${boardId}/${receiver?.token}`,
+        name: receiver?.name || "",
+        senderName: sender?.name,
+      },
+      receiver.email,
+      `You've been invited to join a retrospective session`
+    );
+    await createActivity(
       {
         memberId: receiver?._id,
-        name: receiver?.name,
-      },
-      config.get("accessTokenSecret"),
-      JOIN_TOKEN_EXPIRY
-    );
-
-    const query = {
         boardId: boardId,
-        memberId: receiver?._id,
+        message: ` <u>${receiver?.name ||
+          receiver?.email}</u> have been invited`,
+        type: "invite",
       },
-      update = {
-        $set: {
-          token: jwtToken,
-          createdAt: Date.now(),
-        },
-      },
-      options = {
-        upsert: true,
-        new: true,
-        setDefaultsOnInsert: true,
-        session,
-      };
-    const newToken: any = await JoinToken.findOneAndUpdate(
-      query,
-      update,
-      options
+      session
     );
-
-    const sent = newToken
-      ? await emailService.sendEmail(
-          "/templates/invite.ejs",
-          {
-            url: config.get("url"),
-            invite_link: `${config.get("url")}/board/${boardId}/${
-              newToken?.token
-            }`,
-            name: receiver?.name,
-            senderName: sender?.name,
-          },
-          receiver.email,
-          `You've been invited to join a retrospective session`
-        )
-      : null;
     return sent;
   } catch (err) {
     throw err | err.message;

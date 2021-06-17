@@ -1,9 +1,10 @@
+import JoinMember from "../models/join";
 import Member from "../models/member";
 import { teamMemberTeamsLookup } from "./teamMemberFilters";
 
 const reactedByLookup = {
   $lookup: {
-    from: Member.collection.name,
+    from: JoinMember.collection.name,
     let: { reactedBy: "$reactedBy" },
     pipeline: [
       {
@@ -14,6 +15,21 @@ const reactedByLookup = {
       teamMemberTeamsLookup,
     ],
     as: "reactedBy",
+  },
+};
+
+const joinedMemberLookUp = {
+  $lookup: {
+    from: JoinMember.collection.name,
+    let: { memberId: "$memberId" },
+    pipeline: [
+      {
+        $match: {
+          $expr: { $eq: ["$_id", { $ifNull: ["$$memberId", []] }] },
+        },
+      },
+    ],
+    as: "member",
   },
 };
 
@@ -102,4 +118,5 @@ export {
   reactedByLookup,
   memberAddFields,
   memberLookup,
+  joinedMemberLookUp,
 };

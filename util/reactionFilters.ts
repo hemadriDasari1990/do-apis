@@ -26,7 +26,7 @@ const reactionLookup = {
   },
 };
 
-const reactionPlusOneLookup = {
+const reactionAgreeLookup = {
   $lookup: {
     from: Reaction.collection.name,
     let: { reactions: "$reactions" },
@@ -34,7 +34,7 @@ const reactionPlusOneLookup = {
       {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$reactions", []] }] },
-          type: "plusOne",
+          type: "agree",
         },
       },
       reactedByLookup,
@@ -45,7 +45,7 @@ const reactionPlusOneLookup = {
         },
       },
     ],
-    as: "plusOneReactions",
+    as: "agreeReactions",
   },
 };
 
@@ -95,7 +95,7 @@ const reactionDeserveLookup = {
   },
 };
 
-const reactionMinusOneLookup = {
+const reactionDisagreeLookup = {
   $lookup: {
     from: Reaction.collection.name,
     let: { reactions: "$reactions" },
@@ -103,7 +103,7 @@ const reactionMinusOneLookup = {
       {
         $match: {
           $expr: { $in: ["$_id", { $ifNull: ["$$reactions", []] }] },
-          type: "minusOne",
+          type: "disagree",
         },
       },
       reactedByLookup,
@@ -144,20 +144,20 @@ const reactionLoveLookup = {
 const reactionAddFields = {
   $addFields: {
     totalReactions: { $size: { $ifNull: ["$reactions", []] } },
-    totalPlusOne: { $size: { $ifNull: ["$plusOneReactions", []] } },
+    totalAgree: { $size: { $ifNull: ["$agreeReactions", []] } },
     totalHighlight: { $size: { $ifNull: ["$highlightReactions", []] } },
     totalDeserve: { $size: { $ifNull: ["$deserveReactions", []] } },
-    totalMinusOne: { $size: { $ifNull: ["$minuOneReactions", []] } },
+    totalDisagree: { $size: { $ifNull: ["$minuOneReactions", []] } },
     totalLove: { $size: { $ifNull: ["$loveReactions", []] } },
   },
 };
 
 export {
   reactionLookup,
-  reactionPlusOneLookup,
+  reactionAgreeLookup,
   reactionHighlightLookup,
   reactionDeserveLookup,
-  reactionMinusOneLookup,
+  reactionDisagreeLookup,
   reactionLoveLookup,
   reactionAddFields,
 };

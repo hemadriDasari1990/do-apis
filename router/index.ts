@@ -104,6 +104,7 @@ import {
   validateForgotPasswordValidator,
   verifyAccountValidator,
 } from "../controllers/auth/validator";
+import { getJoinedMembers, joinMemberToBoard } from "../controllers/join";
 import {
   getReactionSummaryByBoard,
   getReactionSummaryByNote,
@@ -120,7 +121,6 @@ import { getActionItemsByActionId } from "../controllers/actionItem";
 import { getActivities } from "../controllers/activity";
 import { getDefaultSections } from "../controllers/defaultSection";
 import { getInvitedMembers } from "../controllers/invite";
-import { getJoinedMembers } from "../controllers/join";
 import { getNotesBySectionId } from "../controllers/note";
 import { getSectionsByBoardId } from "../controllers/section";
 
@@ -500,6 +500,9 @@ export default function(app: Application) {
 
   // Get Joined members
   joinRoutes.get("/", getJoinedMembers);
+
+  // join member to board
+  joinRoutes.post("/member", joinMemberToBoard);
 
   //= ========================
   // Recommendation Routes

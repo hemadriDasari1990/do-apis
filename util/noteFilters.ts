@@ -1,14 +1,14 @@
 import {
   reactionAddFields,
+  reactionAgreeLookup,
   reactionDeserveLookup,
+  reactionDisagreeLookup,
+  reactionHighlightLookup,
   reactionLookup,
   reactionLoveLookup,
-  reactionMinusOneLookup,
-  reactionPlusOneLookup,
-  reactionHighlightLookup,
 } from "./reactionFilters";
 
-import Member from "../models/member";
+import JoinMember from "../models/join";
 import Note from "../models/note";
 import Section from "../models/section";
 
@@ -31,7 +31,7 @@ const sectionNoteAddFields = {
 
 const createdByLookUp = {
   $lookup: {
-    from: Member.collection.name,
+    from: JoinMember.collection.name,
     let: { createdById: "$createdById" },
     pipeline: [
       {
@@ -46,7 +46,7 @@ const createdByLookUp = {
 
 const updatedByLookUp = {
   $lookup: {
-    from: Member.collection.name,
+    from: JoinMember.collection.name,
     let: { updatedById: "$updatedById" },
     pipeline: [
       {
@@ -92,9 +92,9 @@ const notesLookup = {
           preserveNullAndEmptyArrays: true,
         },
       },
-      reactionMinusOneLookup,
+      reactionDisagreeLookup,
       reactionHighlightLookup,
-      reactionPlusOneLookup,
+      reactionAgreeLookup,
       reactionDeserveLookup,
       reactionLoveLookup,
       reactionLookup,

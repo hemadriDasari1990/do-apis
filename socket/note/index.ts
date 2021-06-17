@@ -7,7 +7,6 @@ import {
 import socketio, { Socket } from "socket.io";
 
 import { addAndRemoveNoteFromSection } from "../../controllers/section";
-import { decodeToken } from "../../util";
 
 export default function note(io: socketio.Server, socket: Socket) {
   socket.on("update-note", async (payload: { [Key: string]: any }) => {
@@ -21,13 +20,8 @@ export default function note(io: socketio.Server, socket: Socket) {
   });
 
   socket.on(`create-note`, async (payload: { [Key: string]: any }) => {
-    const query: any = socket.handshake.query;
-    const user: any = decodeToken(query?.token);
     const created = await updateNote({
       ...payload,
-      createdById: user?.memberId || payload?.createdById,
-      updatedById: user?.memberId || payload?.updatedById,
-      //   ...decodeToken(query?.token),
     });
     if (created?._id) {
       io.emit(`plus-note-count-response`, created);

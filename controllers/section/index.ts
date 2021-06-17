@@ -81,28 +81,20 @@ export async function updateSection(payload: {
     if (payload?.sectionId) {
       await createActivity(
         {
-          memberId: payload?.memberId,
+          memberId: payload?.joinedMemberId,
           boardId: payload?.boardId,
-          title: `section`,
-          primaryAction: "from",
-          primaryTitle: payload?.previousTitle,
-          secondaryAction: "to",
-          secondaryTitle: updated?.name,
+          message: ` renamed section <u>${payload?.previousTitle}</u> to <u>${updated?.name}</u>`,
           type: "section",
-          action: "update",
         },
         session
       );
     } else {
       await createActivity(
         {
-          memberId: payload?.memberId,
+          memberId: payload?.joinedMemberId,
           boardId: payload?.boardId,
-          title: `${updated?.name}`,
-          primaryAction: "as",
-          primaryTitle: "section",
+          message: ` created section <u>${updated?.name}</u>`,
           type: "section",
-          action: "create",
         },
         session
       );
@@ -165,15 +157,10 @@ export async function addAndRemoveNoteFromSection(data: {
     const noteDetails = await getNoteDetails(data.noteId, session);
     await createActivity(
       {
-        memberId: data?.memberId,
+        memberId: data?.joinedMemberId,
         boardId: data?.boardId,
-        title: `${noteDetails?.description}`,
-        primaryAction: "from",
-        primaryTitle: `${sourceSectionUpdated?.name}`,
-        secondaryAction: "to",
-        secondaryTitle: `${destinationSectionUpdated?.name}`,
+        message: ` moved note <u>${noteDetails?.description}</u> from section <u>${sourceSectionUpdated?.name}</u> to <u>${destinationSectionUpdated?.name}</u>`,
         type: "note",
-        action: "move",
       },
       session
     );
@@ -205,7 +192,8 @@ async function getSections(boardId: string): Promise<any> {
 
 export async function deleteSection(
   sectionId: string,
-  memberId: string,
+  name: string,
+  joinedMemberId: string,
   boardId: string
 ): Promise<any> {
   const session = await mongoose.startSession();
@@ -217,11 +205,10 @@ export async function deleteSection(
     }
     await createActivity(
       {
-        memberId,
+        joinedMemberId,
         boardId: boardId,
-        title: "section",
+        message: ` deleted section <u>${name}</u>`,
         type: "section",
-        action: "delete",
       },
       session
     );

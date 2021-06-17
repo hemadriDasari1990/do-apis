@@ -1,16 +1,20 @@
-import { RESOURCE_NOT_FOUND, TOKEN_EXPIRED } from "../../util/constants";
+import {
+  INTERNAL_SERVER_ERROR,
+  RESOURCE_NOT_FOUND,
+  TOKEN_EXPIRED,
+} from "../../util/constants";
 import { Request, Response } from "express";
 
 import Board from "../../models/board";
+import InviteMember from "../../models/invite";
 import Join from "../../models/join";
-import JoinToken from "../../models/joinToken";
-import config from "config";
-import { getMember } from "../member";
+import { addJoinedMemberToBoard } from "../board";
+import { createActivity } from "../activity";
 import { getPagination } from "../../util";
-import jwt from "jsonwebtoken";
+import { getSocketInstance } from "../../socket";
 import { memberLookup } from "../../util/memberFilters";
 import mongoose from "mongoose";
-import { updateMemberAvatar } from "../user";
+import { updateInvitedMemberAvatar } from "../invite";
 
 export async function getJoinedMember(
   query: {
@@ -26,17 +30,19 @@ export async function getJoinedMember(
   }
 }
 
-export async function joinMemberToBoard(payload: {
-  [Key: string]: any;
-}): Promise<any> {
+export async function joinMemberToBoard(
+  req: Request,
+  res: Response
+): Promise<any> {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    if (!payload?.boardId) {
+    if (!req?.body?.boardId) {
       return;
     }
+    const io: any = getSocketInstance();
 
-    const board = await Board.findById(payload?.boardId).session(session);
+    const board = await Board.findById(req?.body?.boardId).session(session);
     if (!board) {
       return {
         errorId: RESOURCE_NOT_FOUND,
@@ -46,62 +52,43 @@ export async function joinMemberToBoard(payload: {
 
     /* Validate invited users */
     let token: any;
-    if (payload?.token) {
+    if (req?.body?.token && !req?.body?.isAnnonymous) {
       /* Check if token exists */
-      token = await JoinToken.findOne({
-        memberId: payload?.memberId,
-        boardId: payload?.boardId,
-        token: payload?.token?.trim(),
+      token = await InviteMember.findOne({
+        memberId: req?.body?.memberId,
+        boardId: req?.body?.boardId,
+        token: req?.body?.token?.trim(),
       }).session(session);
       if (!token) {
         return {
           errorId: TOKEN_EXPIRED,
-          message:
-            "We are unable to find a valid token. Your token my have expired.",
+          message: "We are unable to find a valid token.",
         };
       }
-      /* Verify JWT Token */
-      const decodedUser: any = await jwt.verify(
-        token?.token,
-        config.get("accessTokenSecret")
-      );
-      if (!decodedUser) {
-        return {
-          errorId: TOKEN_EXPIRED,
-          message: "Your token is expired. Please join as normal member",
-        };
-      }
-    }
-
-    const member = await getMember(
-      {
-        _id: payload?.memberId,
-      },
-      session
-    );
-    /* Update member avatar */
-    if (member && payload?.avatarId) {
-      await updateMemberAvatar(
+      await updateInvitedMemberAvatar(
+        req?.body?.boardId,
         {
-          _id: member?._id,
+          avatarId: req?.body?.avatarId,
+          name: req?.body?.name,
         },
-        payload?.avatarId,
         session
       );
     }
 
-    const query = {
-        $and: [
-          { boardId: mongoose.Types.ObjectId(payload.boardId) },
-          { memberId: token?.memberId },
-        ],
-      },
+    const query = req?.body?.email
+        ? {
+            $and: [
+              { boardId: mongoose.Types.ObjectId(req?.body.boardId) },
+              { email: req?.body?.email },
+            ],
+          }
+        : { _id: { $exists: false } },
       update = {
         $set: {
-          boardId: payload.boardId,
-          memberId: token.memberId,
-          guestName: member?.name,
-          avatarId: payload?.avatarId,
+          boardId: req?.body.boardId,
+          name: !req?.body?.isAnnonymous ? req?.body?.name : "Team Member",
+          avatarId: req?.body?.avatarId || 0,
+          email: req?.body?.email,
         },
       },
       options = {
@@ -115,12 +102,25 @@ export async function joinMemberToBoard(payload: {
       update,
       options
     );
-    joinedMember.member = member;
+    await createActivity(
+      {
+        memberId: joinedMember?._id,
+        boardId: req?.body.boardId,
+        message: ` joined the session`,
+        type: "join",
+      },
+      session
+    );
+    await addJoinedMemberToBoard(joinedMember?._id, req?.body.boardId, session);
     await session.commitTransaction();
-    return joinedMember;
+    io.emit(`join-member-to-board-response`, joinedMember);
+    return res.status(200).send(joinedMember);
   } catch (err) {
     await session.abortTransaction();
-    throw `Error while adding member to the board ${err || err.message}`;
+    return res.status(500).json({
+      errorId: INTERNAL_SERVER_ERROR,
+      message: err || err?.message,
+    });
   } finally {
     await session.endSession();
   }

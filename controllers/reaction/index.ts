@@ -81,11 +81,8 @@ export async function createOrUpdateReaction(payload: {
         {
           memberId: reactedBy,
           boardId: payload?.boardId,
-          title: payload?.type,
-          primaryAction: "on the note",
-          primaryTitle: note?.description,
+          message: ` withdrawn reaction on the note <u>${note?.description}</u>`,
           type: payload?.type,
-          action: "un-react",
         },
         session
       );
@@ -98,33 +95,36 @@ export async function createOrUpdateReaction(payload: {
 
     const reactionUpdated: any = await updateReaction(query, update, options);
     if (!reactionUpdated) {
+      await session.commitTransaction();
       return {
         removed: false,
       };
     }
-    const newReaction: any = await getReaction(
-      {
-        _id: mongoose.Types.ObjectId(reactionUpdated?._id),
-      },
-      session
-    );
-    if (!note?.reactions?.includes(newReaction?._id)) {
-      await addReactionToNote(newReaction._id, payload.noteId, session);
+    if (!note?.reactions?.includes(reactionUpdated?._id)) {
+      await addReactionToNote(reactionUpdated._id, payload.noteId, session);
       await createActivity(
         {
           memberId: reactedBy,
           boardId: payload?.boardId,
-          title: payload?.type,
-          primaryAction: "to the note",
-          primaryTitle: note?.description,
+          message: ` reacted on the note <u>${note?.description}</u>`,
           type: payload?.type,
-          action: "react",
+        },
+        session
+      );
+    } else {
+      await createActivity(
+        {
+          memberId: reactedBy,
+          boardId: payload?.boardId,
+          message: ` updated reaction on the note <u>${note?.description}</u>`,
+          type: payload?.type,
         },
         session
       );
     }
+
     await session.commitTransaction();
-    return newReaction;
+    return reactionUpdated;
   } catch (err) {
     await session.abortTransaction();
     throw new Error(err || err.message);
@@ -277,11 +277,11 @@ export async function getReactionSummaryByBoard(
       {
         $group: {
           _id: null,
-          plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
+          agree: { $sum: { $cond: [{ $eq: ["$type", "agree"] }, 1, 0] } },
           highlight: {
             $sum: { $cond: [{ $eq: ["$type", "highlight"] }, 1, 0] },
           },
-          minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
+          disagree: { $sum: { $cond: [{ $eq: ["$type", "disagree"] }, 1, 0] } },
           love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
           deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
           totalReactions: { $sum: 1 },
@@ -315,11 +315,11 @@ export async function getReactionSummaryBySection(
       {
         $group: {
           _id: null,
-          plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
+          agree: { $sum: { $cond: [{ $eq: ["$type", "agree"] }, 1, 0] } },
           highlight: {
             $sum: { $cond: [{ $eq: ["$type", "highlight"] }, 1, 0] },
           },
-          minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
+          disagree: { $sum: { $cond: [{ $eq: ["$type", "disagree"] }, 1, 0] } },
           love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
           deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
           totalReactions: { $sum: 1 },
@@ -350,11 +350,11 @@ export async function getReactionSummaryByNote(
       {
         $group: {
           _id: null,
-          plusOne: { $sum: { $cond: [{ $eq: ["$type", "plusOne"] }, 1, 0] } },
+          agree: { $sum: { $cond: [{ $eq: ["$type", "agree"] }, 1, 0] } },
           highlight: {
             $sum: { $cond: [{ $eq: ["$type", "highlight"] }, 1, 0] },
           },
-          minusOne: { $sum: { $cond: [{ $eq: ["$type", "minusOne"] }, 1, 0] } },
+          disagree: { $sum: { $cond: [{ $eq: ["$type", "disagree"] }, 1, 0] } },
           love: { $sum: { $cond: [{ $eq: ["$type", "love"] }, 1, 0] } },
           deserve: { $sum: { $cond: [{ $eq: ["$type", "deserve"] }, 1, 0] } },
           totalReactions: { $sum: 1 },

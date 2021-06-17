@@ -11,12 +11,12 @@ const NoteSchema = new Schema(
     },
     createdById: {
       type: Schema.Types.ObjectId,
-      ref: "Member",
+      ref: "JoinMember",
       default: null,
     },
     updatedById: {
       type: Schema.Types.ObjectId,
-      ref: "Member",
+      ref: "JoinMember",
       default: null,
     },
     description: {
