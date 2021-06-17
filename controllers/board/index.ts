@@ -16,30 +16,28 @@ import {
   teamsLookup,
 } from "../../util/teamFilters";
 import { addBoardToProject, createProject } from "../project";
+import { createActivity, findActivitiesByBoardAndDelete } from "../activity";
 import {
-  checkIfMemberAlreadyInvited,
-  createInvitedMember,
   createInvitedTeams,
   findInvitedMembersByBoardAndDelete,
+  updateInvitedMember,
 } from "../invite";
-import { createActivity, findActivitiesByBoardAndDelete } from "../activity";
-import { createMember, getMember, sendInviteToMember } from "../member";
 import { getPagination, getUser } from "../../util";
 import { sectionAddFields, sectionsLookup } from "../../util/sectionFilters";
 
 import Board from "../../models/board";
-import Join from "../../models/join";
+import JoinMember from "../../models/join";
 import Project from "../../models/project";
 import User from "../../models/user";
 import XLSX from "xlsx";
 import { findJoinedMembersByBoardAndDelete } from "../join";
 import { findSectionsByBoardAndDelete } from "../section";
 import fs from "fs";
+import { getMember } from "../member";
 import { joinedMembersLookup } from "../../util/boardFilters";
 import mongoose from "mongoose";
 import { projectLookup } from "../../util/projectFilters";
 import { saveSection } from "../section";
-import { sendInvitation } from "../team";
 
 export async function addSectionToBoard(
   sectionId: string,
@@ -227,10 +225,6 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
           Promise.resolve()
         );
     }
-    if (!req.body.isAnnonymous && req.body.teams?.length && updated?._id) {
-      await addTeamsToBoad(req.body.teams, updated, session);
-      await createInvitedTeams(req.body.teams, updated?._id, session);
-    }
     /* Add existing project to board */
     if (req.body.projectId) {
       await addBoardToProject(updated?._id, req.body.projectId, session);
@@ -262,18 +256,10 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         );
       }
     }
-    await sendInvitation(req.body.teams, user, updated?._id, session);
-    await createActivity(
-      {
-        memberId: user?.memberId,
-        boardId: updated?._id,
-        title: `${updated?.name}`,
-        primaryAction: "",
-        type: "board",
-        action: req.body.boardId ? "update" : "create",
-      },
-      session
-    );
+    if (!req.body.isAnnonymous && req.body.teams?.length && updated?._id) {
+      await addTeamsToBoard(req.body.teams, updated, session);
+      await createInvitedTeams(req.body.teams, updated?._id, user, session);
+    }
     const board = await getBoardDetailsWithMembers(updated?._id, session);
     await session.commitTransaction();
     return res.status(200).send(board);
@@ -291,6 +277,7 @@ export async function startOrCompleteBoard(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
+    let joinedMember: any;
     const member = await getMember(
       {
         _id: mongoose.Types.ObjectId(payload.memberId),
@@ -318,30 +305,34 @@ export async function startOrCompleteBoard(payload: {
     if (!updated) {
       return updated;
     }
+
     /* Add member to the board who is starting the session */
     if (payload.action === "start") {
-      const join = new Join({
+      const join = new JoinMember({
         boardId: payload.id,
-        memberId: member?._id,
-        guestName: member?.name || "Team Member",
+        email: member?.email,
+        name: member?.name,
         avatarId: member?.avatarId,
       });
-      const joinedMember = await join.save({ session });
+      joinedMember = await join.save({ session });
       await addJoinedMemberToBoard(joinedMember?._id, payload.id, session);
     }
 
     await createActivity(
       {
-        memberId: member?._id,
+        memberId: joinedMember?._id,
         boardId: payload.id,
-        title: "the session",
+        message:
+          payload.action === "start"
+            ? " <u>started</u> the session"
+            : " <u>ended</u> the session",
         type: "board",
-        action: payload.action === "start" ? "session-start" : "session-stop",
       },
       session
     );
     const board = await getBoardDetailsWithMembers(updated?._id, session);
     await session.commitTransaction();
+    board.joinedMemberId = joinedMember?._id;
     return board;
   } catch (err) {
     await session.abortTransaction();
@@ -544,20 +535,9 @@ export async function getBoardDetails(
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
-    const user = getUser(req.headers.authorization as string);
     const board = await getBoardDetailsWithMembers(req.params.id, session);
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const increment = { $inc: { views: 1 } };
-    await createActivity(
-      {
-        memberId: user?.memberId,
-        boardId: board?._id,
-        title: `${board?.name}`,
-        type: "board",
-        action: "view",
-      },
-      session
-    );
     await Board.findOneAndUpdate(query, increment, { session: session });
     await session.commitTransaction();
     return res.status(200).send(board);
@@ -596,6 +576,7 @@ export async function getBoards(req: Request, res: Response): Promise<any> {
           { $sort: { _id: -1 } },
           { $skip: offset },
           { $limit: limit },
+          joinedMembersLookup,
           teamsLookup,
           teamAddFields,
           sectionsLookup,
@@ -717,7 +698,7 @@ async function getBoardsByProject(
   }
 }
 
-export async function addTeamsToBoad(
+export async function addTeamsToBoard(
   teams: Array<string>,
   board: { [Key: string]: any },
   session: any
@@ -761,18 +742,6 @@ export async function changeVisibility(payload: {
       { $set: { isPrivate: payload?.isPrivate } },
       { new: true, useFindAndModify: false, session: session }
     );
-    await createActivity(
-      {
-        memberId: payload?.user?.memberId,
-        boardId: updated?._id,
-        title: `${updated?.name}`,
-        primaryAction: "visibility to",
-        primaryTitle: payload?.isPrivate ? "private" : "public",
-        type: "visibility",
-        action: payload?.isPrivate ? "private" : "public",
-      },
-      session
-    );
     await session.commitTransaction();
     return updated;
   } catch (err) {
@@ -791,107 +760,51 @@ export async function inviteMemberToBoard(payload: {
   try {
     let sent = null;
     if (!payload || !payload?.id || !payload.user) {
-      return;
+      return {
+        error: true,
+        message: "Invalid request",
+      };
+    }
+    if (!payload?.email?.trim() && !payload?.teams?.length) {
+      return {
+        error: true,
+        message: "Email address or team is required",
+      };
     }
     if (payload?.user?.email?.trim() === payload?.email?.trim()) {
-      sent = {
+      return {
         error: true,
-        message: "You are the owner of this board. You can't invite yourself.",
+        message:
+          "You are the organisor of this board. You can't invite yourself.",
       };
-      return sent;
+    }
+    const board: any = await Board.findById(payload?.id);
+    if (!board?._id) {
+      return {
+        error: true,
+        message: "Board can't be found",
+      };
     }
     /* Invite team if team selected */
     if (payload?.teams?.length) {
       const teamIds: any = payload?.teams?.map(
         (team: { [Key: string]: any }) => team?._id
       );
-      const board: any = await Board.findById(payload?.id);
-      await addTeamsToBoad(teamIds, board, session);
-      await createInvitedTeams(teamIds, board?._id, session);
-      await sendInvitation(teamIds, payload?.user, board?._id, session);
-      await createActivity(
-        {
-          memberId: payload?.user?.memberId || null,
-          boardId: payload?.id,
-          title: `${payload?.teams[0]?.name}`,
-          primaryAction: " team to the board",
-          type: "invite",
-          action: "invite",
-        },
-        session
-      );
+
+      await addTeamsToBoard(teamIds, board, session);
+      await createInvitedTeams(teamIds, board?._id, payload.user, session);
       sent = {
         error: false,
       };
     }
-
-    /* invite without token If new user but dont create as team member */
-    if (payload?.email && !payload?.teams?.length) {
-      const member: any = await getMember(
+    if (payload?.email) {
+      sent = await updateInvitedMember(
+        board?._id,
+        payload.user,
         {
           email: payload?.email,
-          userId: payload?.user?._id,
-        },
-        session
-      );
-
-      /* If no member found then create member and send invite */
-      if (!member?._id) {
-        const newMember: any = await createMember(
-          {
-            email: payload?.email,
-            userId: payload?.user?._id,
-            name: payload?.name,
-          },
-          session
-        );
-        await createInvitedMember(
-          newMember?._id,
-          payload.id,
-          newMember?.name,
-          0,
-          session
-        );
-        sent = await sendInviteToMember(
-          payload?.id,
-          payload?.user,
-          newMember,
-          session
-        );
-      }
-
-      if (member?._id) {
-        const invitedMember: any = await checkIfMemberAlreadyInvited(
-          member?._id,
-          payload?.id,
-          session
-        );
-        if (!invitedMember) {
-          await createInvitedMember(
-            member?._id,
-            payload.id,
-            member?.name,
-            0,
-            session
-          );
-        }
-        sent = await sendInviteToMember(
-          payload?.id,
-          payload?.user,
-          member,
-          session
-        );
-      }
-
-      /* If new member and require only board url to be shared */
-      await createActivity(
-        {
-          memberId: payload?.user?.memberId || null,
-          boardId: payload?.id,
-          title: `${payload?.name}`,
-          primaryAction: "to the board",
-          type: "invite",
-          action: "invite",
+          name: payload?.email,
+          avatarId: 0,
         },
         session
       );
@@ -990,8 +903,8 @@ export async function downloadReport(
         const notes = section?.notes?.map((note: { [Key: string]: any }) => {
           return {
             Note: note.description,
-            "+1": note.totalPlusOne,
-            "-1": note.totalMinusOne,
+            "+1": note.totalAgree,
+            "-1": note.totalDisagree,
             Love: note.totalLove,
             Highlight: note.totalHighlight,
             Deserve: note.totalDeserve,

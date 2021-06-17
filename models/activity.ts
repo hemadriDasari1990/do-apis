@@ -5,12 +5,13 @@ delete mongoose.connection.models["BoardActivity"];
 const Schema = mongoose.Schema;
 const ActivitySchema = new Schema(
   {
-    title: {
+    message: {
       type: String,
+      allowNull: false,
     },
     memberId: {
       type: Schema.Types.ObjectId,
-      ref: "Member",
+      ref: "JoinMember",
       index: true,
     },
     boardId: {
@@ -25,54 +26,21 @@ const ActivitySchema = new Schema(
         "board",
         "section",
         "note",
-        "plusOne",
-        "minusOne",
-        "deserve",
-        "love",
-        "highlight",
         "visibility",
         "invite",
+        "agree",
+        "highlight",
+        "disagree",
+        "love",
+        "deserve",
+        "join",
       ],
       index: true,
       required: true,
-    },
-    action: {
-      type: String,
-      required: true,
-      enum: [
-        "create",
-        "update",
-        "delete",
-        "session-start",
-        "session-stop",
-        "read",
-        "un-read",
-        "react",
-        "un-react",
-        "move",
-        "private",
-        "public",
-        "view",
-        "invite",
-      ],
-      default: "create",
-      index: true,
-    },
-    primaryAction: {
-      type: String,
-    },
-    primaryTitle: {
-      type: String,
-    },
-    secondaryAction: {
-      type: String,
-    },
-    secondaryTitle: {
-      type: String,
     },
     member: {
       type: Schema.Types.ObjectId,
-      ref: "member",
+      ref: "JoinMember",
     },
     board: {
       type: Schema.Types.ObjectId,

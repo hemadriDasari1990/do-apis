@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 import { createdByLookUp, updatedByLookUp } from "../../util/noteFilters";
 import {
   reactionAddFields,
+  reactionAgreeLookup,
   reactionDeserveLookup,
+  reactionDisagreeLookup,
   reactionHighlightLookup,
   reactionLoveLookup,
-  reactionMinusOneLookup,
-  reactionPlusOneLookup,
 } from "../../util/reactionFilters";
 
 import Note from "../../models/note";
@@ -74,13 +74,8 @@ export async function updateNote(payload: {
         {
           memberId: updatedById,
           boardId: payload?.boardId,
-          title: `${payload.previousDescription}`,
-          primaryAction: "to",
-          primaryTitle: `${payload.description}`,
-          secondaryAction: "under",
-          secondaryTitle: sectionUpdated?.name,
+          message: ` renamed note <u>${payload.previousDescription}</u> to <u>${payload.description}</u> under section <u>${sectionUpdated?.name}</u>`,
           type: "note",
-          action: "update",
         },
         session
       );
@@ -89,11 +84,8 @@ export async function updateNote(payload: {
         {
           memberId: createdById,
           boardId: payload?.boardId,
-          title: `${payload.description}`,
-          primaryAction: "under",
-          primaryTitle: sectionUpdated?.name,
+          message: ` created note <u>${payload.description}</u> under section <u>${sectionUpdated?.name}</u>`,
           type: "note",
-          action: "create",
         },
         session
       );
@@ -134,9 +126,9 @@ export async function getNotesBySectionId(
         },
       },
       reactionDeserveLookup,
-      reactionPlusOneLookup,
+      reactionAgreeLookup,
       reactionHighlightLookup,
-      reactionMinusOneLookup,
+      reactionDisagreeLookup,
       reactionLoveLookup,
       reactionAddFields,
       sectionLookup,
@@ -160,8 +152,8 @@ export async function getNotesBySectionId(
           totalDeserve: 1,
           totalHighlight: 1,
           totalLove: 1,
-          totalMinusOne: 1,
-          totalPlusOne: 1,
+          totalDisagree: 1,
+          totalAgree: 1,
           totalReactions: 1,
           _id: 1,
           reactions: 1,
@@ -205,9 +197,9 @@ export async function getNoteDetails(
         },
       },
       reactionDeserveLookup,
-      reactionPlusOneLookup,
+      reactionAgreeLookup,
       reactionHighlightLookup,
-      reactionMinusOneLookup,
+      reactionDisagreeLookup,
       reactionLoveLookup,
       reactionAddFields,
     ]).session(session);
@@ -238,12 +230,11 @@ export async function markNoteRead(payload: {
     await createActivity(
       {
         boardId: payload?.boardId,
-        memberId: payload?.memberId,
-        title: ` ${noteUpdated?.description}`,
-        primaryAction: "as",
-        primaryTitle: payload.read ? "read" : "un read",
+        memberId: payload?.joinedMemberId,
+        message: ` marked <u>${noteUpdated?.description}</u> as <b>${
+          payload.read ? "discussed" : "not discussed"
+        }</b>`,
         type: "note",
-        action: payload.read ? "read" : "un-read",
       },
       session
     );
@@ -274,13 +265,10 @@ export async function deleteNote(payload: {
     );
     await createActivity(
       {
-        memberId: payload?.memberId,
+        memberId: payload?.joinedMemberId,
         boardId: payload?.boardId,
-        title: `${payload?.description}`,
-        primaryAction: "under",
-        primaryTitle: section?.name,
+        message: ` deleted note <u>${payload?.description}</u> under <u>${section?.name}</u>`,
         type: "note",
-        action: "delete",
       },
       session
     );

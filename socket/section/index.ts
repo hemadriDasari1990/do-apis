@@ -39,10 +39,10 @@ export default function section(io: socketio.Server, socket: Socket) {
     try {
       const query: any = socket.handshake.query;
       verifyToken(query?.token, io);
-      const user: any = decodeToken(query?.token);
       const deleted = await deleteSection(
         payload.id,
-        user?.memberId,
+        payload.name,
+        payload?.joinedMemberId,
         payload.boardId
       );
       io.emit(`delete-section-response`, deleted);

@@ -12,13 +12,13 @@ const ReactionSchema = new Schema(
     type: {
       type: String,
       required: true,
-      enum: ["plusOne", "highlight", "minusOne", "love", "deserve"],
+      enum: ["agree", "highlight", "disagree", "love", "deserve"],
       default: "agree",
       index: true,
     },
     reactedBy: {
       type: Schema.Types.ObjectId,
-      ref: "Member",
+      ref: "JoinMember",
       default: null,
     },
   },

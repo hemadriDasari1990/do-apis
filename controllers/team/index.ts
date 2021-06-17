@@ -5,9 +5,8 @@ import {
   findMembersByTeamAndDelete,
   getMember,
   removeTeamFromMember,
-  sendInvitationsToMembers,
 } from "../member";
-import { decodeToken, getPagination, getToken, getUser } from "../../util";
+import { getPagination, getUser } from "../../util";
 import {
   teamMemberMembersAddFields,
   teamMemberMembersLookup,
@@ -18,7 +17,7 @@ import Board from "../../models/board";
 import Team from "../../models/team";
 import TeamMember from "../../models/teamMember";
 import { addTeamToUser } from "../user";
-import { getMemberIds } from "../../util/member";
+import { createInvitedTeams } from "../invite";
 import mongoose from "mongoose";
 import { teamLookup } from "../../util/teamFilters";
 
@@ -436,14 +435,22 @@ export async function sendInvitationToTeams(req: Request, res: Response) {
         message: `Team id's are required in an array`,
       });
     }
-    const authHeader: string = req.headers.authorization as string;
-    const token = getToken(authHeader);
-    const sender: any = decodeToken(token);
-    const updatedBoard = await sendInvitation(
-      teamIds,
-      sender,
+
+    const user = getUser(req.headers.authorization as string);
+    await createInvitedTeams(teamIds, req.body.boardId, user, session);
+    const update = {
+      $set: {
+        inviteSent: true,
+      },
+      $inc: { inviteCount: 1 },
+    };
+    const updatedBoard = await Board.findByIdAndUpdate(
       req.body.boardId,
-      session
+      update,
+      {
+        new: true,
+        session: session,
+      }
     );
     await session.commitTransaction();
     return res.status(200).json({
@@ -456,42 +463,5 @@ export async function sendInvitationToTeams(req: Request, res: Response) {
     throw new Error("Error while sending invite to teams");
   } finally {
     await session.endSession();
-  }
-}
-
-export async function sendInvitation(
-  teamIds: Array<string>,
-  sender: { [Key: string]: any },
-  boardId: string,
-  session: any
-) {
-  try {
-    if (!teamIds || !teamIds?.length || !sender || !boardId) {
-      return;
-    }
-    await teamIds.reduce(async (promise: any, teamId: string) => {
-      await promise;
-      const team: any = await getTeam(
-        {
-          _id: mongoose.Types.ObjectId(teamId),
-        },
-        session
-      );
-      const memberIds = await getMemberIds(team?.members);
-      await sendInvitationsToMembers(memberIds, sender, boardId, session);
-    }, Promise.resolve());
-    const update = {
-      $set: {
-        inviteSent: true,
-      },
-      $inc: { inviteCount: 1 },
-    };
-    const updatedBoard = await Board.findByIdAndUpdate(boardId, update, {
-      new: true,
-      session: session,
-    });
-    return updatedBoard;
-  } catch (err) {
-    throw new Error("Error while sending invite to teams");
   }
 }

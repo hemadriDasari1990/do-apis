@@ -5,30 +5,30 @@ delete mongoose.connection.models["Join"];
 const Schema = mongoose.Schema;
 const JoinSchema = new Schema(
   {
-    memberId: {
-      type: Schema.Types.ObjectId,
-      ref: "Member",
-      default: null,
-    },
     boardId: {
       type: Schema.Types.ObjectId,
       ref: "Board",
       index: true,
       required: true,
     },
-    guestName: {
+    name: {
       type: String,
+      trim: true,
+      minlength: 1,
+    },
+    email: {
+      type: String,
+      // min: [5, "Too short, min is 5 characters"],
+      // max: [32, "Too long, max is 32 characters"],
+      lowercase: true,
     },
     avatarId: {
       type: Number,
+      default: 0,
     },
     board: {
       type: Schema.Types.ObjectId,
       ref: "Board",
-    },
-    member: {
-      type: Schema.Types.ObjectId,
-      ref: "Member",
     },
   },
   {
@@ -36,4 +36,4 @@ const JoinSchema = new Schema(
   }
 );
 
-export default mongoose.model("Join", JoinSchema);
+export default mongoose.model("JoinMember", JoinSchema);

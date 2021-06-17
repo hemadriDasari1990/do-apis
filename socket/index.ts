@@ -12,7 +12,9 @@ import project from "./project";
 import reaction from "./reaction";
 import section from "./section";
 
+let socketInstance: socketio.Server;
 export default function socketEvents(io: socketio.Server) {
+  socketInstance = io;
   // io.sockets.use(function(socket: any, next: any) {
   // socket.set("authorization", (handshakeData: any, accept: any) => {
   //   const domain = handshakeData.headers.referer
@@ -76,4 +78,9 @@ export default function socketEvents(io: socketio.Server) {
   io.sockets.on("disconnect", () => {
     console.log("client disconnected");
   });
+  return io;
+}
+
+export function getSocketInstance() {
+  return socketInstance;
 }
