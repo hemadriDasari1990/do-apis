@@ -307,7 +307,7 @@ export async function startOrCompleteBoard(payload: {
     }
 
     /* Add member to the board who is starting the session */
-    if (payload.action === "start") {
+    if (payload.action === "start" && !updated?.isInstant) {
       const join = new JoinMember({
         boardId: payload.id,
         email: member?.email,
@@ -365,9 +365,8 @@ export async function createInstantBord(
           description: req.body?.description,
           status: "new",
           sprint: 1,
-
           defaultSection: req.body?.defaultSection,
-          isInstant: req.body?.isInstant,
+          isInstant: true,
         },
       },
       options = {
