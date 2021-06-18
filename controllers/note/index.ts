@@ -32,7 +32,7 @@ export async function updateNote(payload: {
         message: "Board isn't found",
       };
     }
-    let createdById = null;
+    let createdById = payload.createdById;
     let updatedById = null;
     if (!payload.noteId && !payload?.isAnnonymous && !board?.isAnnonymous) {
       createdById = payload.createdById;
@@ -51,7 +51,7 @@ export async function updateNote(payload: {
           description: payload.description,
           sectionId: payload.sectionId,
           createdById: createdById,
-          updatedById: payload.noteId ? updatedById : null,
+          updatedById: updatedById,
           isAnnonymous: payload.isAnnonymous || false,
           ...(!payload.noteId ? { position: payload.position } : {}),
         },
@@ -141,6 +141,7 @@ export async function getNotesBySectionId(
       {
         $project: {
           createdBy: 1,
+          createdById: 1,
           createdAt: 1,
           updatedAt: 1,
           description: 1,
@@ -158,6 +159,7 @@ export async function getNotesBySectionId(
           _id: 1,
           reactions: 1,
           updatedBy: 1,
+          updatedById: 1,
         },
       },
     ]);
