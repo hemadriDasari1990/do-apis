@@ -320,7 +320,9 @@ export async function startOrCompleteBoard(payload: {
 
     await createActivity(
       {
-        memberId: joinedMember?._id,
+        memberId: updated?.isInstant
+          ? payload?.joinedMemberId
+          : joinedMember?._id,
         boardId: payload.id,
         message:
           payload.action === "start"
@@ -367,6 +369,7 @@ export async function createInstantBord(
           sprint: 1,
           defaultSection: req.body?.defaultSection,
           isInstant: true,
+          isAnnonymous: req.body?.isAnnonymous,
         },
       },
       options = {
