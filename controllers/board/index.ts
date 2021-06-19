@@ -537,11 +537,20 @@ export async function getBoardDetails(
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
+    const user: any = getUser(req.headers.authorization as string);
+    const joinedMember: any = user?.email
+      ? await JoinMember.findOne({
+          boardId: mongoose.Types.ObjectId(req.params.id),
+          email: user?.email,
+        }).session(session)
+      : null;
+
     const board = await getBoardDetailsWithMembers(req.params.id, session);
     const query = { _id: mongoose.Types.ObjectId(req.params.id) };
     const increment = { $inc: { views: 1 } };
     await Board.findOneAndUpdate(query, increment, { session: session });
     await session.commitTransaction();
+    board.joinedMemberId = joinedMember?._id;
     return res.status(200).send(board);
   } catch (err) {
     await session.abortTransaction();
