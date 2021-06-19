@@ -74,7 +74,6 @@ export async function updateSection(payload: {
       };
     }
     const updated: any = await Section.findOneAndUpdate(query, update, options);
-
     if (!payload?.sectionId && updated?._id) {
       await addSectionToBoard(updated?._id, updated?.boardId, session);
     }
@@ -99,8 +98,13 @@ export async function updateSection(payload: {
         session
       );
     }
+
+    const sectionUpdated: any = await getSection(
+      { _id: updated?._id },
+      session
+    );
     await session.commitTransaction();
-    return updated;
+    return sectionUpdated;
   } catch (err) {
     await session.abortTransaction();
     throw err;
