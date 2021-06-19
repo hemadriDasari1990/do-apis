@@ -20,5 +20,5 @@ module.exports = {
     user: "letsdoretro@gmail.com",
     password: "ziknjvfoihgdjabo", //nodemailer
   },
-  url: "letsdoretro.com",
+  url: "http://letsdoretro.com",
 };

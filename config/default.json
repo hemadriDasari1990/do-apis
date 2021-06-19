@@ -7,7 +7,7 @@
   "port": 8080,
   "env": "dev",
   "bcryptSalt": 10,
-  "url": "letsdoretro.com",
+  "url": "http://letsdoretro.com",
   "email": {
     "from": "letsdoretro@gmail.com",
     "host": "smtp.gmail.com",
