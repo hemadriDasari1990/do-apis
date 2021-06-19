@@ -205,7 +205,7 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
         options
       );
       const query = {
-          memberId: updatedUser?.memberId,
+          _id: updatedUser?.memberId,
         },
         update = {
           $set: {
@@ -225,6 +225,7 @@ export async function updateAvatar(req: Request, res: Response): Promise<any> {
       return res.status(200).send(updated);
     }
   } catch (err) {
+    console.log("err", err);
     await session.abortTransaction();
     return res.status(500).json(err || err.message);
   } finally {
