@@ -24,7 +24,7 @@ const NoteSchema = new Schema(
       trim: true,
       minlength: 5,
     },
-    isAnnonymous: {
+    isAnonymous: {
       type: Boolean,
       default: false,
     },

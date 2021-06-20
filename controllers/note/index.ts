@@ -34,17 +34,17 @@ export async function updateNote(payload: {
     }
     let createdById = payload.createdById;
     let updatedById = null;
-    if (!payload.noteId && !payload?.isAnnonymous && !board?.isAnnonymous) {
+    if (!payload.noteId && !payload?.isAnonymous && !board?.isAnonymous) {
       createdById = payload.createdById;
       updatedById = payload.createdById;
     }
 
-    if (payload.noteId && !payload?.isAnnonymous && !board?.isAnnonymous) {
+    if (payload.noteId && !payload?.isAnonymous && !board?.isAnonymous) {
       createdById = payload.createdById;
       updatedById = payload.updatedById;
     }
 
-    // @TODO - Need a way to capture annonymous people avatar and name
+    // @TODO - Need a way to capture anonymous people avatar and name
     const query = { _id: mongoose.Types.ObjectId(payload.noteId) },
       update = {
         $set: {
@@ -52,7 +52,7 @@ export async function updateNote(payload: {
           sectionId: payload.sectionId,
           createdById: createdById,
           updatedById: updatedById,
-          isAnnonymous: payload.isAnnonymous || false,
+          isAnonymous: payload.isAnonymous || false,
           ...(!payload.noteId ? { position: payload.position } : {}),
         },
       },
@@ -145,7 +145,7 @@ export async function getNotesBySectionId(
           createdAt: 1,
           updatedAt: 1,
           description: 1,
-          isAnnonymous: 1,
+          isAnonymous: 1,
           position: 1,
           read: 1,
           sectionId: 1,
