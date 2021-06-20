@@ -20,7 +20,7 @@ export async function createOrUpdateReaction(payload: {
   await session.startTransaction();
   try {
     /* Get the admin member */
-    const reactedBy: any = !payload?.isAnnonymous ? payload?.reactedBy : null;
+    const reactedBy: any = !payload?.isAnonymous ? payload?.reactedBy : null;
     const query = reactedBy
         ? {
             $and: [

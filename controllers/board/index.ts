@@ -170,7 +170,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
           status: req.body.status,
           sprint: boardsCount + 1,
           defaultSection: req.body.defaultSection,
-          isAnnonymous: req.body.isAnnonymous,
+          isAnonymous: req.body.isAnonymous,
         },
       },
       options = {
@@ -256,7 +256,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         );
       }
     }
-    if (!req.body.isAnnonymous && req.body.teams?.length && updated?._id) {
+    if (!req.body.isAnonymous && req.body.teams?.length && updated?._id) {
       await addTeamsToBoard(req.body.teams, updated, session);
       await createInvitedTeams(req.body.teams, updated?._id, user, session);
     }
@@ -369,7 +369,7 @@ export async function createInstantBord(
           sprint: 1,
           defaultSection: req.body?.defaultSection,
           isInstant: true,
-          isAnnonymous: req.body?.isAnnonymous,
+          isAnonymous: req.body?.isAnonymous,
         },
       },
       options = {
@@ -480,7 +480,7 @@ export async function getBoardDetailsWithMembers(
           description: 1,
           inviteCount: 1,
           inviteSent: 1,
-          isAnnonymous: 1,
+          isAnonymous: 1,
           defaultSection: 1,
           isLocked: 1,
           isPrivate: 1,

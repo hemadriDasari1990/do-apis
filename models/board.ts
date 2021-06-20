@@ -68,7 +68,7 @@ const BoardSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    isAnnonymous: {
+    isAnonymous: {
       type: Boolean,
       default: false,
     },

@@ -52,7 +52,7 @@ export async function joinMemberToBoard(
 
     /* Validate invited users */
     let token: any;
-    if (req?.body?.token && !req?.body?.isAnnonymous) {
+    if (req?.body?.token && !req?.body?.isAnonymous) {
       /* Check if token exists */
       token = await InviteMember.findOne({
         memberId: req?.body?.memberId,
@@ -86,7 +86,7 @@ export async function joinMemberToBoard(
       update = {
         $set: {
           boardId: req?.body.boardId,
-          name: !req?.body?.isAnnonymous ? req?.body?.name : "Team Member",
+          name: !req?.body?.isAnonymous ? req?.body?.name : "Team Member",
           avatarId: req?.body?.avatarId || 0,
           email: req?.body?.email,
         },

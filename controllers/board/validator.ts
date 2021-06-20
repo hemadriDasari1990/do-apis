@@ -16,7 +16,7 @@ export const updateBoardValidator = [
     .withMessage("No of sections should be a number")
     .isLength({ min: 1, max: 10 })
     .withMessage("No of sections must be between 1 and 10"),
-  check("isAnnonymous").custom((value) => {
+  check("isAnonymous").custom((value) => {
     if (value == false && !check("teams").isArray()) {
       throw new Error("Team must be an array");
     }
