@@ -3,7 +3,8 @@ import { Request, Response } from "express";
 import ApplicationServer from "./server";
 import config from "config";
 import cors from "cors";
-import { createServer } from "http";
+import { createServer } from "https";
+import fs from "fs";
 import socketEvents from "./socket";
 
 if (!process.env.PWD) {
@@ -11,7 +12,25 @@ if (!process.env.PWD) {
 }
 
 const app = new ApplicationServer().bootstrap();
-const server = createServer(app);
+const privateKey = fs.readFileSync(
+  "/etc/letsencrypt/live/letsdoretro.com/privkey.pem",
+  "utf8"
+); // key
+const certificate = fs.readFileSync(
+  "/etc/letsencrypt/live/letsdoretro.com/cert.pem",
+  "utf8"
+); // certificate
+const ca = fs.readFileSync(
+  "/etc/letsencrypt/live/letsdoretro.com/chain.pem",
+  "utf8"
+); // chain
+const credentials: { [Key: string]: any } = {
+  key: privateKey,
+  cert: certificate,
+  ca: ca,
+};
+
+const server = createServer(credentials, app);
 server.listen(config.get("port"));
 server.on("listening", onListening);
 server.on("error", onError);
