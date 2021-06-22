@@ -54,8 +54,13 @@ function onError(error: any) {
   console.log("There was an error:", error);
 }
 
+const corsOptions: any = {
+  origin: config.get("url"),
+  optionsSuccessStatus: 200, // For legacy browser support
+  methods: "GET, PUT, POST, DELETE",
+};
 // Add headers
-app.use(cors());
+app.use(cors(corsOptions));
 
 app.get("/", (req: Request, res: Response) => {
   res.send(`This is a landing page for letsdoretro service`);
