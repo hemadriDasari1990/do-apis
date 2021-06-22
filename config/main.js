@@ -6,10 +6,10 @@ module.exports = {
   database:
     "mongodb://hemadri:Hemanth%401505@cluster0-shard-00-00.vgtdr.mongodb.net:27017,cluster0-shard-00-01.vgtdr.mongodb.net:27017,cluster0-shard-00-02.vgtdr.mongodb.net:27017/lets-do-retro?ssl=true&replicaSet=atlas-elrkrn-shard-0&authSource=admin&retryWrites=true&w=majority",
   // Setting port for server
-  port: 443,
+  port: 8080,
   // Configuring Mailgun API for sending transactional email
   // necessary in order to run tests in parallel of the main app
-  test_port: 443,
+  test_port: 8080,
   test_db: "lets-do-retro",
   test_env: "test",
   bcryptSalt: 10,
