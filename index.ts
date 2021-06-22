@@ -13,17 +13,14 @@ if (!process.env.PWD) {
 
 const app = new ApplicationServer().bootstrap();
 const privateKey = fs.readFileSync(
-  "/etc/letsencrypt/live/letsdoretro.com/privkey.pem",
+  "/home/ubuntu/certificates/privkey.pem",
   "utf8"
 ); // key
 const certificate = fs.readFileSync(
-  "/etc/letsencrypt/live/letsdoretro.com/cert.pem",
+  "/home/ubuntu/certificates/cert.pem",
   "utf8"
 ); // certificate
-const ca = fs.readFileSync(
-  "/etc/letsencrypt/live/letsdoretro.com/chain.pem",
-  "utf8"
-); // chain
+const ca = fs.readFileSync("/home/ubuntu/certificates/chain.pem", "utf8"); // chain
 const credentials: { [Key: string]: any } = {
   key: privateKey,
   cert: certificate,
