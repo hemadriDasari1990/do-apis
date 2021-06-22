@@ -14,11 +14,11 @@ module.exports = {
   test_env: "test",
   bcryptSalt: 10,
   email: {
-    from: "letsdoretro@gmail.com",
+    from: "info@letsdoretro.com",
     host: "smtp.gmail.com",
     port: 587,
-    user: "letsdoretro@gmail.com",
-    password: "ziknjvfoihgdjabo", //nodemailer
+    user: "info@letsdoretro.com",
+    password: "quxnmgwibrfvgvxe", //nodemailer
   },
   url: "http://letsdoretro.com",
 };
