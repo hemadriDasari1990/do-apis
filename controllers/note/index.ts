@@ -1,3 +1,4 @@
+import { INVALID_REQUEST, RESOURCE_NOT_FOUND } from "../../util/constants";
 import { Request, Response } from "express";
 import { createdByLookUp, updatedByLookUp } from "../../util/noteFilters";
 import {
@@ -10,7 +11,6 @@ import {
 } from "../../util/reactionFilters";
 
 import Note from "../../models/note";
-import { RESOURCE_NOT_FOUND } from "../../util/constants";
 import Section from "../../models/section";
 import { addNoteToSection } from "../section";
 import { createActivity } from "../activity";
@@ -25,6 +25,12 @@ export async function updateNote(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
+    if (!payload.description || !payload.sectionId || !payload?.boardId) {
+      return {
+        errorId: INVALID_REQUEST,
+        message: "Invalid Request",
+      };
+    }
     const board = await getBoardDetailsWithProject(payload?.boardId, session);
     if (!board) {
       return {

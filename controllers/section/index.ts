@@ -1,4 +1,5 @@
 import {
+  INVALID_REQUEST,
   MAX_SECTIONS_COUNT,
   MAX_SECTIONS_ERROR,
   RESOURCE_ALREADY_EXISTS,
@@ -38,6 +39,12 @@ export async function updateSection(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
+    if (!payload?.name || !payload?.boardId) {
+      return {
+        errorId: INVALID_REQUEST,
+        message: `Invalid request`,
+      };
+    }
     const sectionCount: number = await Section.find({
       boardId: payload?.boardId,
     }).countDocuments();
