@@ -105,7 +105,7 @@ export async function updateInvitedMembers(
           email: member?.email,
           avatarId: member?.avatarId || 0,
         };
-        await updateInvitedMember(boardId, invitedMember, sender, session);
+        await updateInvitedMember(boardId, sender, invitedMember, session);
       },
       Promise.resolve()
     );
@@ -128,7 +128,7 @@ export async function updateInvitedMember(
     }
     const token: any = crypto.randomBytes(16).toString("hex");
     const query = {
-        boardId: mongoose.Types.ObjectId(boardId),
+        boardId: boardId,
         email: invitedMember?.email,
       },
       update = {
@@ -146,18 +146,23 @@ export async function updateInvitedMember(
         setDefaultsOnInsert: true,
         session: session,
       };
+    console.log("check", boardId, sender, invitedMember);
     const updatedInvitedMember: any = await InviteMember.findOneAndUpdate(
       query,
       update,
       options
     );
-    const sent = await sendInviteToMember(
-      boardId,
-      sender,
-      updatedInvitedMember,
-      session
-    );
-    return sent;
+
+    if (sender?.email?.trim() !== invitedMember?.email?.trim()) {
+      const sent = await sendInviteToMember(
+        boardId,
+        sender,
+        updatedInvitedMember,
+        session
+      );
+      return sent;
+    }
+    return updatedInvitedMember;
   } catch (err) {
     throw new Error(
       `Error while adding invited members to board ${err || err.message}`

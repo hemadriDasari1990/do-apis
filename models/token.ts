@@ -7,6 +7,7 @@ const TokenSchema = new Schema({
     unique: true,
     lowercase: true,
     required: true,
+    index: true,
   },
   userId: {
     type: Schema.Types.ObjectId,
