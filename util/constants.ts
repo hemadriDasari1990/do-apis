@@ -30,6 +30,8 @@ export const MAX_PROJECTS_COUNT = 1000;
 export const MAX_SECTIONS_ERROR = "MAX_SECTIONS_ERROR";
 export const MAX_SECTIONS_COUNT = 10;
 
+export const INVALID_REQUEST = "INVALID_REQUEST";
+
 export const MAX_BOARDS_ERROR = "MAX_BOARDS_ERROR";
 export const MAX_BOARDS_COUNT = 1000;
 
