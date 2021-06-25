@@ -16,7 +16,6 @@ const ProjectSchema = new Schema(
       trim: true,
       minlength: 1,
       required: true,
-      unique: true,
     },
     description: {
       type: String,

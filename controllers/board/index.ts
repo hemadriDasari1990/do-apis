@@ -137,7 +137,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     if (boardDetails) {
       return res.status(409).json({
         errorId: RESOURCE_ALREADY_EXISTS,
-        message: `Board with ${boardDetails?.name} already exist. Please contact administrator`,
+        message: `Board with ${boardDetails?.name} already exist. Please choose different name`,
       });
     }
 
@@ -164,13 +164,13 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
         : { _id: { $exists: false } }, // Create new record if id is not matching
       update = {
         $set: {
-          ...(!req.body.boardId ? { name: "Board " + (boardsCount + 1) } : {}),
-          description: req.body.description,
-          projectId: req.body.projectId,
-          status: req.body.status,
+          ...(!req.body.boardId ? { name: req.body?.name?.trim() } : {}),
+          description: req.body?.description,
+          projectId: req.body?.projectId,
+          status: req.body?.status,
           sprint: boardsCount + 1,
-          defaultSection: req.body.defaultSection,
-          isAnonymous: req.body.isAnonymous,
+          defaultSection: req.body?.defaultSection,
+          isAnonymous: req.body?.isAnonymous,
         },
       },
       options = {
@@ -264,6 +264,7 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     await session.commitTransaction();
     return res.status(200).send(board);
   } catch (err) {
+    console.log("error", err);
     await session.abortTransaction();
     return res.status(500).send(err || err.message);
   } finally {

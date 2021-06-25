@@ -7,6 +7,8 @@ export const updateBoardValidator = [
   /* Check Name */
   check("name")
     .trim()
+    .isLength({ min: 1, max: 50 })
+    .withMessage("Name can't be more than 50 characters")
     .escape(),
   check("description")
     .trim()

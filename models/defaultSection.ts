@@ -10,7 +10,6 @@ const DefaultSectionSchema = new Schema(
       trim: true,
       index: true,
       required: true,
-      unique: true,
     },
   },
   {

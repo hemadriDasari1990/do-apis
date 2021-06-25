@@ -11,7 +11,6 @@ const SecurityQuestionSchema = new Schema(
       index: true,
       required: true,
       minlength: 20,
-      unique: true,
     },
   },
   {

@@ -8,8 +8,8 @@ const InviteSchema = new Schema(
     boardId: {
       type: Schema.Types.ObjectId,
       ref: "Board",
-      index: true,
       required: true,
+      index: true,
     },
     name: {
       type: String,
@@ -20,9 +20,9 @@ const InviteSchema = new Schema(
       type: String,
       // min: [5, "Too short, min is 5 characters"],
       // max: [32, "Too long, max is 32 characters"],
-      unique: true,
       lowercase: true,
       required: true,
+      index: true,
     },
     avatarId: {
       type: Number,

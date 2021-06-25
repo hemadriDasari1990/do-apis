@@ -21,7 +21,6 @@ const SecurityQuestionAnswerSchema = new Schema(
       type: String,
       trim: true,
       required: true,
-      unique: true,
     },
     answered: {
       type: Boolean,
