@@ -864,7 +864,7 @@ export async function addJoinedMemberToBoard(
     );
     return board;
   } catch (err) {
-    throw "Cannot joined member to board";
+    throw "Cannot join member to board";
   }
 }
 
@@ -915,8 +915,8 @@ export async function downloadReport(
         const notes = section?.notes?.map((note: { [Key: string]: any }) => {
           return {
             Note: note.description,
-            "+1": note.totalAgree,
-            "-1": note.totalDisagree,
+            Agree: note.totalAgree,
+            DisAgree: note.totalDisagree,
             Love: note.totalLove,
             Highlight: note.totalHighlight,
             Deserve: note.totalDeserve,
