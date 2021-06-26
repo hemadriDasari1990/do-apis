@@ -5,12 +5,8 @@ import { VALIDATION_FAILED } from "../../util/constants";
 
 export const createFeedbackValidator = [
   /* Check Title */
-  check("title")
-    .trim()
-    .escape(),
-  check("description")
-    .trim()
-    .escape(),
+  check("title").trim(),
+  check("description").trim(),
   check("rating")
     .isNumeric()
     .withMessage("rating should be a number")
