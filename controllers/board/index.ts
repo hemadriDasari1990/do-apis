@@ -264,7 +264,6 @@ export async function updateBoard(req: Request, res: Response): Promise<any> {
     await session.commitTransaction();
     return res.status(200).send(board);
   } catch (err) {
-    console.log("error", err);
     await session.abortTransaction();
     return res.status(500).send(err || err.message);
   } finally {
@@ -278,6 +277,9 @@ export async function startOrCompleteBoard(payload: {
   const session = await mongoose.startSession();
   await session.startTransaction();
   try {
+    if (!payload.id) {
+      return;
+    }
     let joinedMember: any;
     const member = await getMember(
       {
@@ -290,13 +292,13 @@ export async function startOrCompleteBoard(payload: {
         payload.action === "start"
           ? {
               $set: {
-                startedAt: payload.startedAt,
+                startedAt: Date.now(),
                 status: "inprogress",
               },
             }
           : {
               $set: {
-                completedAt: payload.completedAt,
+                completedAt: Date.now(),
                 status: "completed",
                 isLocked: true,
               },
