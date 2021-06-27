@@ -69,7 +69,7 @@ export async function joinMemberToBoard(
         req?.body?.boardId,
         {
           avatarId: req?.body?.avatarId,
-          name: req?.body?.name,
+          name: req?.body?.name || "Team Member",
         },
         session
       );
@@ -86,7 +86,9 @@ export async function joinMemberToBoard(
       update = {
         $set: {
           boardId: req?.body.boardId,
-          name: !req?.body?.isAnonymous ? req?.body?.name : "Team Member",
+          name: !req?.body?.isAnonymous
+            ? req?.body?.name || "Team Member"
+            : "Team Member",
           avatarId: req?.body?.avatarId || 0,
           email: req?.body?.email,
         },
