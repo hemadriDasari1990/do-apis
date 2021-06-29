@@ -14,12 +14,8 @@ export const updateProjectValidator = [
     .withMessage("Project name must have minimum length of 3")
     .trim()
     .escape(),
-  check("description")
-    .trim()
-    .escape(),
-  check("status")
-    .trim()
-    .escape(),
+  check("description").trim(),
+  check("status").trim(),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);
     const hasError = !error.isEmpty();
