@@ -8,11 +8,8 @@ export const updateBoardValidator = [
   check("name")
     .trim()
     .isLength({ min: 1, max: 50 })
-    .withMessage("Name can't be more than 50 characters")
-    .escape(),
-  check("description")
-    .trim()
-    .escape(),
+    .withMessage("Name can't be more than 50 characters"),
+  check("description").trim(),
   check("noOfSections")
     .isNumeric()
     .withMessage("No of sections should be a number")
@@ -28,15 +25,9 @@ export const updateBoardValidator = [
 
     return true;
   }),
-  check("projectTitle")
-    .trim()
-    .escape(),
-  check("projectDescription")
-    .trim()
-    .escape(),
-  check("boardId")
-    .trim()
-    .escape(),
+  check("projectTitle").trim(),
+  check("projectDescription").trim(),
+  check("boardId").trim(),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);
     const hasError = !error.isEmpty();
@@ -53,12 +44,8 @@ export const updateBoardValidator = [
 
 export const createInstantBordValidator = [
   /* Check Name */
-  check("name")
-    .trim()
-    .escape(),
-  check("description")
-    .trim()
-    .escape(),
+  check("name").trim(),
+  check("description").trim(),
   check("noOfSections")
     .isNumeric()
     .withMessage("No of sections should be a number")

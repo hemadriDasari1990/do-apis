@@ -12,14 +12,9 @@ export const updateTeamValidator = [
     .withMessage("Team name must be string")
     .isLength({ min: 3 })
     .withMessage("Team name must have minimum length of 3")
-    .trim()
-    .escape(),
-  check("description")
-    .trim()
-    .escape(),
-  check("status")
-    .trim()
-    .escape(),
+    .trim(),
+  check("description").trim(),
+  check("status").trim(),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);
     const hasError = !error.isEmpty();
@@ -84,15 +79,13 @@ export const addOrRemoveMemberFromTeamValidator = [
     .withMessage("Team id is required")
     .isString()
     .withMessage("Team id must be string")
-    .trim()
-    .escape(),
+    .trim(),
   check("memberId")
     .notEmpty()
     .withMessage("Member id is required")
     .isString()
     .withMessage("Member id must be string")
-    .trim()
-    .escape(),
+    .trim(),
   (req: Request, res: Response, next: NextFunction) => {
     const error = validationResult(req).formatWith(({ msg }) => msg);
     const hasError = !error.isEmpty();
@@ -113,8 +106,7 @@ export const sendInvitationToTeamsValidator = [
     .withMessage("Board id is required")
     .isString()
     .withMessage("Board id must be string")
-    .trim()
-    .escape(),
+    .trim(),
   check("teamIds")
     .not()
     .isEmpty()
