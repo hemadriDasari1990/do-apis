@@ -1,6 +1,7 @@
 import {
   changeVisibility,
   startOrCompleteBoard,
+  getBoardDetailsWithMembers,
 } from "../../controllers/board";
 import { decodeToken, verifyToken } from "../../util";
 import socketio, { Socket } from "socket.io";
@@ -68,4 +69,13 @@ export default function board(io: socketio.Server, socket: Socket) {
       }
     }
   );
+
+  socket.on("board-details", async (payload: { [Key: string]: any }) => {
+    try {
+      const boardDetails = await getBoardDetailsWithMembers(payload?.id, null);
+      await io.emit(`board-details-response`, boardDetails);
+    } catch (err) {
+      return err;
+    }
+  });
 }
