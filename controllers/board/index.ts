@@ -296,11 +296,19 @@ export async function startOrCompleteBoard(payload: {
                 status: "inprogress",
               },
             }
-          : {
+          : payload.action === "end"
+          ? {
               $set: {
                 completedAt: Date.now(),
                 status: "completed",
                 isLocked: true,
+              },
+            }
+          : {
+              $set: {
+                completedAt: null,
+                status: "inprogress",
+                isLocked: false,
               },
             };
     const options = { new: true, session: session }; // return updated document
@@ -330,7 +338,9 @@ export async function startOrCompleteBoard(payload: {
         message:
           payload.action === "start"
             ? " <u>started</u> the session"
-            : " <u>ended</u> the session",
+            : payload.action === "end"
+            ? " <u>ended</u> the session"
+            : " <u>resumed</u> the session",
         type: "board",
       },
       session
@@ -340,6 +350,7 @@ export async function startOrCompleteBoard(payload: {
     board.joinedMemberId = joinedMember?._id;
     return board;
   } catch (err) {
+    console.log("error", err);
     await session.abortTransaction();
     return err || err.message;
   } finally {
