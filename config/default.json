@@ -9,10 +9,10 @@
   "bcryptSalt": 10,
   "url": "https://letsdoretro.com",
   "email": {
-    "from": "info@letsdoretro.com",
+    "from": "team@letsdoretro.com",
     "host": "smtp.gmail.com",
     "port": 587,
-    "user": "info@letsdoretro.com",
-    "password": "quxnmgwibrfvgvxe"
+    "user": "team@letsdoretro.com",
+    "password": "ktmyubiqhkwpqynt"
   }
 }
