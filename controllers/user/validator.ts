@@ -43,24 +43,24 @@ export const signupValidator = [
   /* Check confirm password */
   check("confirmPassword")
     .notEmpty()
-    .withMessage("Confirm password is required")
+    .withMessage("New password (Again) is required")
     .isString()
-    .withMessage("Confirm password must be string")
+    .withMessage("New password (Again) must be string")
     .isLength({ min: 8, max: 15 })
-    .withMessage("Confirm password Must Be at Least 8 Characters")
+    .withMessage("New password (Again) Must Be at Least 8 Characters")
     .matches("[0-9]")
-    .withMessage("Confirm password  Must Contain a Number")
+    .withMessage("New password (Again) Must Contain a Number")
     .matches("[A-Z]")
-    .withMessage("Confirm password  Must Contain an Uppercase Letter")
+    .withMessage("New password (Again) Must Contain an Uppercase Letter")
     .matches(/[!@#$%^&*(),.?":{}|<>]/)
     .withMessage(
-      "your confirm password  should have at least one sepcial character"
+      "your New password (Again) should have at least one sepcial character"
     )
     .trim()
     .escape()
     .custom((value, { req }) => {
       if (value !== req.body.password) {
-        throw new Error("Confirm password does not match");
+        throw new Error("New password (Again) does not match");
       }
       return true;
     }),
