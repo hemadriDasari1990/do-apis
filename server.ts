@@ -54,6 +54,7 @@ export default class Server {
     // this.app.use("/static", express.static(path.join(__dirname, "public")));
 
     this.app.use(
+      "/static",
       express.static("public", {
         etag: true, // Just being explicit about the default.
         lastModified: true, // Just being explicit about the default.
