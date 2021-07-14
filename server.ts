@@ -1,4 +1,4 @@
-import { Application } from "express";
+import { Application, Request, Response, NextFunction } from "express";
 import bodyParser from "body-parser";
 import config from "config";
 import cors from "cors";
@@ -53,6 +53,14 @@ export default class Server {
     // set public path for static assets
     this.app.use("/static", express.static(path.join(__dirname, "public")));
 
+    this.app.use((req: Request, res: Response, next: NextFunction) => {
+      res.set({
+        "Cache-Control": "public, max-age=86400",
+        Expires: new Date(Date.now() + 86400000).toUTCString(),
+      });
+      next();
+    });
+
     /* Configure requests body parsing */
     this.app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
     this.app.use(bodyParser.json({ limit: "50mb" }));
@@ -61,9 +69,5 @@ export default class Server {
     this.app.use(helmet());
 
     this.app.use(morgan(config.get("env")));
-
-    this.app.use(function(req, res, next) {
-      res.set("Cache-control", "public, max-age=31536000");
-    });
   }
 }
