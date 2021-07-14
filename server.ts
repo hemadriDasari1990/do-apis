@@ -45,21 +45,31 @@ export default class Server {
     this.app.use(cors());
 
     /* Disable default cache */
-    this.app.set("etag", false);
+    // this.app.set("etag", false);
 
     // set the view engine to ejs
     this.app.set("view engine", "ejs");
 
     // set public path for static assets
-    this.app.use("/static", express.static(path.join(__dirname, "public")));
+    // this.app.use("/static", express.static(path.join(__dirname, "public")));
 
-    this.app.use((req: Request, res: Response, next: NextFunction) => {
-      res.set({
-        "Cache-Control": "public, max-age=86400",
-        Expires: new Date(Date.now() + 86400000).toUTCString(),
-      });
-      next();
-    });
+    this.app.use(
+      express.static("public", {
+        etag: true, // Just being explicit about the default.
+        lastModified: true, // Just being explicit about the default.
+        setHeaders: (res, path) => {
+          const hashRegExp = new RegExp("\\.[0-9a-f]{8}\\.");
+
+          if (path.endsWith(".html")) {
+            // All of the project's HTML files end in .html
+            res.setHeader("Cache-Control", "no-cache");
+          } else if (hashRegExp.test(path)) {
+            // If the RegExp matched, then we have a versioned URL.
+            res.setHeader("Cache-Control", "max-age=31536000");
+          }
+        },
+      })
+    );
 
     /* Configure requests body parsing */
     this.app.use(bodyParser.urlencoded({ extended: true, limit: "50mb" }));
