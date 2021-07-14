@@ -61,5 +61,9 @@ export default class Server {
     this.app.use(helmet());
 
     this.app.use(morgan(config.get("env")));
+
+    this.app.use(function(req, res, next) {
+      res.set("Cache-control", "public, max-age=31536000");
+    });
   }
 }
