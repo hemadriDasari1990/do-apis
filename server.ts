@@ -1,4 +1,4 @@
-import { Application, Request, Response, NextFunction } from "express";
+import { Application } from "express";
 import bodyParser from "body-parser";
 import config from "config";
 import cors from "cors";
@@ -6,7 +6,7 @@ import express from "express";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import morgan from "morgan";
-import path from "path";
+// import path from "path";
 import router from "./router";
 
 export default class Server {
