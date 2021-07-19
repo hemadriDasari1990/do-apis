@@ -696,6 +696,20 @@ export async function findBoardsByProjectAndDelete(
   }
 }
 
+export async function enableReaction(
+  boardId: string,
+  enableReaction: boolean
+): Promise<any> {
+  try {
+    const boardUpdated = await Board.findByIdAndUpdate(boardId, {
+      enableReaction,
+    });
+    return boardUpdated;
+  } catch (err) {
+    throw err || err.message;
+  }
+}
+
 // async function deleteNoteById(noteId: string):Promise<any> {
 //   try {
 //     if(!noteId){
