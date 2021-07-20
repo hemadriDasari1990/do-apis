@@ -102,8 +102,10 @@ export default function board(io: socketio.Server, socket: Socket) {
         { _id: payload?.joinedMemberId },
         null
       );
-      joinedMember.type = payload?.type;
-      await io.emit(`show-reaction`, payload?.type);
+      if (joinedMember) {
+        joinedMember.type = payload?.type;
+      }
+      await io.emit(`show-reaction`, joinedMember);
     } catch (err) {
       return err;
     }
