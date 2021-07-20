@@ -702,9 +702,13 @@ export async function enableReactions(
   enableReactions: boolean
 ): Promise<any> {
   try {
-    const boardUpdated = await Board.findByIdAndUpdate(boardId, {
-      enableReactions,
-    });
+    const boardUpdated = await Board.findByIdAndUpdate(
+      boardId,
+      {
+        enableReactions,
+      },
+      { new: true }
+    );
     return boardUpdated;
   } catch (err) {
     throw err || err.message;
