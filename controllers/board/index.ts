@@ -696,13 +696,13 @@ export async function findBoardsByProjectAndDelete(
   }
 }
 
-export async function enableReaction(
+export async function enableReactions(
   boardId: string,
-  enableReaction: boolean
+  enableReactions: boolean
 ): Promise<any> {
   try {
     const boardUpdated = await Board.findByIdAndUpdate(boardId, {
-      enableReaction,
+      enableReactions,
     });
     return boardUpdated;
   } catch (err) {

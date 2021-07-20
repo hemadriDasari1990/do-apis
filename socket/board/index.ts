@@ -2,7 +2,7 @@ import {
   changeVisibility,
   startOrCompleteBoard,
   getBoardDetailsWithMembers,
-  enableReaction,
+  enableReactions,
 } from "../../controllers/board";
 import { decodeToken, verifyToken } from "../../util";
 import socketio, { Socket } from "socket.io";
@@ -103,13 +103,13 @@ export default function board(io: socketio.Server, socket: Socket) {
     }
   });
 
-  socket.on("enable-reaction", async (payload: { [Key: string]: any }) => {
+  socket.on("enable-reactions", async (payload: { [Key: string]: any }) => {
     try {
-      const boardUpdated = await enableReaction(
+      const boardUpdated = await enableReactions(
         payload?.boardId,
-        payload?.enableReaction
+        payload?.enableReactions
       );
-      await io.emit(`enable-reaction`, boardUpdated);
+      await io.emit(`enable-reactions`, boardUpdated);
     } catch (err) {
       return err;
     }
