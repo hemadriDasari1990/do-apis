@@ -8,6 +8,7 @@ import { decodeToken, verifyToken } from "../../util";
 import socketio, { Socket } from "socket.io";
 
 import { inviteMemberToBoard } from "../../controllers/board";
+import { getJoinedMember } from "../../controllers/join";
 
 // import { decodeToken } from "../../util";
 
@@ -95,9 +96,14 @@ export default function board(io: socketio.Server, socket: Socket) {
     }
   });
 
-  socket.on("show-reaction", async (type: string) => {
+  socket.on("show-reaction", async (payload: { [Key: string]: any }) => {
     try {
-      await io.emit(`show-reaction`, type);
+      const joinedMember: any = await getJoinedMember(
+        { _id: payload?.joinedMemberId },
+        null
+      );
+      joinedMember.type = payload?.type;
+      await io.emit(`show-reaction`, payload?.type);
     } catch (err) {
       return err;
     }
