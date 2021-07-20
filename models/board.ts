@@ -72,7 +72,7 @@ const BoardSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    enableReaction: {
+    enableReactions: {
       type: Boolean,
       default: false,
     },
