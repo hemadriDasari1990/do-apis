@@ -513,6 +513,7 @@ export async function getBoardDetailsWithMembers(
           project: 1,
           isInstant: 1,
           joinedMembers: 1,
+          enableReactions: 1,
         },
       },
     ]).session(session);
