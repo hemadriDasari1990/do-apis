@@ -50,11 +50,11 @@ export default class Server {
 
   private configureMiddleware(): void {
     /* Enable Cross Origin Resource Sharing to all origins by default */
-    this.app.use(
-      cors({
-        origin: "https://www.letsdoretro.com",
-      })
-    );
+    const allowedOrigins = ["https://www.letsdoretro.com"];
+    const options: cors.CorsOptions = {
+      origin: allowedOrigins,
+    };
+    this.app.use(cors(options));
     /* Disable default cache */
     // this.app.set("etag", false);
 
