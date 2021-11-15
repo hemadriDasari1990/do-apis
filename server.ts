@@ -41,8 +41,26 @@ export default class Server {
   }
 
   private configureMiddleware(): void {
+    const allowedOrigins = [
+      "https://letsdoretro.com",
+      "https://www.letsdoretro.com",
+    ];
     /* Enable Cross Origin Resource Sharing to all origins by default */
-    this.app.use(cors());
+    this.app.use(
+      cors({
+        origin: function(origin, callback) {
+          if (!origin) {
+            return callback(null, true);
+          }
+          if (allowedOrigins.indexOf(origin) === -1) {
+            const message =
+              "The CORS policy for this site does not allow access from the specified origin.";
+            return callback(new Error(message), false);
+          }
+          return callback(null, true);
+        },
+      })
+    );
 
     /* Disable default cache */
     // this.app.set("etag", false);
