@@ -1,5 +1,3 @@
-// import { NextFunction, Request, Response } from "express";
-
 import { Application } from "express";
 import bodyParser from "body-parser";
 import config from "config";
@@ -8,6 +6,7 @@ import express from "express";
 import helmet from "helmet";
 import mongoose from "mongoose";
 import morgan from "morgan";
+// import path from "path";
 import router from "./router";
 
 export default class Server {
@@ -33,13 +32,6 @@ export default class Server {
     this.dbInstance = connectionInstance;
   }
 
-  // private allowCrossDomain(req: Request, res: Response, next: NextFunction) {
-  //   res.header("Access-Control-Allow-Origin", "*");
-  //   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-  //   res.header("Access-Control-Allow-Headers", "Content-Type");
-  //   next();
-  // }
-
   private configureRoutes(): void {
     router(this.app);
   }
@@ -50,11 +42,8 @@ export default class Server {
 
   private configureMiddleware(): void {
     /* Enable Cross Origin Resource Sharing to all origins by default */
-    const allowedOrigins = ["https://www.letsdoretro.com"];
-    const options: cors.CorsOptions = {
-      origin: allowedOrigins,
-    };
-    this.app.use(cors(options));
+    this.app.use(cors());
+
     /* Disable default cache */
     // this.app.set("etag", false);
 
