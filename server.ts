@@ -1,7 +1,8 @@
+import { NextFunction, Request, Response } from "express";
+
 import { Application } from "express";
 import bodyParser from "body-parser";
 import config from "config";
-import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 import mongoose from "mongoose";
@@ -32,6 +33,13 @@ export default class Server {
     this.dbInstance = connectionInstance;
   }
 
+  private allowCrossDomain(req: Request, res: Response, next: NextFunction) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+    res.header("Access-Control-Allow-Headers", "Content-Type");
+    next();
+  }
+
   private configureRoutes(): void {
     router(this.app);
   }
@@ -41,27 +49,8 @@ export default class Server {
   }
 
   private configureMiddleware(): void {
-    const allowedOrigins = [
-      "https://letsdoretro.com",
-      "https://www.letsdoretro.com",
-    ];
     /* Enable Cross Origin Resource Sharing to all origins by default */
-    this.app.use(
-      cors({
-        origin: function(origin, callback) {
-          if (!origin) {
-            return callback(null, true);
-          }
-          if (allowedOrigins.indexOf(origin) === -1) {
-            const message =
-              "The CORS policy for this site does not allow access from the specified origin.";
-            return callback(new Error(message), false);
-          }
-          return callback(null, true);
-        },
-      })
-    );
-
+    this.app.use(this.allowCrossDomain);
     /* Disable default cache */
     // this.app.set("etag", false);
 
